@@ -49,12 +49,15 @@ export default {
   },
   email: {
     smtp: {
+      name: envVars.SMTP_HOST,
       host: envVars.SMTP_HOST,
       port: envVars.SMTP_PORT,
       auth: {
         user: envVars.SMTP_USERNAME,
         pass: envVars.SMTP_PASSWORD
-      }
+      },
+      logger: true,
+      debug: true
     },
     from: envVars.EMAIL_FROM
   }

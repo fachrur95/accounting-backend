@@ -3,7 +3,9 @@
     "target": "es2016",
     "outDir": "./build",
     "module": "commonjs",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
