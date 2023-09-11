@@ -2,6 +2,7 @@ import prisma from '../client';
 import { Strategy as JwtStrategy, ExtractJwt, VerifyCallback } from 'passport-jwt';
 import config from './config';
 import { TokenType } from '@prisma/client';
+import { PayloadData, SessionData } from '../types/session';
 
 const jwtOptions = {
   secretOrKey: config.jwt.secret,
@@ -17,14 +18,22 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
       select: {
         id: true,
         email: true,
-        name: true
+        name: true,
+        role: true,
       },
       where: { id: payload.sub }
     });
     if (!user) {
       return done(null, false);
     }
-    done(null, user);
+    const institute = await prisma.institute.findUnique({
+      where: { id: payload.session?.institution ?? 0 }
+    });
+    const unit = await prisma.unit.findUnique({
+      where: { id: payload.session?.unit ?? 0 }
+    });
+
+    done(null, { ...user, session: { institute, unit } } as SessionData);
   } catch (error) {
     done(error, false);
   }

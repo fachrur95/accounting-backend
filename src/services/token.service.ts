@@ -7,7 +7,7 @@ import ApiError from '../utils/ApiError';
 import { Token, TokenType } from '@prisma/client';
 import prisma from '../client';
 import { AuthTokensResponse } from '../types/response';
-import { Session, SessionData } from '../types/session';
+import { Session, PayloadData } from '../types/session';
 
 /**
  * Generate token
@@ -19,7 +19,7 @@ import { Session, SessionData } from '../types/session';
  */
 const generateToken = (
   // userId: number,
-  data: SessionData,
+  data: PayloadData,
   expires: Moment,
   type: TokenType,
   secret: string = config.jwt.secret

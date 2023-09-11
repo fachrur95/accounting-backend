@@ -3,7 +3,8 @@ import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
 import { roleRights } from '../config/roles';
 import { NextFunction, Request, Response } from 'express';
-import { User } from '@prisma/client';
+// import { User } from '@prisma/client';
+import { SessionData } from '../types/session';
 
 const verifyCallback =
   (
@@ -12,7 +13,7 @@ const verifyCallback =
     reject: (reason?: unknown) => void,
     requiredRights: string[]
   ) =>
-    async (err: unknown, user: User | false, info: unknown) => {
+    async (err: unknown, user: SessionData | false, info: unknown) => {
       if (err || info || !user) {
         return reject(new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate'));
       }
