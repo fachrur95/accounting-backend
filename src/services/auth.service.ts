@@ -34,6 +34,8 @@ const loginUserWithEmailAndPassword = async (
   return exclude(user, ['password']);
 };
 
+// const chooseInstitute = async (instituteId: number): Promise<
+
 /**
  * Logout
  * @param {string} refreshToken
@@ -109,6 +111,7 @@ const verifyEmail = async (verifyEmailToken: string): Promise<void> => {
     });
     await userService.updateUserById(verifyEmailTokenData.userId, { isEmailVerified: true });
   } catch (error) {
+    console.log({ error })
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed');
   }
 };

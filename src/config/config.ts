@@ -56,8 +56,13 @@ export default {
         user: envVars.SMTP_USERNAME,
         pass: envVars.SMTP_PASSWORD
       },
-      logger: true,
-      debug: true
+    },
+    smtpGmail: {
+      service: "gmail",
+      auth: {
+        user: envVars.SMTP_USERNAME,
+        pass: envVars.SMTP_PASSWORD
+      },
     },
     from: envVars.EMAIL_FROM
   }
