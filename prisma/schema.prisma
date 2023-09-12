@@ -48,6 +48,52 @@ model Unit {
   updatedAt   DateTime  @updatedAt
   institute   Institute @relation(fields: [instituteId], references: [id])
   instituteId Int
+  Store       Store[]
+}
+
+model Store {
+  id        Int         @id @default(autoincrement())
+  name      String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  unit      Unit        @relation(fields: [unitId], references: [id])
+  unitId    Int
+  Warehouse Warehouse[]
+}
+
+model Warehouse {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  store     Store    @relation(fields: [storeId], references: [id])
+  storeId   Int
+}
+
+model GeneralSetting {
+  id          Int      @id @default(autoincrement())
+  companyName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PeopleCategory {
+  id         Int      @id @default(autoincrement())
+  name       String
+  isCustomer Boolean
+  isSupplier Boolean
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  People     People[]
+}
+
+model People {
+  id               Int            @id @default(autoincrement())
+  name             String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  peopleCategory   PeopleCategory @relation(fields: [peopleCategoryId], references: [id])
+  peopleCategoryId Int
 }
 
 enum Role {
