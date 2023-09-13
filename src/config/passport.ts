@@ -1,10 +1,10 @@
 import prisma from '../client';
-import { Strategy as JwtStrategy, ExtractJwt, VerifyCallback } from 'passport-jwt';
+import { Strategy as JwtStrategy, ExtractJwt, VerifyCallback, StrategyOptions } from 'passport-jwt';
 import config from './config';
 import { TokenType } from '@prisma/client';
-import { PayloadData, SessionData } from '../types/session';
+import { SessionData } from '../types/session';
 
-const jwtOptions = {
+const jwtOptions: StrategyOptions = {
   secretOrKey: config.jwt.secret,
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
 };
@@ -27,13 +27,13 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
       return done(null, false);
     }
     const institute = await prisma.institute.findUnique({
-      where: { id: payload.session?.institution ?? 0 }
+      where: { id: payload.session?.institution ?? "" }
     });
     const unit = await prisma.unit.findUnique({
-      where: { id: payload.session?.unit ?? 0 }
+      where: { id: payload.session?.unit ?? "" }
     });
-
-    done(null, { ...user, session: { institute, unit } } as SessionData);
+    const dataSession = { ...user, session: { institute, unit } } as SessionData;
+    done(null, dataSession);
   } catch (error) {
     done(error, false);
   }

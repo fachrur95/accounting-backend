@@ -42,23 +42,13 @@ model Institute {
 }
 
 model Unit {
-  id          String    @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  institute   Institute @relation(fields: [instituteId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  institute   Institute   @relation(fields: [instituteId], references: [id])
   instituteId String
-  Store       Store[]
-}
-
-model Store {
-  id        String      @id @default(cuid())
-  name      String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  unit      Unit        @relation(fields: [unitId], references: [id])
-  unitId    String
-  Warehouse Warehouse[]
+  Warehouse   Warehouse[]
 }
 
 model Warehouse {
@@ -66,8 +56,8 @@ model Warehouse {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  store     Store    @relation(fields: [storeId], references: [id])
-  storeId   String
+  unit      Unit     @relation(fields: [unitId], references: [id])
+  unitId    String
 }
 
 model AccountClass {

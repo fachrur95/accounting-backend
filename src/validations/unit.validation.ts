@@ -2,7 +2,7 @@ import Joi from 'joi';
 
 const createUnit = {
   body: Joi.object().keys({
-    instituteId: Joi.number().required(),
+    instituteId: Joi.string().required(),
     name: Joi.string().required(),
   })
 };
@@ -10,7 +10,8 @@ const createUnit = {
 const getUnits = {
   query: Joi.object().keys({
     name: Joi.string(),
-    instituteId: Joi.number(),
+    instituteId: Joi.string(),
+    // "institute.id": Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
@@ -40,7 +41,7 @@ const updateUnit = {
   }),
   body: Joi.object()
     .keys({
-      instituteId: Joi.number(),
+      instituteId: Joi.string(),
       name: Joi.string()
     })
     .min(1)
