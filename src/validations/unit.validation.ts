@@ -11,7 +11,10 @@ const getUnits = {
   query: Joi.object().keys({
     name: Joi.string(),
     instituteId: Joi.string(),
-    // "institute.id": Joi.string(),
+    // institute: Joi.object().keys({
+    //   id: Joi.string(),
+    // }),
+    // "institute.a.id": Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),

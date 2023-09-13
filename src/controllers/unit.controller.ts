@@ -14,6 +14,7 @@ const createUnit = catchAsync(async (req, res) => {
 
 const getUnits = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['name', 'instituteId']);
+  console.log({ filter })
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await unitService.queryUnits(filter, options, conditions);
