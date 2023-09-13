@@ -2,6 +2,7 @@ import { Unit, Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/ApiError';
+import { NestedObject } from '../utils/pickNested';
 
 /**
  * Create a unit
@@ -9,7 +10,7 @@ import ApiError from '../utils/ApiError';
  * @returns {Promise<Unit>}
  */
 const createUnit = async (
-  data: { instituteId: number, name: string },
+  data: { instituteId: string, name: string },
 ): Promise<Unit> => {
   if (await getUnitByName(data.name)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
@@ -36,6 +37,7 @@ const queryUnits = async <Key extends keyof Unit>(
     sortBy?: string;
     sortType?: 'asc' | 'desc';
   },
+  conditions?: NestedObject,
   keys: Key[] = [
     'id',
     'instituteId',
@@ -49,7 +51,7 @@ const queryUnits = async <Key extends keyof Unit>(
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'desc';
   const units = await prisma.unit.findMany({
-    where: filter,
+    where: { ...filter, ...conditions },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
     skip: page * limit,
     take: limit,
@@ -65,7 +67,7 @@ const queryUnits = async <Key extends keyof Unit>(
  * @returns {Promise<Pick<Unit, Key> | null>}
  */
 const getUnitById = async <Key extends keyof Unit>(
-  id: number,
+  id: string,
   keys: Key[] = [
     'id',
     'instituteId',
@@ -109,7 +111,7 @@ const getUnitByName = async <Key extends keyof Unit>(
  * @returns {Promise<Unit>}
  */
 const updateUnitById = async <Key extends keyof Unit>(
-  unitId: number,
+  unitId: string,
   updateBody: Prisma.UnitUpdateInput,
   keys: Key[] = ['id', 'name', 'instituteId'] as Key[]
 ): Promise<Pick<Unit, Key> | null> => {
@@ -133,7 +135,7 @@ const updateUnitById = async <Key extends keyof Unit>(
  * @param {ObjectId} unitId
  * @returns {Promise<Unit>}
  */
-const deleteUnitById = async (unitId: number): Promise<Unit> => {
+const deleteUnitById = async (unitId: string): Promise<Unit> => {
   const unit = await getUnitById(unitId);
   if (!unit) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Unit not found');

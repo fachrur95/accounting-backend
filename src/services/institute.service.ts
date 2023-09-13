@@ -64,7 +64,7 @@ const queryInstitutes = async <Key extends keyof Institute>(
  * @returns {Promise<Pick<Institute, Key> | null>}
  */
 const getInstituteById = async <Key extends keyof Institute>(
-  id: number,
+  id: string,
   keys: Key[] = [
     'id',
     'name',
@@ -106,7 +106,7 @@ const getInstituteByName = async <Key extends keyof Institute>(
  * @returns {Promise<Institute>}
  */
 const updateInstituteById = async <Key extends keyof Institute>(
-  instituteId: number,
+  instituteId: string,
   updateBody: Prisma.InstituteUpdateInput,
   keys: Key[] = ['id', 'name'] as Key[]
 ): Promise<Pick<Institute, Key> | null> => {
@@ -130,7 +130,7 @@ const updateInstituteById = async <Key extends keyof Institute>(
  * @param {ObjectId} instituteId
  * @returns {Promise<Institute>}
  */
-const deleteInstituteById = async (instituteId: number): Promise<Institute> => {
+const deleteInstituteById = async (instituteId: string): Promise<Institute> => {
   const institute = await getInstituteById(instituteId);
   if (!institute) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Institute not found');

@@ -10,22 +10,33 @@ const createUnit = {
 const getUnits = {
   query: Joi.object().keys({
     name: Joi.string(),
-    instituteId: Joi.number().optional(),
+    instituteId: Joi.number(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
-    page: Joi.number().integer()
+    page: Joi.number().integer(),
+    filters: Joi.object().keys({
+      operator: Joi.string().valid("and", "or").default("and").optional(),
+      fields: Joi.array().items(
+        Joi.object().keys({
+          // field: Joi.object().pattern(Joi.string(), Joi.string()),
+          field: Joi.string().required(),
+          type: Joi.string().valid("contains", "endsWith", "equals", "gt", "gte", "in", "lt", "lte", "not", "notIn", "startsWith").required(),
+          value: Joi.string().required(),
+        })
+      )
+    }),
   })
 };
 
 const getUnit = {
   params: Joi.object().keys({
-    unitId: Joi.number().integer()
+    unitId: Joi.string()
   })
 };
 
 const updateUnit = {
   params: Joi.object().keys({
-    unitId: Joi.number().integer()
+    unitId: Joi.string()
   }),
   body: Joi.object()
     .keys({
@@ -37,7 +48,7 @@ const updateUnit = {
 
 const deleteUnit = {
   params: Joi.object().keys({
-    unitId: Joi.number().integer()
+    unitId: Joi.string()
   })
 };
 

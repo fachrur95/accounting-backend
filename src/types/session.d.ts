@@ -1,12 +1,12 @@
 import { Institute, Unit, User } from "@prisma/client";
 
 export interface Session {
-  institution?: number;
-  unit?: number;
+  institution?: string;
+  unit?: string;
 }
 
 export interface PayloadData {
-  userId: number;
+  userId: string;
   session?: Session;
 }
 

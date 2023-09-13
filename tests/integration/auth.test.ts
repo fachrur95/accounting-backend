@@ -159,7 +159,7 @@ describe('Auth routes', () => {
       await insertUsers([userOne]);
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.refreshExpirationDays, 'days');
-      const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
+      const refreshToken = tokenService.generateToken({ userId: dbUserOne.id }, expires, TokenType.REFRESH);
       await tokenService.saveToken(refreshToken, dbUserOne.id, expires, TokenType.REFRESH);
 
       await request(app)
@@ -179,7 +179,7 @@ describe('Auth routes', () => {
       await insertUsers([userOne]);
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.refreshExpirationDays, 'days');
-      const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
+      const refreshToken = tokenService.generateToken({ userId: dbUserOne.id }, expires, TokenType.REFRESH);
 
       await request(app)
         .post('/v1/auth/logout')
@@ -191,7 +191,7 @@ describe('Auth routes', () => {
       await insertUsers([userOne]);
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.refreshExpirationDays, 'days');
-      const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
+      const refreshToken = tokenService.generateToken({ userId: dbUserOne.id }, expires, TokenType.REFRESH);
       await tokenService.saveToken(refreshToken, dbUserOne.id, expires, TokenType.REFRESH, true);
 
       await request(app)
@@ -206,7 +206,7 @@ describe('Auth routes', () => {
       await insertUsers([userOne]);
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.refreshExpirationDays, 'days');
-      const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
+      const refreshToken = tokenService.generateToken({ userId: dbUserOne.id }, expires, TokenType.REFRESH);
       await tokenService.saveToken(refreshToken, dbUserOne.id, expires, TokenType.REFRESH);
 
       const res = await request(app)
@@ -246,7 +246,7 @@ describe('Auth routes', () => {
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.refreshExpirationDays, 'days');
       const refreshToken = tokenService.generateToken(
-        dbUserOne.id,
+        { userId: dbUserOne.id },
         expires,
         TokenType.REFRESH,
         'invalidSecret'
@@ -263,7 +263,7 @@ describe('Auth routes', () => {
       await insertUsers([userOne]);
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.refreshExpirationDays, 'days');
-      const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
+      const refreshToken = tokenService.generateToken({ userId: dbUserOne.id }, expires, TokenType.REFRESH);
 
       await request(app)
         .post('/v1/auth/refresh-tokens')
@@ -275,7 +275,7 @@ describe('Auth routes', () => {
       await insertUsers([userOne]);
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.refreshExpirationDays, 'days');
-      const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
+      const refreshToken = tokenService.generateToken({ userId: dbUserOne.id }, expires, TokenType.REFRESH);
       await tokenService.saveToken(refreshToken, dbUserOne.id, expires, TokenType.REFRESH, true);
 
       await request(app)
@@ -288,7 +288,7 @@ describe('Auth routes', () => {
       await insertUsers([userOne]);
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().subtract(1, 'minutes');
-      const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
+      const refreshToken = tokenService.generateToken({ userId: dbUserOne.id }, expires, TokenType.REFRESH);
       await tokenService.saveToken(refreshToken, dbUserOne.id, expires, TokenType.REFRESH);
 
       await request(app)
@@ -299,7 +299,7 @@ describe('Auth routes', () => {
 
     // test('should return 401 error if user is not found', async () => {
     //   const expires = moment().add(config.jwt.refreshExpirationDays, 'days');
-    //   const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
+    //   const refreshToken = tokenService.generateToken({userId: dbUserOne.id}, expires, TokenType.REFRESH);
     //   await tokenService.saveToken(refreshToken, dbUserOne.id, expires, TokenType.REFRESH);
 
     //   await request(app)
@@ -355,7 +355,7 @@ describe('Auth routes', () => {
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.resetPasswordExpirationMinutes, 'minutes');
       const resetPasswordToken = tokenService.generateToken(
-        dbUserOne.id,
+        { userId: dbUserOne.id },
         expires,
         TokenType.RESET_PASSWORD
       );
@@ -399,7 +399,7 @@ describe('Auth routes', () => {
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.resetPasswordExpirationMinutes, 'minutes');
       const resetPasswordToken = tokenService.generateToken(
-        dbUserOne.id,
+        { userId: dbUserOne.id },
         expires,
         TokenType.RESET_PASSWORD
       );
@@ -423,7 +423,7 @@ describe('Auth routes', () => {
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().subtract(1, 'minutes');
       const resetPasswordToken = tokenService.generateToken(
-        dbUserOne.id,
+        { userId: dbUserOne.id },
         expires,
         TokenType.RESET_PASSWORD
       );
@@ -467,7 +467,7 @@ describe('Auth routes', () => {
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.resetPasswordExpirationMinutes, 'minutes');
       const resetPasswordToken = tokenService.generateToken(
-        dbUserOne.id,
+        { userId: dbUserOne.id },
         expires,
         TokenType.RESET_PASSWORD
       );
@@ -513,7 +513,7 @@ describe('Auth routes', () => {
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const sendVerificationEmailSpy = jest.spyOn(emailService, 'sendVerificationEmail');
       const userOneAccessToken = tokenService.generateToken(
-        dbUserOne.id,
+        { userId: dbUserOne.id },
         moment().add(config.jwt.accessExpirationMinutes, 'minutes'),
         TokenType.ACCESS
       );
@@ -551,7 +551,7 @@ describe('Auth routes', () => {
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.verifyEmailExpirationMinutes, 'minutes');
       const verifyEmailToken = tokenService.generateToken(
-        dbUserOne.id,
+        { userId: dbUserOne.id },
         expires,
         TokenType.VERIFY_EMAIL
       );
@@ -587,7 +587,7 @@ describe('Auth routes', () => {
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().add(config.jwt.verifyEmailExpirationMinutes, 'minutes');
       const verifyEmailToken = tokenService.generateToken(
-        dbUserOne.id,
+        { userId: dbUserOne.id },
         expires,
         TokenType.VERIFY_EMAIL
       );
@@ -611,7 +611,7 @@ describe('Auth routes', () => {
       const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
       const expires = moment().subtract(1, 'minutes');
       const verifyEmailToken = tokenService.generateToken(
-        dbUserOne.id,
+        { userId: dbUserOne.id },
         expires,
         TokenType.VERIFY_EMAIL
       );
@@ -647,7 +647,7 @@ describe('Auth middleware', () => {
     await insertUsers([userOne]);
     const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
     const userOneAccessToken = tokenService.generateToken(
-      dbUserOne.id,
+      { userId: dbUserOne.id },
       moment().add(config.jwt.accessExpirationMinutes, 'minutes'),
       TokenType.ACCESS
     );
@@ -698,7 +698,7 @@ describe('Auth middleware', () => {
     await insertUsers([userOne]);
     const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
     const expires = moment().add(config.jwt.accessExpirationMinutes, 'minutes');
-    const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
+    const refreshToken = tokenService.generateToken({ userId: dbUserOne.id }, expires, TokenType.REFRESH);
     const req = httpMocks.createRequest({ headers: { Authorization: `Bearer ${refreshToken}` } });
     const next = jest.fn();
 
@@ -718,7 +718,7 @@ describe('Auth middleware', () => {
     const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
     const expires = moment().add(config.jwt.accessExpirationMinutes, 'minutes');
     const accessToken = tokenService.generateToken(
-      dbUserOne.id,
+      { userId: dbUserOne.id },
       expires,
       TokenType.ACCESS,
       'invalidSecret'
@@ -741,7 +741,7 @@ describe('Auth middleware', () => {
     await insertUsers([userOne]);
     const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
     const expires = moment().subtract(1, 'minutes');
-    const accessToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.ACCESS);
+    const accessToken = tokenService.generateToken({ userId: dbUserOne.id }, expires, TokenType.ACCESS);
     const req = httpMocks.createRequest({ headers: { Authorization: `Bearer ${accessToken}` } });
     const next = jest.fn();
 
@@ -758,7 +758,7 @@ describe('Auth middleware', () => {
 
   test('should call next with unauthorized error if user is not found', async () => {
     const userOneAccessToken = tokenService.generateToken(
-      2000,
+      { userId: "2000" },
       moment().add(config.jwt.accessExpirationMinutes, 'minutes'),
       TokenType.ACCESS
     );
@@ -782,7 +782,7 @@ describe('Auth middleware', () => {
     await insertUsers([userOne]);
     const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
     const userOneAccessToken = tokenService.generateToken(
-      dbUserOne.id,
+      { userId: dbUserOne.id },
       moment().add(config.jwt.accessExpirationMinutes, 'minutes'),
       TokenType.ACCESS
     );
@@ -803,7 +803,7 @@ describe('Auth middleware', () => {
     await insertUsers([userOne]);
     const dbUserOne = (await prisma.user.findUnique({ where: { email: userOne.email } })) as User;
     const userOneAccessToken = tokenService.generateToken(
-      dbUserOne.id,
+      { userId: dbUserOne.id },
       moment().add(config.jwt.accessExpirationMinutes, 'minutes'),
       TokenType.ACCESS
     );
@@ -822,7 +822,7 @@ describe('Auth middleware', () => {
     await insertUsers([admin]);
     const dbAdmin = (await prisma.user.findUnique({ where: { email: admin.email } })) as User;
     const adminAccessToken = tokenService.generateToken(
-      dbAdmin.id,
+      { userId: dbAdmin.id },
       moment().add(config.jwt.accessExpirationMinutes, 'minutes'),
       TokenType.ACCESS
     );

@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
+  id              String   @id @default(cuid())
   email           String   @unique
   name            String?
   password        String
@@ -23,18 +23,18 @@ model User {
 }
 
 model Token {
-  id          Int       @id @default(autoincrement())
+  id          String    @id @default(cuid())
   token       String
   type        TokenType
   expires     DateTime
   blacklisted Boolean
   createdAt   DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id])
-  userId      Int
+  userId      String
 }
 
 model Institute {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -42,58 +42,139 @@ model Institute {
 }
 
 model Unit {
-  id          Int       @id @default(autoincrement())
+  id          String    @id @default(cuid())
   name        String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   institute   Institute @relation(fields: [instituteId], references: [id])
-  instituteId Int
+  instituteId String
   Store       Store[]
 }
 
 model Store {
-  id        Int         @id @default(autoincrement())
+  id        String      @id @default(cuid())
   name      String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   unit      Unit        @relation(fields: [unitId], references: [id])
-  unitId    Int
+  unitId    String
   Warehouse Warehouse[]
 }
 
 model Warehouse {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   store     Store    @relation(fields: [storeId], references: [id])
-  storeId   Int
+  storeId   String
+}
+
+model AccountClass {
+  id                   String            @id @default(cuid())
+  type                 BalanceSheet
+  code                 String
+  group                String
+  name                 String
+  balanceSheetPosition Vector
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  AccountSubClass      AccountSubClass[]
+}
+
+model AccountSubClass {
+  id                   String           @id @default(cuid())
+  code                 String
+  group                String
+  name                 String
+  balanceSheetPosition Vector
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  accountClass         AccountClass     @relation(fields: [accountClassId], references: [id])
+  accountClassId       String
+  ChartOfAccount       ChartOfAccount[]
+}
+
+model ChartOfAccount {
+  id                String          @id @default(cuid())
+  code              String
+  name              String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  accountSubClass   AccountSubClass @relation(fields: [accountSubClassId], references: [id])
+  accountSubClassId String
 }
 
 model GeneralSetting {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(cuid())
   companyName String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model PeopleCategory {
-  id         Int      @id @default(autoincrement())
+  id         String   @id @default(cuid())
   name       String
   isCustomer Boolean
   isSupplier Boolean
+  note       String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   People     People[]
 }
 
 model People {
-  id               Int            @id @default(autoincrement())
+  id               String         @id @default(cuid())
   name             String
+  note             String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   peopleCategory   PeopleCategory @relation(fields: [peopleCategoryId], references: [id])
-  peopleCategoryId Int
+  peopleCategoryId String
+}
+
+model ItemType {
+  id           String         @id @default(cuid())
+  name         String
+  isStock      Boolean
+  isSale       Boolean
+  isPurchase   Boolean
+  isAdjustment Boolean
+  isTransfer   Boolean
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  ItemCategory ItemCategory[]
+}
+
+model ItemCategory {
+  id         String   @id @default(cuid())
+  name       String
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  itemType   ItemType @relation(fields: [itemTypeId], references: [id])
+  itemTypeId String
+  Item       Item[]
+}
+
+model Item {
+  id             String       @id @default(cuid())
+  name           String
+  note           String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  itemCategory   ItemCategory @relation(fields: [itemCategoryId], references: [id])
+  itemCategoryId String
+}
+
+enum BalanceSheet {
+  AKTIVA
+  PASIVA
+}
+
+enum Vector {
+  POSITIVE
+  NEGATIVE
 }
 
 enum Role {

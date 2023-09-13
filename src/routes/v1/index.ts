@@ -1,6 +1,8 @@
 import express from 'express';
 import authRoute from './auth.route';
 import userRoute from './user.route';
+import instituteRoute from './institute.route';
+import unitRoute from './unit.route';
 import docsRoute from './docs.route';
 import config from '../../config/config';
 
@@ -14,7 +16,15 @@ const defaultRoutes = [
   {
     path: '/users',
     route: userRoute
-  }
+  },
+  {
+    path: '/institutes',
+    route: instituteRoute
+  },
+  {
+    path: '/units',
+    route: unitRoute
+  },
 ];
 
 const devRoutes = [

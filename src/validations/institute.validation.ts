@@ -17,13 +17,13 @@ const getInstitutes = {
 
 const getInstitute = {
   params: Joi.object().keys({
-    instituteId: Joi.number().integer()
+    instituteId: Joi.string()
   })
 };
 
 const updateInstitute = {
   params: Joi.object().keys({
-    instituteId: Joi.number().integer()
+    instituteId: Joi.string()
   }),
   body: Joi.object()
     .keys({
@@ -34,7 +34,7 @@ const updateInstitute = {
 
 const deleteInstitute = {
   params: Joi.object().keys({
-    instituteId: Joi.number().integer()
+    instituteId: Joi.string()
   })
 };
 

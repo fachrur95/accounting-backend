@@ -3,6 +3,8 @@ import pick from '../utils/pick';
 import ApiError from '../utils/ApiError';
 import catchAsync from '../utils/catchAsync';
 import { unitService } from '../services';
+import pickNested from '../utils/pickNested';
+import { FiltersType } from '../types/filtering';
 
 const createUnit = catchAsync(async (req, res) => {
   const { instituteId, name } = req.body;
@@ -13,7 +15,8 @@ const createUnit = catchAsync(async (req, res) => {
 const getUnits = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['name', 'instituteId']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
-  const result = await unitService.queryUnits(filter, options);
+  const conditions = pickNested(req.query?.filters as FiltersType);
+  const result = await unitService.queryUnits(filter, options, conditions);
   res.send(result);
 });
 
