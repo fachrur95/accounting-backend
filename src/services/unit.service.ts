@@ -12,8 +12,8 @@ import { NestedObject } from '../utils/pickNested';
 const createUnit = async (
   data: { instituteId: string, name: string },
 ): Promise<Unit> => {
-  if (await getUnitByName(data.name)) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
+  if (await getUnitByName(data.instituteId, data.name)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Unit name already taken');
   }
   return prisma.unit.create({
     data
@@ -49,7 +49,7 @@ const queryUnits = async <Key extends keyof Unit>(
   const page = options.page ?? 1;
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
-  const sortType = options.sortType ?? 'desc';
+  const sortType = options.sortType ?? 'asc';
   const units = await prisma.unit.findMany({
     where: { ...filter, ...conditions },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
@@ -89,6 +89,7 @@ const getUnitById = async <Key extends keyof Unit>(
  * @returns {Promise<Pick<Unit, Key> | null>}
  */
 const getUnitByName = async <Key extends keyof Unit>(
+  instituteId: string,
   name: string,
   keys: Key[] = [
     'id',
@@ -99,7 +100,7 @@ const getUnitByName = async <Key extends keyof Unit>(
   ] as Key[]
 ): Promise<Pick<Unit, Key> | null> => {
   return prisma.unit.findFirst({
-    where: { name },
+    where: { instituteId, name },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<Unit, Key> | null>;
 };
@@ -112,14 +113,14 @@ const getUnitByName = async <Key extends keyof Unit>(
  */
 const updateUnitById = async <Key extends keyof Unit>(
   unitId: string,
-  updateBody: Prisma.UnitUpdateInput,
+  updateBody: Prisma.UnitUncheckedUpdateInput,
   keys: Key[] = ['id', 'name', 'instituteId'] as Key[]
 ): Promise<Pick<Unit, Key> | null> => {
   const unit = await getUnitById(unitId, ['id', 'name']);
   if (!unit) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Unit not found');
   }
-  if (updateBody.name && (await getUnitByName(updateBody.name as string))) {
+  if (updateBody.name && (await getUnitByName(updateBody.instituteId as string, updateBody.name as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Unit name already taken');
   }
   const updatedUnit = await prisma.unit.update({

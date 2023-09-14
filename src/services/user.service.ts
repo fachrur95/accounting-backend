@@ -59,7 +59,7 @@ const queryUsers = async <Key extends keyof User>(
   const page = options.page ?? 1;
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
-  const sortType = options.sortType ?? 'desc';
+  const sortType = options.sortType ?? 'asc';
   const users = await prisma.user.findMany({
     where: filter,
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),

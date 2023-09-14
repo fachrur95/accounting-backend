@@ -1,38 +1,38 @@
 import express from 'express';
 import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
-import { unitValidation } from '../../validations';
-import { unitController } from '../../controllers';
+import { warehouseValidation } from '../../validations';
+import { warehouseController } from '../../controllers';
 
 const router = express.Router();
 
 router
   .route('/')
-  .post(auth('manageUnits'), validate(unitValidation.createUnit), unitController.createUnit)
-  .get(auth('getUnits'), validate(unitValidation.getUnits), unitController.getUnits);
+  .post(auth('manageWarehouses'), validate(warehouseValidation.createWarehouse), warehouseController.createWarehouse)
+  .get(auth('getWarehouses'), validate(warehouseValidation.getWarehouses), warehouseController.getWarehouses);
 
 router
-  .route('/:unitId')
-  .get(auth('getUnits'), validate(unitValidation.getUnit), unitController.getUnit)
-  .patch(auth('manageUnits'), validate(unitValidation.updateUnit), unitController.updateUnit)
-  .delete(auth('manageUnits'), validate(unitValidation.deleteUnit), unitController.deleteUnit);
+  .route('/:warehouseId')
+  .get(auth('getWarehouses'), validate(warehouseValidation.getWarehouse), warehouseController.getWarehouse)
+  .patch(auth('manageWarehouses'), validate(warehouseValidation.updateWarehouse), warehouseController.updateWarehouse)
+  .delete(auth('manageWarehouses'), validate(warehouseValidation.deleteWarehouse), warehouseController.deleteWarehouse);
 
 export default router;
 
 /**
  * @swagger
  * tags:
- *   name: Units
- *   description: Unit management and retrieval
+ *   name: Warehouses
+ *   description: Warehouse management and retrieval
  */
 
 /**
  * @swagger
- * /units:
+ * /warehouses:
  *   post:
- *     summary: Create a unit
- *     description: Only admins can create other units.
- *     tags: [Units]
+ *     summary: Create a warehouse
+ *     description: Only admins can create other warehouses.
+ *     tags: [Warehouses]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -60,19 +60,19 @@ export default router;
  *                 description: At least one number and one letter
  *               role:
  *                  type: string
- *                  enum: [unit, admin]
+ *                  enum: [warehouse, admin]
  *             example:
  *               name: fake name
  *               email: fake@example.com
  *               password: password1
- *               role: unit
+ *               role: warehouse
  *     responses:
  *       "201":
  *         description: Created
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Unit'
+ *                $ref: '#/components/schemas/Warehouse'
  *       "400":
  *         $ref: '#/components/responses/DuplicateEmail'
  *       "401":
@@ -81,9 +81,9 @@ export default router;
  *         $ref: '#/components/responses/Forbidden'
  *
  *   get:
- *     summary: Get all units
- *     description: Only admins can retrieve all units.
- *     tags: [Units]
+ *     summary: Get all warehouses
+ *     description: Only admins can retrieve all warehouses.
+ *     tags: [Warehouses]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -91,12 +91,12 @@ export default router;
  *         name: name
  *         schema:
  *           type: string
- *         description: Unit name
+ *         description: Warehouse name
  *       - in: query
  *         name: role
  *         schema:
  *           type: string
- *         description: Unit role
+ *         description: Warehouse role
  *       - in: query
  *         name: sortBy
  *         schema:
@@ -108,7 +108,7 @@ export default router;
  *           type: integer
  *           minimum: 1
  *         default: 10
- *         description: Maximum number of units
+ *         description: Maximum number of warehouses
  *       - in: query
  *         name: page
  *         schema:
@@ -127,7 +127,7 @@ export default router;
  *                 results:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Unit'
+ *                     $ref: '#/components/schemas/Warehouse'
  *                 page:
  *                   type: integer
  *                   example: 1
@@ -148,11 +148,11 @@ export default router;
 
 /**
  * @swagger
- * /units/{id}:
+ * /warehouses/{id}:
  *   get:
- *     summary: Get a unit
- *     description: Logged in units can fetch only their own unit information. Only admins can fetch other units.
- *     tags: [Units]
+ *     summary: Get a warehouse
+ *     description: Logged in warehouses can fetch only their own warehouse information. Only admins can fetch other warehouses.
+ *     tags: [Warehouses]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -161,14 +161,14 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Unit id
+ *         description: Warehouse id
  *     responses:
  *       "200":
  *         description: OK
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Unit'
+ *                $ref: '#/components/schemas/Warehouse'
  *       "401":
  *         $ref: '#/components/responses/Unauthorized'
  *       "403":
@@ -177,9 +177,9 @@ export default router;
  *         $ref: '#/components/responses/NotFound'
  *
  *   patch:
- *     summary: Update a unit
- *     description: Logged in units can only update their own information. Only admins can update other units.
- *     tags: [Units]
+ *     summary: Update a warehouse
+ *     description: Logged in warehouses can only update their own information. Only admins can update other warehouses.
+ *     tags: [Warehouses]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -188,7 +188,7 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Unit id
+ *         description: Warehouse id
  *     requestBody:
  *       required: true
  *       content:
@@ -217,7 +217,7 @@ export default router;
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Unit'
+ *                $ref: '#/components/schemas/Warehouse'
  *       "400":
  *         $ref: '#/components/responses/DuplicateEmail'
  *       "401":
@@ -228,9 +228,9 @@ export default router;
  *         $ref: '#/components/responses/NotFound'
  *
  *   delete:
- *     summary: Delete a unit
- *     description: Logged in units can delete only themselves. Only admins can delete other units.
- *     tags: [Units]
+ *     summary: Delete a warehouse
+ *     description: Logged in warehouses can delete only themselves. Only admins can delete other warehouses.
+ *     tags: [Warehouses]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -239,7 +239,7 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Unit id
+ *         description: Warehouse id
  *     responses:
  *       "200":
  *         description: No content

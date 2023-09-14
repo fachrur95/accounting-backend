@@ -9,7 +9,14 @@ const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(email, password);
   const userWithoutPassword = exclude(user, ['password', 'createdAt', 'updatedAt']);
   const tokens = await tokenService.generateAuthTokens(user);
-  res.status(httpStatus.CREATED).send({ user: userWithoutPassword, tokens });
+  res.cookie('jwt', tokens.access.token,
+    {
+      httpOnly: true,
+      signed: true,
+      expires: tokens.access.expires,
+      secure: false //--> SET TO TRUE ON PRODUCTION
+    })
+    .status(httpStatus.CREATED).send({ user: userWithoutPassword, tokens });
 });
 
 const login = catchAsync(async (req, res) => {
@@ -28,7 +35,7 @@ const login = catchAsync(async (req, res) => {
 });
 
 const logout = catchAsync(async (req, res) => {
-  if (!req.cookies['jwt']) {
+  if (!req.signedCookies['jwt']) {
     res.status(httpStatus.UNAUTHORIZED).send({
       error: 'Invalid jwt'
     })
@@ -58,24 +65,24 @@ const refreshTokens = catchAsync(async (req, res) => {
 const forgotPassword = catchAsync(async (req, res) => {
   const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body.email);
   await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
-  res.status(httpStatus.NO_CONTENT).send();
+  res.status(httpStatus.CREATED).send({ message: "Reset password request has been sent to your email." });
 });
 
 const resetPassword = catchAsync(async (req, res) => {
   await authService.resetPassword(req.query.token as string, req.body.password);
-  res.status(httpStatus.NO_CONTENT).send();
+  res.status(httpStatus.ACCEPTED).send({ message: "Password has been reset." });
 });
 
 const sendVerificationEmail = catchAsync(async (req, res) => {
   const user = req.user as User;
   const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
   await emailService.sendVerificationEmail(user.email, verifyEmailToken);
-  res.status(httpStatus.NO_CONTENT).send();
+  res.status(httpStatus.CREATED).send({ message: "Email confirmation has been sent." });
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
   await authService.verifyEmail(req.query.token as string);
-  res.status(httpStatus.NO_CONTENT).send();
+  res.status(httpStatus.ACCEPTED).send({ message: "Email confirmed." });
 });
 
 const userInfo = catchAsync(async (req, res) => {

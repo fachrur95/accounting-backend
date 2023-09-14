@@ -13,12 +13,13 @@ const cookieExtractor = (req: { cookies: any; signedCookies: { [x: string]: any;
   return jwt
 }
 
+const { fromExtractors, fromAuthHeaderAsBearerToken } = ExtractJwt;
+
 const jwtOptions: StrategyOptions = {
   secretOrKey: config.jwt.secret,
+  jwtFromRequest: fromExtractors([cookieExtractor, fromAuthHeaderAsBearerToken()]),
   // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
-  // jwtFromRequest: ExtractJwt.fromHeader("jwt")
   // jwtFromRequest: cookieExtractor,
-  jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor, ExtractJwt.fromAuthHeaderAsBearerToken()]),
 };
 
 const jwtVerify: VerifyCallback = async (payload, done) => {

@@ -46,7 +46,7 @@ const queryInstitutes = async <Key extends keyof Institute>(
   const page = options.page ?? 1;
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
-  const sortType = options.sortType ?? 'desc';
+  const sortType = options.sortType ?? 'asc';
   const institutes = await prisma.institute.findMany({
     where: filter,
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),

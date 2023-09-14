@@ -42,13 +42,15 @@ model Institute {
 }
 
 model Unit {
-  id          String      @id @default(cuid())
-  name        String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  institute   Institute   @relation(fields: [instituteId], references: [id])
-  instituteId String
-  Warehouse   Warehouse[]
+  id             String           @id @default(cuid())
+  name           String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  institute      Institute        @relation(fields: [instituteId], references: [id])
+  instituteId    String
+  Warehouse      Warehouse[]
+  ChartOfAccount ChartOfAccount[]
+  PeopleCategory PeopleCategory[]
 }
 
 model Warehouse {
@@ -64,7 +66,7 @@ model AccountClass {
   id                   String            @id @default(cuid())
   type                 BalanceSheet
   code                 String
-  group                String
+  group                String?
   name                 String
   balanceSheetPosition Vector
   createdAt            DateTime          @default(now())
@@ -75,7 +77,7 @@ model AccountClass {
 model AccountSubClass {
   id                   String           @id @default(cuid())
   code                 String
-  group                String
+  group                String?
   name                 String
   balanceSheetPosition Vector
   createdAt            DateTime         @default(now())
@@ -88,11 +90,14 @@ model AccountSubClass {
 model ChartOfAccount {
   id                String          @id @default(cuid())
   code              String
+  group             String?
   name              String
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   accountSubClass   AccountSubClass @relation(fields: [accountSubClassId], references: [id])
   accountSubClassId String
+  unit              Unit            @relation(fields: [unitId], references: [id])
+  unitId            String
 }
 
 model GeneralSetting {
@@ -111,6 +116,8 @@ model PeopleCategory {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   People     People[]
+  unit       Unit     @relation(fields: [unitId], references: [id])
+  unitId     String
 }
 
 model People {
@@ -170,6 +177,7 @@ enum Vector {
 enum Role {
   USER
   ADMIN
+  SUPERADMIN
 }
 
 enum TokenType {
