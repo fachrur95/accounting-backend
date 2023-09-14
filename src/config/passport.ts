@@ -17,7 +17,8 @@ const jwtOptions: StrategyOptions = {
   secretOrKey: config.jwt.secret,
   // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
   // jwtFromRequest: ExtractJwt.fromHeader("jwt")
-  jwtFromRequest: cookieExtractor,
+  // jwtFromRequest: cookieExtractor,
+  jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor, ExtractJwt.fromAuthHeaderAsBearerToken()]),
 };
 
 const jwtVerify: VerifyCallback = async (payload, done) => {
