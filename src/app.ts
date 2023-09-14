@@ -12,6 +12,7 @@ import { authLimiter } from './middlewares/rateLimiter';
 import routes from './routes/v1';
 import { errorConverter, errorHandler } from './middlewares/error';
 import ApiError from './utils/ApiError';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.options('*', cors());
 
 // jwt authentication
 app.use(passport.initialize());
+app.use(cookieParser(config.jwt.secret))
 passport.use('jwt', jwtStrategy);
 
 // limit repeated failed requests to auth endpoints

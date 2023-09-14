@@ -16,17 +16,43 @@ const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
   const user = await authService.loginUserWithEmailAndPassword(email, password);
   const tokens = await tokenService.generateAuthTokens(user);
-  res.send({ user, tokens });
+  res.cookie('jwt', tokens.access.token,
+    {
+      httpOnly: true,
+      signed: true,
+      expires: tokens.access.expires,
+      secure: false //--> SET TO TRUE ON PRODUCTION
+    })
+    .send({ user, tokens });
+  // res.send({ user, tokens });
 });
 
 const logout = catchAsync(async (req, res) => {
+  if (!req.cookies['jwt']) {
+    res.status(httpStatus.UNAUTHORIZED).send({
+      error: 'Invalid jwt'
+    })
+  }
   await authService.logout(req.body.refreshToken);
-  res.status(httpStatus.NO_CONTENT).send();
+  res
+    .clearCookie('jwt')
+    .status(200)
+    .json({
+      message: 'You have logged out'
+    })
+  // res.status(httpStatus.NO_CONTENT).send();
 });
 
 const refreshTokens = catchAsync(async (req, res) => {
   const tokens = await authService.refreshAuth(req.body.refreshToken);
-  res.send({ ...tokens });
+  res.cookie('jwt', tokens.access.token,
+    {
+      httpOnly: true,
+      signed: true,
+      expires: tokens.access.expires,
+      secure: false //--> SET TO TRUE ON PRODUCTION
+    })
+    .send({ ...tokens });
 });
 
 const forgotPassword = catchAsync(async (req, res) => {

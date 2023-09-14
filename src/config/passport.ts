@@ -4,9 +4,20 @@ import config from './config';
 import { TokenType } from '@prisma/client';
 import { SessionData } from '../types/session';
 
+const cookieExtractor = (req: { cookies: any; signedCookies: { [x: string]: any; }; }) => {
+  let jwt = null
+  if (req && req.cookies) {
+    jwt = req.signedCookies['jwt']
+  }
+
+  return jwt
+}
+
 const jwtOptions: StrategyOptions = {
   secretOrKey: config.jwt.secret,
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
+  // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
+  // jwtFromRequest: ExtractJwt.fromHeader("jwt")
+  jwtFromRequest: cookieExtractor,
 };
 
 const jwtVerify: VerifyCallback = async (payload, done) => {
