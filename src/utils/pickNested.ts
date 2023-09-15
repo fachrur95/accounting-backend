@@ -5,6 +5,7 @@ export type NestedObject = {
 };
 
 const pickNested = (obj?: FiltersType): NestedObject | undefined => {
+  if (!obj?.fields) return undefined;
   const filters: FieldType[] = obj?.fields as unknown as FieldType[];
   const fields = filters?.reduce<{ [field: string]: NestedObject }>((finalObj, filter) => {
     const field = filter.field;

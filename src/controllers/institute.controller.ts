@@ -32,7 +32,7 @@ const updateInstitute = catchAsync(async (req, res) => {
 
 const deleteInstitute = catchAsync(async (req, res) => {
   await instituteService.deleteInstituteById(req.params.instituteId);
-  res.status(httpStatus.NO_CONTENT).send();
+  res.status(httpStatus.OK).send({ id: req.params.instituteId, message: "Deleted" });
 });
 
 export default {

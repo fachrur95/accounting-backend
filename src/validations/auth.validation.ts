@@ -27,6 +27,20 @@ const refreshTokens = {
   })
 };
 
+const setInstitute = {
+  body: Joi.object().keys({
+    instituteId: Joi.string().required(),
+    refreshToken: Joi.string().required()
+  })
+};
+
+const setUnit = {
+  body: Joi.object().keys({
+    unitId: Joi.string().required(),
+    refreshToken: Joi.string().required()
+  })
+};
+
 const forgotPassword = {
   body: Joi.object().keys({
     email: Joi.string().email().required()
@@ -53,6 +67,8 @@ export default {
   login,
   logout,
   refreshTokens,
+  setInstitute,
+  setUnit,
   forgotPassword,
   resetPassword,
   verifyEmail

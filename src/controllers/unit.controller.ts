@@ -16,8 +16,6 @@ const getUnits = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['name', 'instituteId']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
   const conditions = pickNested(req.query?.filters as FiltersType);
-  const user = req.user;
-  console.log({ user });
   const result = await unitService.queryUnits(filter, options, conditions);
   res.send(result);
 });

@@ -1,7 +1,7 @@
 import { Institute, Unit, User } from "@prisma/client";
 
 export interface Session {
-  institution?: string;
+  institute?: string;
   unit?: string;
 }
 

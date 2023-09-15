@@ -2,7 +2,7 @@ import httpStatus from 'http-status';
 import tokenService from './token.service';
 import userService from './user.service';
 import ApiError from '../utils/ApiError';
-import { Institute, TokenType, User } from '@prisma/client';
+import { TokenType, User } from '@prisma/client';
 import prisma from '../client';
 import { encryptPassword, isPasswordMatch } from '../utils/encryption';
 import { AuthTokensResponse } from '../types/response';
@@ -34,10 +34,6 @@ const loginUserWithEmailAndPassword = async (
   return exclude(user, ['password']);
 };
 
-// const chooseInstitute = async (instituteId: number): Promise<Institute> => {
-//   const institute = await 
-// }
-
 /**
  * Logout
  * @param {string} refreshToken
@@ -68,6 +64,40 @@ const refreshAuth = async (refreshToken: string): Promise<AuthTokensResponse> =>
     const { userId } = refreshTokenData;
     await prisma.token.delete({ where: { id: refreshTokenData.id } });
     return tokenService.generateAuthTokens({ id: userId });
+  } catch (error) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+  }
+};
+
+/**
+ * Set institute into tokens
+ * @param {string} instituteId
+ * @param {string} refreshToken
+ * @returns {Promise<AuthTokensResponse>}
+ */
+const setInstituteSession = async (instituteId: string, refreshToken: string): Promise<AuthTokensResponse> => {
+  try {
+    const refreshTokenData = await tokenService.verifyToken(refreshToken, TokenType.REFRESH);
+    const { userId } = refreshTokenData;
+    await prisma.token.delete({ where: { id: refreshTokenData.id } });
+    return tokenService.generateAuthTokens({ id: userId }, { institute: instituteId });
+  } catch (error) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+  }
+};
+
+/**
+ * Set institute into tokens
+ * @param {string} instituteId
+ * @param {string} refreshToken
+ * @returns {Promise<AuthTokensResponse>}
+ */
+const setUnitSession = async (session: { instituteId: string, unitId: string }, refreshToken: string): Promise<AuthTokensResponse> => {
+  try {
+    const refreshTokenData = await tokenService.verifyToken(refreshToken, TokenType.REFRESH);
+    const { userId } = refreshTokenData;
+    await prisma.token.delete({ where: { id: refreshTokenData.id } });
+    return tokenService.generateAuthTokens({ id: userId }, { institute: session.instituteId, unit: session.unitId });
   } catch (error) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
   }
@@ -124,6 +154,8 @@ export default {
   encryptPassword,
   logout,
   refreshAuth,
+  setInstituteSession,
+  setUnitSession,
   resetPassword,
   verifyEmail
 };

@@ -15,6 +15,16 @@ router.post(
   authController.refreshTokens
 );
 router.post(
+  '/set-institute',
+  validate(authValidation.setInstitute),
+  authController.setInstitute
+);
+router.post(
+  '/set-unit',
+  validate(authValidation.setUnit),
+  authController.setUnit
+);
+router.post(
   '/forgot-password',
   validate(authValidation.forgotPassword),
   authController.forgotPassword
