@@ -2,6 +2,9 @@ import { Institute, Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/ApiError';
+import { PaginationResponse } from '../types/response';
+import getPagination from '../utils/pagination';
+import { NestedObject } from '../utils/pickNested';
 
 /**
  * Create a institute
@@ -36,25 +39,37 @@ const queryInstitutes = async <Key extends keyof Institute>(
     sortBy?: string;
     sortType?: 'asc' | 'desc';
   },
+  conditions?: NestedObject,
   keys: Key[] = [
     'id',
     'name',
     'createdAt',
     'updatedAt'
   ] as Key[]
-): Promise<Pick<Institute, Key>[]> => {
+): Promise<PaginationResponse<Pick<Institute, Key>>> => {
   const page = options.page ?? 1;
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const countAll = await prisma.institute.count({
+    where: { ...filter, ...conditions }
+  });
   const institutes = await prisma.institute.findMany({
-    where: filter,
+    where: { ...filter, ...conditions },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
     skip: page * limit,
     take: limit,
     orderBy: sortBy ? { [sortBy]: sortType } : undefined
   });
-  return institutes as Pick<Institute, Key>[];
+  const { totalPages, nextPage } = getPagination({ page, countAll, limit });
+  return {
+    currentPage: page,
+    totalPages,
+    nextPage,
+    countRows: institutes.length,
+    countAll,
+    rows: institutes as Pick<Institute, Key>[],
+  };
 };
 
 /**

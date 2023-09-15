@@ -3,6 +3,7 @@ import authRoute from './auth.route';
 import userRoute from './user.route';
 import instituteRoute from './institute.route';
 import unitRoute from './unit.route';
+import warehouseRoute from './warehouse.route';
 import docsRoute from './docs.route';
 import config from '../../config/config';
 
@@ -24,6 +25,10 @@ const defaultRoutes = [
   {
     path: '/units',
     route: unitRoute
+  },
+  {
+    path: '/warehouses',
+    route: warehouseRoute
   },
 ];
 

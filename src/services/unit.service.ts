@@ -3,6 +3,8 @@ import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/ApiError';
 import { NestedObject } from '../utils/pickNested';
+import { PaginationResponse } from '../types/response';
+import getPagination from '../utils/pagination';
 
 /**
  * Create a unit
@@ -40,16 +42,20 @@ const queryUnits = async <Key extends keyof Unit>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
+    'institute',
     'instituteId',
     'name',
     'createdAt',
     'updatedAt'
   ] as Key[]
-): Promise<Pick<Unit, Key>[]> => {
+): Promise<PaginationResponse<Pick<Unit, Key>>> => {
   const page = options.page ?? 1;
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const countAll = await prisma.unit.count({
+    where: { ...filter, ...conditions }
+  });
   const units = await prisma.unit.findMany({
     where: { ...filter, ...conditions },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
@@ -57,7 +63,15 @@ const queryUnits = async <Key extends keyof Unit>(
     take: limit,
     orderBy: sortBy ? { [sortBy]: sortType } : undefined
   });
-  return units as Pick<Unit, Key>[];
+  const { totalPages, nextPage } = getPagination({ page, countAll, limit });
+  return {
+    currentPage: page,
+    totalPages,
+    nextPage,
+    countRows: units.length,
+    countAll,
+    rows: units as Pick<Unit, Key>[],
+  };
 };
 
 /**
@@ -70,6 +84,7 @@ const getUnitById = async <Key extends keyof Unit>(
   id: string,
   keys: Key[] = [
     'id',
+    'institute',
     'instituteId',
     'name',
     'createdAt',

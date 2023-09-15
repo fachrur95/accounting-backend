@@ -9,7 +9,7 @@ const createChartOfAccount = {
   })
 };
 
-const getChartOfAccountes = {
+const getChartOfAccounts = {
   query: Joi.object().keys({
     name: Joi.string(),
     accountSubClassId: Joi.string(),
@@ -57,7 +57,7 @@ const deleteChartOfAccount = {
 
 export default {
   createChartOfAccount,
-  getChartOfAccountes,
+  getChartOfAccounts,
   getChartOfAccount,
   updateChartOfAccount,
   deleteChartOfAccount

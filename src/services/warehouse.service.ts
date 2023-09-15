@@ -3,6 +3,8 @@ import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/ApiError';
 import { NestedObject } from '../utils/pickNested';
+import { PaginationResponse } from '../types/response';
+import getPagination from '../utils/pagination';
 
 /**
  * Create a warehouse
@@ -40,16 +42,20 @@ const queryWarehouses = async <Key extends keyof Warehouse>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
+    'unit',
     'unitId',
     'name',
     'createdAt',
     'updatedAt'
   ] as Key[]
-): Promise<Pick<Warehouse, Key>[]> => {
+): Promise<PaginationResponse<Pick<Warehouse, Key>>> => {
   const page = options.page ?? 1;
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const countAll = await prisma.warehouse.count({
+    where: { ...filter, ...conditions }
+  });
   const warehouses = await prisma.warehouse.findMany({
     where: { ...filter, ...conditions },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
@@ -57,7 +63,15 @@ const queryWarehouses = async <Key extends keyof Warehouse>(
     take: limit,
     orderBy: sortBy ? { [sortBy]: sortType } : undefined
   });
-  return warehouses as Pick<Warehouse, Key>[];
+  const { totalPages, nextPage } = getPagination({ page, countAll, limit });
+  return {
+    currentPage: page,
+    totalPages,
+    nextPage,
+    countRows: warehouses.length,
+    countAll,
+    rows: warehouses as Pick<Warehouse, Key>[],
+  };
 };
 
 /**
@@ -70,6 +84,7 @@ const getWarehouseById = async <Key extends keyof Warehouse>(
   id: string,
   keys: Key[] = [
     'id',
+    'unit',
     'unitId',
     'name',
     'createdAt',

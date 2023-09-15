@@ -3,6 +3,8 @@ import validate from '../../middlewares/validate';
 import authValidation from '../../validations/auth.validation';
 import { authController } from '../../controllers';
 import auth from '../../middlewares/auth';
+import authSession from '../../middlewares/authSession';
+import { instituteValidation } from '../../validations';
 
 const router = express.Router();
 
@@ -13,16 +15,6 @@ router.post(
   '/refresh-tokens',
   validate(authValidation.refreshTokens),
   authController.refreshTokens
-);
-router.post(
-  '/set-institute',
-  validate(authValidation.setInstitute),
-  authController.setInstitute
-);
-router.post(
-  '/set-unit',
-  validate(authValidation.setUnit),
-  authController.setUnit
 );
 router.post(
   '/forgot-password',
@@ -38,6 +30,32 @@ router.post('/send-verification-email', auth(), authController.sendVerificationE
 router.get('/verify-email', validate(authValidation.verifyEmail), authController.verifyEmail);
 
 router.get('/user', auth(), authController.userInfo);
+
+router.get('/institutes',
+  auth(),
+  validate(instituteValidation.getInstitutes),
+  authController.allowedInstitutes
+);
+router.get(
+  '/units',
+  auth(),
+  authSession({ unit: false }),
+  validate(instituteValidation.getInstitutes),
+  authController.allowedUnits
+);
+router.post(
+  '/set-institute',
+  auth(),
+  validate(authValidation.setInstitute),
+  authController.setInstitute
+);
+router.post(
+  '/set-unit',
+  auth(),
+  authSession({ unit: false }),
+  validate(authValidation.setUnit),
+  authController.setUnit
+);
 
 export default router;
 

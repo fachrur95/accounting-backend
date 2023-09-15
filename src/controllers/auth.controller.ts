@@ -1,10 +1,14 @@
 import httpStatus from 'http-status';
 import catchAsync from '../utils/catchAsync';
-import { authService, userService, tokenService, emailService } from '../services';
+import { authService, userService, tokenService, emailService, instituteService, unitService } from '../services';
 import exclude from '../utils/exclude';
 import { User } from '@prisma/client';
 import { CookieOptions } from 'express';
 import { SessionData } from '../types/session';
+import pick from '../utils/pick';
+import pickNested from '../utils/pickNested';
+import { FiltersType } from '../types/filtering';
+import ApiError from '../utils/ApiError';
 
 const cookieOptions = (expires: Date): CookieOptions => {
   return {
@@ -77,27 +81,60 @@ const setUnit = catchAsync(async (req, res) => {
   ).send({ ...tokens });
 });
 
+const allowedInstitutes = catchAsync(async (req, res) => {
+  const filter = pick(req.query, ['name']);
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const conditions = pickNested(req.query?.filters as FiltersType);
+  const result = await instituteService.queryInstitutes(filter, options, conditions);
+  res.send(result);
+});
+
+const allowedUnits = catchAsync(async (req, res) => {
+  const user = req.user as SessionData;
+  let filterInstitute: { [x: string]: unknown } = {};
+  if (!user.session?.institute) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Choose institute first.');
+  }
+  if (user.role !== "SUPERADMIN") {
+    filterInstitute = {
+      instituteId: user.session.institute.id
+    }
+  }
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const conditions = pickNested(req.query?.filters as FiltersType);
+  const result = await unitService.queryUnits({ ...filterInstitute }, options, conditions);
+  res.send(result);
+});
+
 const forgotPassword = catchAsync(async (req, res) => {
   const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body.email);
   await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
-  res.status(httpStatus.CREATED).send({ message: "Reset password request has been sent to your email." });
+  res.status(httpStatus.CREATED).send({
+    message: "Reset password request has been sent to your email."
+  });
 });
 
 const resetPassword = catchAsync(async (req, res) => {
   await authService.resetPassword(req.query.token as string, req.body.password);
-  res.status(httpStatus.ACCEPTED).send({ message: "Password has been reset." });
+  res.status(httpStatus.ACCEPTED).send({
+    message: "Password has been reset."
+  });
 });
 
 const sendVerificationEmail = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
   await emailService.sendVerificationEmail(user.email, verifyEmailToken);
-  res.status(httpStatus.CREATED).send({ message: "Email confirmation has been sent." });
+  res.status(httpStatus.CREATED).send({
+    message: "Email confirmation has been sent."
+  });
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
   await authService.verifyEmail(req.query.token as string);
-  res.status(httpStatus.ACCEPTED).send({ message: "Email confirmed." });
+  res.status(httpStatus.ACCEPTED).send({
+    message: "Email confirmed."
+  });
 });
 
 const userInfo = catchAsync(async (req, res) => {
@@ -112,6 +149,8 @@ export default {
   refreshTokens,
   setInstitute,
   setUnit,
+  allowedInstitutes,
+  allowedUnits,
   forgotPassword,
   resetPassword,
   sendVerificationEmail,

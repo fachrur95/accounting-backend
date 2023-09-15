@@ -16,8 +16,6 @@ const getWarehouses = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['name', 'unitId']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
   const conditions = pickNested(req.query?.filters as FiltersType);
-  const user = req.user;
-  console.log({ user });
   const result = await warehouseService.queryWarehouses(filter, options, conditions);
   res.send(result);
 });
@@ -37,7 +35,8 @@ const updateWarehouse = catchAsync(async (req, res) => {
 
 const deleteWarehouse = catchAsync(async (req, res) => {
   await warehouseService.deleteWarehouseById(req.params.warehouseId);
-  res.status(httpStatus.NO_CONTENT).send();
+  // res.status(httpStatus.NO_CONTENT).send();
+  res.status(httpStatus.OK).send({ id: req.params.warehouseId, message: "Deleted" });
 });
 
 export default {

@@ -51,6 +51,7 @@ model Unit {
   Warehouse      Warehouse[]
   ChartOfAccount ChartOfAccount[]
   PeopleCategory PeopleCategory[]
+  ItemType       ItemType[]
 }
 
 model Warehouse {
@@ -112,6 +113,7 @@ model PeopleCategory {
   name       String
   isCustomer Boolean
   isSupplier Boolean
+  isEmployee Boolean
   note       String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -141,6 +143,8 @@ model ItemType {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   ItemCategory ItemCategory[]
+  unit         Unit           @relation(fields: [unitId], references: [id])
+  unitId       String
 }
 
 model ItemCategory {

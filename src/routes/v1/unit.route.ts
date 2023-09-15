@@ -3,15 +3,16 @@ import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
 import { unitValidation } from '../../validations';
 import { unitController } from '../../controllers';
+import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
-router
+router.use(authSession({ unit: false }))
   .route('/')
   .post(auth('manageUnits'), validate(unitValidation.createUnit), unitController.createUnit)
   .get(auth('getUnits'), validate(unitValidation.getUnits), unitController.getUnits);
 
-router
+router.use(authSession({ unit: false }))
   .route('/:unitId')
   .get(auth('getUnits'), validate(unitValidation.getUnit), unitController.getUnit)
   .patch(auth('manageUnits'), validate(unitValidation.updateUnit), unitController.updateUnit)

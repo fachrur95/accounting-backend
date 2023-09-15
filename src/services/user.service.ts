@@ -3,6 +3,9 @@ import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/ApiError';
 import { encryptPassword } from '../utils/encryption';
+import { PaginationResponse } from '../types/response';
+import getPagination from '../utils/pagination';
+import { NestedObject } from '../utils/pickNested';
 
 /**
  * Create a user
@@ -45,6 +48,7 @@ const queryUsers = async <Key extends keyof User>(
     sortBy?: string;
     sortType?: 'asc' | 'desc';
   },
+  conditions?: NestedObject,
   keys: Key[] = [
     'id',
     'email',
@@ -55,19 +59,30 @@ const queryUsers = async <Key extends keyof User>(
     'createdAt',
     'updatedAt'
   ] as Key[]
-): Promise<Pick<User, Key>[]> => {
+): Promise<PaginationResponse<Pick<User, Key>>> => {
   const page = options.page ?? 1;
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const countAll = await prisma.user.count({
+    where: { ...filter, ...conditions }
+  });
   const users = await prisma.user.findMany({
-    where: filter,
+    where: { ...filter, ...conditions },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
     skip: page * limit,
     take: limit,
     orderBy: sortBy ? { [sortBy]: sortType } : undefined
   });
-  return users as Pick<User, Key>[];
+  const { totalPages, nextPage } = getPagination({ page, countAll, limit });
+  return {
+    currentPage: page,
+    totalPages,
+    nextPage,
+    countRows: users.length,
+    countAll,
+    rows: users as Pick<User, Key>[],
+  };
 };
 
 /**

@@ -35,7 +35,8 @@ const updateUnit = catchAsync(async (req, res) => {
 
 const deleteUnit = catchAsync(async (req, res) => {
   await unitService.deleteUnitById(req.params.unitId);
-  res.status(httpStatus.NO_CONTENT).send();
+  // res.status(httpStatus.NO_CONTENT).send();
+  res.status(httpStatus.OK).send({ id: req.params.unitId, message: "Deleted" });
 });
 
 export default {

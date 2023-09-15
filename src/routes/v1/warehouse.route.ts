@@ -3,19 +3,40 @@ import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
 import { warehouseValidation } from '../../validations';
 import { warehouseController } from '../../controllers';
+import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
-router
+router.use(authSession())
   .route('/')
-  .post(auth('manageWarehouses'), validate(warehouseValidation.createWarehouse), warehouseController.createWarehouse)
-  .get(auth('getWarehouses'), validate(warehouseValidation.getWarehouses), warehouseController.getWarehouses);
+  .post(
+    auth('manageWarehouses'),
+    validate(warehouseValidation.createWarehouse),
+    warehouseController.createWarehouse
+  )
+  .get(
+    auth('getWarehouses'),
+    validate(warehouseValidation.getWarehouses),
+    warehouseController.getWarehouses
+  );
 
-router
+router.use(authSession())
   .route('/:warehouseId')
-  .get(auth('getWarehouses'), validate(warehouseValidation.getWarehouse), warehouseController.getWarehouse)
-  .patch(auth('manageWarehouses'), validate(warehouseValidation.updateWarehouse), warehouseController.updateWarehouse)
-  .delete(auth('manageWarehouses'), validate(warehouseValidation.deleteWarehouse), warehouseController.deleteWarehouse);
+  .get(
+    auth('getWarehouses'),
+    validate(warehouseValidation.getWarehouse),
+    warehouseController.getWarehouse
+  )
+  .patch(
+    auth('manageWarehouses'),
+    validate(warehouseValidation.updateWarehouse),
+    warehouseController.updateWarehouse
+  )
+  .delete(
+    auth('manageWarehouses'),
+    validate(warehouseValidation.deleteWarehouse),
+    warehouseController.deleteWarehouse
+  );
 
 export default router;
 
