@@ -53,25 +53,31 @@ const queryWarehouses = async <Key extends keyof Warehouse>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
-  const countAll = await prisma.warehouse.count({
-    where: { ...filter, ...conditions }
-  });
-  const warehouses = await prisma.warehouse.findMany({
-    where: { ...filter, ...conditions },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
-    skip: page * limit,
-    take: limit,
-    orderBy: sortBy ? { [sortBy]: sortType } : undefined
-  });
-  const { totalPages, nextPage } = getPagination({ page, countAll, limit });
-  return {
-    currentPage: page,
-    totalPages,
-    nextPage,
-    countRows: warehouses.length,
-    countAll,
-    rows: warehouses as Pick<Warehouse, Key>[],
-  };
+
+  const where = { ...filter, ...conditions };
+  try {
+    const getCountAll = prisma.warehouse.count({ where });
+    const getWarehouses = prisma.warehouse.findMany({
+      where,
+      select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      skip: page * limit,
+      take: limit,
+      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+    });
+    const [countAll, warehouses] = await Promise.all([getCountAll, getWarehouses]);
+    const { totalPages, nextPage } = getPagination({ page, countAll, limit });
+    return {
+      currentPage: page,
+      totalPages,
+      nextPage,
+      countRows: warehouses.length,
+      countAll,
+      rows: warehouses as Pick<Warehouse, Key>[],
+    };
+  } catch (error) {
+    // Tangani kesalahan jika ada
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
 };
 
 /**

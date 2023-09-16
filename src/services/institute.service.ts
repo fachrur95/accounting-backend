@@ -51,25 +51,31 @@ const queryInstitutes = async <Key extends keyof Institute>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
-  const countAll = await prisma.institute.count({
-    where: { ...filter, ...conditions }
-  });
-  const institutes = await prisma.institute.findMany({
-    where: { ...filter, ...conditions },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
-    skip: page * limit,
-    take: limit,
-    orderBy: sortBy ? { [sortBy]: sortType } : undefined
-  });
-  const { totalPages, nextPage } = getPagination({ page, countAll, limit });
-  return {
-    currentPage: page,
-    totalPages,
-    nextPage,
-    countRows: institutes.length,
-    countAll,
-    rows: institutes as Pick<Institute, Key>[],
-  };
+
+  const where = { ...filter, ...conditions };
+  try {
+    const getCountAll = prisma.institute.count({ where });
+    const getInstitutes = prisma.institute.findMany({
+      where,
+      select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      skip: page * limit,
+      take: limit,
+      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+    });
+    const [countAll, institutes] = await Promise.all([getCountAll, getInstitutes]);
+    const { totalPages, nextPage } = getPagination({ page, countAll, limit });
+    return {
+      currentPage: page,
+      totalPages,
+      nextPage,
+      countRows: institutes.length,
+      countAll,
+      rows: institutes as Pick<Institute, Key>[],
+    };
+  } catch (error) {
+    // Tangani kesalahan jika ada
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
 };
 
 /**

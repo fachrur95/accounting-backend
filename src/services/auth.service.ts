@@ -80,7 +80,6 @@ const setInstituteSession = async (instituteId: string, refreshToken: string): P
     const refreshTokenData = await tokenService.verifyToken(refreshToken, TokenType.REFRESH);
     const { userId } = refreshTokenData;
     await prisma.token.delete({ where: { id: refreshTokenData.id } });
-    console.log({ instituteId })
     return tokenService.generateAuthTokens({ id: userId }, { institute: instituteId });
   } catch (error) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
@@ -144,7 +143,6 @@ const verifyEmail = async (verifyEmailToken: string): Promise<void> => {
     });
     await userService.updateUserById(verifyEmailTokenData.userId, { isEmailVerified: true });
   } catch (error) {
-    console.log({ error })
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed');
   }
 };

@@ -64,25 +64,31 @@ const queryUsers = async <Key extends keyof User>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
-  const countAll = await prisma.user.count({
-    where: { ...filter, ...conditions }
-  });
-  const users = await prisma.user.findMany({
-    where: { ...filter, ...conditions },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
-    skip: page * limit,
-    take: limit,
-    orderBy: sortBy ? { [sortBy]: sortType } : undefined
-  });
-  const { totalPages, nextPage } = getPagination({ page, countAll, limit });
-  return {
-    currentPage: page,
-    totalPages,
-    nextPage,
-    countRows: users.length,
-    countAll,
-    rows: users as Pick<User, Key>[],
-  };
+
+  const where = { ...filter, ...conditions };
+  try {
+    const getCountAll = prisma.user.count({ where });
+    const getUsers = prisma.user.findMany({
+      where,
+      select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      skip: page * limit,
+      take: limit,
+      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+    });
+    const [countAll, users] = await Promise.all([getCountAll, getUsers]);
+    const { totalPages, nextPage } = getPagination({ page, countAll, limit });
+    return {
+      currentPage: page,
+      totalPages,
+      nextPage,
+      countRows: users.length,
+      countAll,
+      rows: users as Pick<User, Key>[],
+    };
+  } catch (error) {
+    // Tangani kesalahan jika ada
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
 };
 
 /**

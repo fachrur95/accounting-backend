@@ -29,7 +29,7 @@ router.post(
 router.post('/send-verification-email', auth(), authController.sendVerificationEmail);
 router.get('/verify-email', validate(authValidation.verifyEmail), authController.verifyEmail);
 
-router.get('/user', auth(), authController.userInfo);
+router.get('/session', auth(), authController.userInfo);
 
 router.get('/institutes',
   auth(),

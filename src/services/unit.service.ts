@@ -53,25 +53,31 @@ const queryUnits = async <Key extends keyof Unit>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
-  const countAll = await prisma.unit.count({
-    where: { ...filter, ...conditions }
-  });
-  const units = await prisma.unit.findMany({
-    where: { ...filter, ...conditions },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
-    skip: page * limit,
-    take: limit,
-    orderBy: sortBy ? { [sortBy]: sortType } : undefined
-  });
-  const { totalPages, nextPage } = getPagination({ page, countAll, limit });
-  return {
-    currentPage: page,
-    totalPages,
-    nextPage,
-    countRows: units.length,
-    countAll,
-    rows: units as Pick<Unit, Key>[],
-  };
+
+  const where = { ...filter, ...conditions };
+  try {
+    const getCountAll = prisma.unit.count({ where });
+    const getUnits = prisma.unit.findMany({
+      where,
+      select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      skip: page * limit,
+      take: limit,
+      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+    });
+    const [countAll, units] = await Promise.all([getCountAll, getUnits]);
+    const { totalPages, nextPage } = getPagination({ page, countAll, limit });
+    return {
+      currentPage: page,
+      totalPages,
+      nextPage,
+      countRows: units.length,
+      countAll,
+      rows: units as Pick<Unit, Key>[],
+    };
+  } catch (error) {
+    // Tangani kesalahan jika ada
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
 };
 
 /**
