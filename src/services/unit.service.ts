@@ -8,7 +8,7 @@ import getPagination from '../utils/pagination';
 
 /**
  * Create a unit
- * @param {Object} unitBody
+ * @param {Object} data
  * @returns {Promise<Unit>}
  */
 const createUnit = async (

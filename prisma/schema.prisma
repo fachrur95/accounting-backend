@@ -52,6 +52,11 @@ model Unit {
   ChartOfAccount ChartOfAccount[]
   PeopleCategory PeopleCategory[]
   ItemType       ItemType[]
+  UnitOfMeasure  UnitOfMeasure[]
+  PriceBook      PriceBook[]
+  MultipleUom    MultipleUom[]
+  Prefix         Prefix[]
+  Image          Image[]
 }
 
 model Warehouse {
@@ -110,6 +115,7 @@ model GeneralSetting {
 
 model PeopleCategory {
   id         String   @id @default(cuid())
+  code       String?
   name       String
   isCustomer Boolean
   isSupplier Boolean
@@ -124,12 +130,25 @@ model PeopleCategory {
 
 model People {
   id               String         @id @default(cuid())
+  code             String?
   name             String
   note             String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   peopleCategory   PeopleCategory @relation(fields: [peopleCategoryId], references: [id])
   peopleCategoryId String
+}
+
+model UnitOfMeasure {
+  id          String        @id @default(cuid())
+  code        String?
+  name        String
+  note        String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  unit        Unit          @relation(fields: [unitId], references: [id])
+  unitId      String
+  MultipleUom MultipleUom[]
 }
 
 model ItemType {
@@ -159,13 +178,85 @@ model ItemCategory {
 }
 
 model Item {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
+  code           String
   name           String
+  description    String?
   note           String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  itemCategory   ItemCategory @relation(fields: [itemCategoryId], references: [id])
+  minQty         Float         @default(0)
+  maxQty         Float         @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  itemCategory   ItemCategory  @relation(fields: [itemCategoryId], references: [id])
   itemCategoryId String
+  MultipleUom    MultipleUom[]
+  Images         Image[]
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  item      Item     @relation(fields: [itemId], references: [id])
+  itemId    String
+  unit      Unit     @relation(fields: [unitId], references: [id])
+  unitId    String
+}
+
+model MultipleUom {
+  id              String            @id @default(cuid())
+  convertionQty   Float             @default(1.0)
+  barcode         String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  unit            Unit              @relation(fields: [unitId], references: [id])
+  unitId          String
+  unitOfMeasure   UnitOfMeasure     @relation(fields: [unitOfMeasureId], references: [id])
+  unitOfMeasureId String
+  item            Item              @relation(fields: [itemId], references: [id])
+  itemId          String
+  PriceBookDetail PriceBookDetail[]
+
+  @@unique([unitId, barcode])
+  @@unique([unitOfMeasureId, itemId, unitId, convertionQty])
+}
+
+model PriceBook {
+  id              String            @id @default(cuid())
+  startDate       DateTime?
+  endDate         DateTime?
+  note            String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  unit            Unit              @relation(fields: [unitId], references: [id])
+  unitId          String
+  PriceBookDetail PriceBookDetail[]
+}
+
+model PriceBookDetail {
+  id            String      @id @default(cuid())
+  qty           Float       @default(1)
+  price         Float
+  discount      Float
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  priceBook     PriceBook   @relation(fields: [priceBookId], references: [id])
+  priceBookId   String
+  multipleUom   MultipleUom @relation(fields: [multipleUomId], references: [id])
+  multipleUomId String
+}
+
+model Prefix {
+  id              String   @id @default(cuid())
+  typeCode        String
+  name            String
+  transactionName String
+  lastCode        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  unit            Unit     @relation(fields: [unitId], references: [id])
+  unitId          String
 }
 
 enum BalanceSheet {

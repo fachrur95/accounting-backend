@@ -87,8 +87,8 @@ const setInstituteSession = async (instituteId: string, refreshToken: string): P
 };
 
 /**
- * Set institute into tokens
- * @param {string} instituteId
+ * Set unit into tokens
+ * @param {Object} session
  * @param {string} refreshToken
  * @returns {Promise<AuthTokensResponse>}
  */
