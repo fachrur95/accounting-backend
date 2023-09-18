@@ -35,7 +35,7 @@ model Token {
 
 model Institute {
   id        String   @id @default(cuid())
-  name      String
+  name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Unit      Unit[]
@@ -52,28 +52,33 @@ model Unit {
   ChartOfAccount ChartOfAccount[]
   PeopleCategory PeopleCategory[]
   ItemType       ItemType[]
-  UnitOfMeasure  UnitOfMeasure[]
   PriceBook      PriceBook[]
   MultipleUom    MultipleUom[]
   Prefix         Prefix[]
   Image          Image[]
+  Transaction    Transaction[]
+  GeneralSetting GeneralSetting?
+  UnitOfMeasure  UnitOfMeasure[]
+
+  @@unique([instituteId, name])
 }
 
 model Warehouse {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  unit      Unit     @relation(fields: [unitId], references: [id])
-  unitId    String
+  id          String        @id @default(cuid())
+  name        String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  unit        Unit          @relation(fields: [unitId], references: [id])
+  unitId      String
+  Transaction Transaction[]
 }
 
 model AccountClass {
   id                   String            @id @default(cuid())
   type                 BalanceSheet
-  code                 String
+  code                 String            @unique
   group                String?
-  name                 String
+  name                 String            @unique
   balanceSheetPosition Vector
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
@@ -82,9 +87,9 @@ model AccountClass {
 
 model AccountSubClass {
   id                   String           @id @default(cuid())
-  code                 String
+  code                 String           @unique
   group                String?
-  name                 String
+  name                 String           @unique
   balanceSheetPosition Vector
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
@@ -94,23 +99,27 @@ model AccountSubClass {
 }
 
 model ChartOfAccount {
-  id                String          @id @default(cuid())
+  id                String              @id @default(cuid())
   code              String
   group             String?
   name              String
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  accountSubClass   AccountSubClass @relation(fields: [accountSubClassId], references: [id])
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  accountSubClass   AccountSubClass     @relation(fields: [accountSubClassId], references: [id])
   accountSubClassId String
-  unit              Unit            @relation(fields: [unitId], references: [id])
+  unit              Unit                @relation(fields: [unitId], references: [id])
   unitId            String
+  TransactionDetail TransactionDetail[]
 }
 
 model GeneralSetting {
-  id          String   @id @default(cuid())
-  companyName String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String            @id @default(cuid())
+  companyName       String
+  recalculateMethod RecalculateMethod @default(AVG)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  unit              Unit              @relation(fields: [unitId], references: [id])
+  unitId            String            @unique
 }
 
 model PeopleCategory {
@@ -140,15 +149,16 @@ model People {
 }
 
 model UnitOfMeasure {
-  id          String        @id @default(cuid())
-  code        String?
-  name        String
-  note        String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  unit        Unit          @relation(fields: [unitId], references: [id])
-  unitId      String
-  MultipleUom MultipleUom[]
+  id                String              @id @default(cuid())
+  code              String?
+  name              String
+  note              String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  unit              Unit                @relation(fields: [unitId], references: [id])
+  unitId            String
+  MultipleUom       MultipleUom[]
+  TransactionDetail TransactionDetail[]
 }
 
 model ItemType {
@@ -248,15 +258,84 @@ model PriceBookDetail {
 }
 
 model Prefix {
-  id              String   @id @default(cuid())
-  typeCode        String
+  id              String          @id @default(cuid())
+  transactionType TransactionType
   name            String
   transactionName String
-  lastCode        Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  unit            Unit     @relation(fields: [unitId], references: [id])
+  lastCode        Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  unit            Unit            @relation(fields: [unitId], references: [id])
   unitId          String
+
+  @@unique([transactionType, unitId])
+}
+
+model Transaction {
+  id                String              @id @default(cuid())
+  transactionType   TransactionType
+  transactionNumber String
+  beforeTax         Float               @default(0)
+  taxValue          Float               @default(0)
+  total             Float               @default(0)
+  note              String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  unit              Unit                @relation(fields: [unitId], references: [id])
+  unitId            String
+  warehouse         Warehouse           @relation(fields: [warehouseId], references: [id])
+  warehouseId       String
+  TransactionDetail TransactionDetail[]
+}
+
+model TransactionDetail {
+  id               String          @id @default(cuid())
+  qtyInput         Float
+  priceInput       Float
+  discountInput    Float           @default(0)
+  vector           Vector
+  beforeDiscount   Float
+  discount         Float
+  amount           Float
+  taxValue         Float
+  total            Float
+  note             String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  transaction      Transaction     @relation(fields: [transactionId], references: [id])
+  transactionId    String
+  unitOfMeasure    UnitOfMeasure?  @relation(fields: [unitOfMeasureId], references: [id])
+  unitOfMeasureId  String?
+  chartOfAccount   ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
+  chartOfAccountId String?
+}
+
+enum TransactionType {
+  SALE_QUOTATION
+  SALE_ORDER
+  SALE_INVOICE
+  SALE_RETURN
+  PURCHASE_QUOTATION
+  PURCHASE_ORDER
+  PURCHASE_INVOICE
+  PURCHASE_RETURN
+  RECEIVEABLE_PAYMENT
+  DEBT_PAYMENT
+  EXPENSE
+  REVENUE
+  TRANSFER_FUND
+  TRANSFER_ITEM_SEND
+  TRANSFER_ITEM_RECEIVE
+  STOCK_OPNAME
+  JOURNAL_ENTRY
+  BEGINNING_BALANCE_STOCK
+  BEGINNING_BALANCE_DEBT
+  BEGINNING_BALANCE_RECEIVABLE
+}
+
+enum RecalculateMethod {
+  FIFO
+  AVG
 }
 
 enum BalanceSheet {

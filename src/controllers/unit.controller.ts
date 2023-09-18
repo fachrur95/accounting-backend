@@ -2,14 +2,15 @@ import httpStatus from 'http-status';
 import pick from '../utils/pick';
 import ApiError from '../utils/ApiError';
 import catchAsync from '../utils/catchAsync';
-import { unitService } from '../services';
+import { unitService, warehouseService } from '../services';
 import pickNested from '../utils/pickNested';
 import { FiltersType } from '../types/filtering';
 
 const createUnit = catchAsync(async (req, res) => {
   const { instituteId, name } = req.body;
   const unit = await unitService.createUnit({ instituteId, name, });
-  res.status(httpStatus.CREATED).send(unit);
+  const warehouse = await warehouseService.createWarehouse({ unitId: unit.id, name: `Main Warehouse ${name}`, });
+  res.status(httpStatus.CREATED).send({ ...unit, warehouse: [warehouse] });
 });
 
 const getUnits = catchAsync(async (req, res) => {
