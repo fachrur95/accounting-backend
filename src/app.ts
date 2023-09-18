@@ -30,6 +30,8 @@ app.use(express.json());
 // parse urlencoded request body
 app.use(express.urlencoded({ extended: true }));
 
+// app.use(multerUpload.array('files'));
+
 // sanitize request data
 app.use(xss());
 

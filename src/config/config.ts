@@ -65,5 +65,11 @@ export default {
       },
     },
     from: envVars.EMAIL_FROM
+  },
+  cloudinary: {
+    cloudName: envVars.CLOUDINARY_NAME,
+    key: envVars.CLOUDINARY_API_KEY,
+    secret: envVars.CLOUDINARY_API_SECRET,
+    url: envVars.CLOUDINARY_URL,
   }
 };

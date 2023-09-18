@@ -1,9 +1,10 @@
 export interface File {
-  name: string;
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
   size: number;
-  type: string;
-  extension: string;
-  content: ArrayBuffer;
+  buffer: Buffer;
 }
 
 export interface UploadedFile {
