@@ -11,15 +11,16 @@ datasource db {
 }
 
 model User {
-  id              String   @id @default(cuid())
-  email           String   @unique
+  id              String        @id @default(cuid())
+  email           String        @unique
   name            String?
   password        String
-  role            Role     @default(USER)
-  isEmailVerified Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  role            Role          @default(USER)
+  isEmailVerified Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   Token           Token[]
+  LogActivity     LogActivity[]
 }
 
 model Token {
@@ -37,7 +38,9 @@ model Institute {
   id        String   @id @default(cuid())
   name      String   @unique
   createdAt DateTime @default(now())
+  createdBy String
   updatedAt DateTime @updatedAt
+  updatedBy String?
   Unit      Unit[]
 }
 
@@ -45,7 +48,9 @@ model Unit {
   id             String           @id @default(cuid())
   name           String
   createdAt      DateTime         @default(now())
+  createdBy      String
   updatedAt      DateTime         @updatedAt
+  updatedBy      String?
   institute      Institute        @relation(fields: [instituteId], references: [id])
   instituteId    String
   Warehouse      Warehouse[]
@@ -67,7 +72,9 @@ model Warehouse {
   id          String        @id @default(cuid())
   name        String
   createdAt   DateTime      @default(now())
+  createdBy   String
   updatedAt   DateTime      @updatedAt
+  updatedBy   String?
   unit        Unit          @relation(fields: [unitId], references: [id])
   unitId      String
   Transaction Transaction[]
@@ -81,7 +88,9 @@ model AccountClass {
   name                 String            @unique
   balanceSheetPosition Vector
   createdAt            DateTime          @default(now())
+  createdBy            String
   updatedAt            DateTime          @updatedAt
+  updatedBy            String?
   AccountSubClass      AccountSubClass[]
 }
 
@@ -92,7 +101,9 @@ model AccountSubClass {
   name                 String           @unique
   balanceSheetPosition Vector
   createdAt            DateTime         @default(now())
+  createdBy            String
   updatedAt            DateTime         @updatedAt
+  updatedBy            String?
   accountClass         AccountClass     @relation(fields: [accountClassId], references: [id])
   accountClassId       String
   ChartOfAccount       ChartOfAccount[]
@@ -104,7 +115,9 @@ model ChartOfAccount {
   group             String?
   name              String
   createdAt         DateTime            @default(now())
+  createdBy         String
   updatedAt         DateTime            @updatedAt
+  updatedBy         String?
   accountSubClass   AccountSubClass     @relation(fields: [accountSubClassId], references: [id])
   accountSubClassId String
   unit              Unit                @relation(fields: [unitId], references: [id])
@@ -117,6 +130,7 @@ model GeneralSetting {
   companyName       String
   recalculateMethod RecalculateMethod @default(AVG)
   createdAt         DateTime          @default(now())
+  createdBy         String
   updatedAt         DateTime          @updatedAt
   unit              Unit              @relation(fields: [unitId], references: [id])
   unitId            String            @unique
@@ -131,7 +145,9 @@ model PeopleCategory {
   isEmployee Boolean
   note       String?
   createdAt  DateTime @default(now())
+  createdBy  String
   updatedAt  DateTime @updatedAt
+  updatedBy  String?
   People     People[]
   unit       Unit     @relation(fields: [unitId], references: [id])
   unitId     String
@@ -143,7 +159,9 @@ model People {
   name             String
   note             String?
   createdAt        DateTime       @default(now())
+  createdBy        String
   updatedAt        DateTime       @updatedAt
+  updatedBy        String?
   peopleCategory   PeopleCategory @relation(fields: [peopleCategoryId], references: [id])
   peopleCategoryId String
 }
@@ -154,7 +172,9 @@ model UnitOfMeasure {
   name              String
   note              String?
   createdAt         DateTime            @default(now())
+  createdBy         String
   updatedAt         DateTime            @updatedAt
+  updatedBy         String?
   unit              Unit                @relation(fields: [unitId], references: [id])
   unitId            String
   MultipleUom       MultipleUom[]
@@ -170,7 +190,9 @@ model ItemType {
   isAdjustment Boolean
   isTransfer   Boolean
   createdAt    DateTime       @default(now())
+  createdBy    String
   updatedAt    DateTime       @updatedAt
+  updatedBy    String?
   ItemCategory ItemCategory[]
   unit         Unit           @relation(fields: [unitId], references: [id])
   unitId       String
@@ -181,7 +203,9 @@ model ItemCategory {
   name       String
   note       String?
   createdAt  DateTime @default(now())
+  createdBy  String
   updatedAt  DateTime @updatedAt
+  updatedBy  String?
   itemType   ItemType @relation(fields: [itemTypeId], references: [id])
   itemTypeId String
   Item       Item[]
@@ -196,7 +220,9 @@ model Item {
   minQty         Float         @default(0)
   maxQty         Float         @default(0)
   createdAt      DateTime      @default(now())
+  createdBy      String
   updatedAt      DateTime      @updatedAt
+  updatedBy      String?
   itemCategory   ItemCategory  @relation(fields: [itemCategoryId], references: [id])
   itemCategoryId String
   MultipleUom    MultipleUom[]
@@ -207,8 +233,9 @@ model Image {
   id        String   @id @default(cuid())
   imageUrl  String
   createdAt DateTime @default(now())
+  createdBy String
   updatedAt DateTime @updatedAt
-  item      Item     @relation(fields: [itemId], references: [id])
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
   itemId    String
   unit      Unit     @relation(fields: [unitId], references: [id])
   unitId    String
@@ -219,12 +246,14 @@ model MultipleUom {
   convertionQty   Float             @default(1.0)
   barcode         String?
   createdAt       DateTime          @default(now())
+  createdBy       String
   updatedAt       DateTime          @updatedAt
+  updatedBy       String?
   unit            Unit              @relation(fields: [unitId], references: [id])
   unitId          String
-  unitOfMeasure   UnitOfMeasure     @relation(fields: [unitOfMeasureId], references: [id])
+  unitOfMeasure   UnitOfMeasure     @relation(fields: [unitOfMeasureId], references: [id], onDelete: Cascade)
   unitOfMeasureId String
-  item            Item              @relation(fields: [itemId], references: [id])
+  item            Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
   itemId          String
   PriceBookDetail PriceBookDetail[]
 
@@ -238,7 +267,9 @@ model PriceBook {
   endDate         DateTime?
   note            String?
   createdAt       DateTime          @default(now())
+  createdBy       String
   updatedAt       DateTime          @updatedAt
+  updatedBy       String?
   unit            Unit              @relation(fields: [unitId], references: [id])
   unitId          String
   PriceBookDetail PriceBookDetail[]
@@ -250,10 +281,12 @@ model PriceBookDetail {
   price         Float
   discount      Float
   createdAt     DateTime    @default(now())
+  createdBy     String
   updatedAt     DateTime    @updatedAt
-  priceBook     PriceBook   @relation(fields: [priceBookId], references: [id])
+  updatedBy     String?
+  priceBook     PriceBook   @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
   priceBookId   String
-  multipleUom   MultipleUom @relation(fields: [multipleUomId], references: [id])
+  multipleUom   MultipleUom @relation(fields: [multipleUomId], references: [id], onDelete: Cascade)
   multipleUomId String
 }
 
@@ -264,7 +297,9 @@ model Prefix {
   transactionName String
   lastCode        Int             @default(0)
   createdAt       DateTime        @default(now())
+  createdBy       String
   updatedAt       DateTime        @updatedAt
+  updatedBy       String?
   unit            Unit            @relation(fields: [unitId], references: [id])
   unitId          String
 
@@ -280,7 +315,11 @@ model Transaction {
   total             Float               @default(0)
   note              String?
   createdAt         DateTime            @default(now())
+  createdBy         String
   updatedAt         DateTime            @updatedAt
+  updatedBy         String?
+  deletedAt         DateTime?
+  deletedBy         String?
   unit              Unit                @relation(fields: [unitId], references: [id])
   unitId            String
   warehouse         Warehouse           @relation(fields: [warehouseId], references: [id])
@@ -301,13 +340,26 @@ model TransactionDetail {
   total            Float
   note             String?
   createdAt        DateTime        @default(now())
+  createdBy        String
   updatedAt        DateTime        @updatedAt
-  transaction      Transaction     @relation(fields: [transactionId], references: [id])
+  updatedBy        String?
+  transaction      Transaction     @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   transactionId    String
   unitOfMeasure    UnitOfMeasure?  @relation(fields: [unitOfMeasureId], references: [id])
   unitOfMeasureId  String?
   chartOfAccount   ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
   chartOfAccountId String?
+}
+
+model LogActivity {
+  id           String       @id @default(cuid())
+  message      String
+  data         String?
+  activityType ActivityType
+  createdAt    DateTime     @default(now())
+  createdBy    String
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId       String?
 }
 
 enum TransactionType {
@@ -334,8 +386,8 @@ enum TransactionType {
 }
 
 enum RecalculateMethod {
-  FIFO
   AVG
+  FIFO
 }
 
 enum BalanceSheet {
@@ -359,4 +411,15 @@ enum TokenType {
   REFRESH
   RESET_PASSWORD
   VERIFY_EMAIL
+}
+
+enum ActivityType {
+  REGISTER
+  LOGIN
+  VERIFY_EMAIL
+  RESET_PASSWORD
+  VIEW
+  INSERT
+  UPDATE
+  DELETE
 }
