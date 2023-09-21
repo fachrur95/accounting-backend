@@ -12,7 +12,7 @@ import getPagination from '../utils/pagination';
  * @returns {Promise<Warehouse>}
  */
 const createWarehouse = async (
-  data: { unitId: string, name: string },
+  data: { unitId: string, name: string, createdBy: string },
 ): Promise<Warehouse> => {
   if (await getWarehouseByName(data.unitId, data.name)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Warehouse name already taken');

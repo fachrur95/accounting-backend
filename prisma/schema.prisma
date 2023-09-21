@@ -123,12 +123,16 @@ model ChartOfAccount {
   unit              Unit                @relation(fields: [unitId], references: [id])
   unitId            String
   TransactionDetail TransactionDetail[]
+
+  @@unique([code, unitId])
+  @@unique([group, unitId])
 }
 
 model GeneralSetting {
   id                String            @id @default(cuid())
   companyName       String
   recalculateMethod RecalculateMethod @default(AVG)
+  isStrictMode      Boolean           @default(true)
   createdAt         DateTime          @default(now())
   createdBy         String
   updatedAt         DateTime          @updatedAt
@@ -243,7 +247,7 @@ model Image {
 
 model MultipleUom {
   id              String            @id @default(cuid())
-  convertionQty   Float             @default(1.0)
+  conversionQty   Float             @default(1.0)
   barcode         String?
   createdAt       DateTime          @default(now())
   createdBy       String
@@ -258,11 +262,12 @@ model MultipleUom {
   PriceBookDetail PriceBookDetail[]
 
   @@unique([unitId, barcode])
-  @@unique([unitOfMeasureId, itemId, unitId, convertionQty])
+  @@unique([unitOfMeasureId, itemId, unitId, conversionQty])
 }
 
 model PriceBook {
   id              String            @id @default(cuid())
+  name            String
   startDate       DateTime?
   endDate         DateTime?
   note            String?
@@ -273,6 +278,8 @@ model PriceBook {
   unit            Unit              @relation(fields: [unitId], references: [id])
   unitId          String
   PriceBookDetail PriceBookDetail[]
+
+  @@unique([name, unitId])
 }
 
 model PriceBookDetail {
@@ -294,7 +301,7 @@ model Prefix {
   id              String          @id @default(cuid())
   transactionType TransactionType
   name            String
-  transactionName String
+  prefix          String
   lastCode        Int             @default(0)
   createdAt       DateTime        @default(now())
   createdBy       String
@@ -411,6 +418,20 @@ enum TokenType {
   REFRESH
   RESET_PASSWORD
   VERIFY_EMAIL
+}
+
+enum TableLog {
+  USER
+  INSTITUTE
+  UNIT
+  WAREHOUSE
+  ACCOUNT_CLASS
+  ACCOUNT_SUB_CLASS
+  CHART_OF_ACCOUNT
+  GENERAL_SETTING
+  PEOPLE_CATEGORY
+  PEOPLE
+  UNIT_OF_MEASURE
 }
 
 enum ActivityType {

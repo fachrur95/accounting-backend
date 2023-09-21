@@ -5,11 +5,13 @@ import catchAsync from '../utils/catchAsync';
 import { unitService, warehouseService } from '../services';
 import pickNested from '../utils/pickNested';
 import { FiltersType } from '../types/filtering';
+import { SessionData } from '../types/session';
 
 const createUnit = catchAsync(async (req, res) => {
   const { instituteId, name } = req.body;
-  const unit = await unitService.createUnit({ instituteId, name, });
-  const warehouse = await warehouseService.createWarehouse({ unitId: unit.id, name: `Main Warehouse ${name}`, });
+  const user = req.user as SessionData;
+  const unit = await unitService.createUnit({ instituteId, name, createdBy: user.email });
+  const warehouse = await warehouseService.createWarehouse({ unitId: unit.id, name: `${name} Utama`, createdBy: user.email });
   res.status(httpStatus.CREATED).send({ ...unit, warehouse: [warehouse] });
 });
 

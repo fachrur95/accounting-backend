@@ -5,10 +5,12 @@ import catchAsync from '../utils/catchAsync';
 import { instituteService } from '../services';
 import pickNested from '../utils/pickNested';
 import { FiltersType } from '../types/filtering';
+import { SessionData } from '../types/session';
 
 const createInstitute = catchAsync(async (req, res) => {
   const { name } = req.body;
-  const institute = await instituteService.createInstitute(name);
+  const user = req.user as SessionData;
+  const institute = await instituteService.createInstitute({ name, createdBy: user.email });
   res.status(httpStatus.CREATED).send(institute);
 });
 

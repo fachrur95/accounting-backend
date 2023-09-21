@@ -8,17 +8,17 @@ import { NestedObject } from '../utils/pickNested';
 
 /**
  * Create a institute
- * @param {Object} instituteBody
+ * @param {Object} data
  * @returns {Promise<Institute>}
  */
 const createInstitute = async (
-  name: string,
+  data: Prisma.InstituteCreateInput
 ): Promise<Institute> => {
-  if (await getInstituteByName(name)) {
+  if (await getInstituteByName(data.name)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
   return prisma.institute.create({
-    data: { name, }
+    data
   });
 };
 

@@ -12,7 +12,7 @@ import getPagination from '../utils/pagination';
  * @returns {Promise<Unit>}
  */
 const createUnit = async (
-  data: { instituteId: string, name: string },
+  data: Prisma.UnitUncheckedCreateInput
 ): Promise<Unit> => {
   if (await getUnitByName(data.instituteId, data.name)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Unit name already taken');
