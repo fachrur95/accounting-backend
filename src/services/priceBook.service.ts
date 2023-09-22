@@ -89,7 +89,9 @@ const getPriceBookById = async <Key extends keyof PriceBook>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<PriceBook, Key> | null> => {

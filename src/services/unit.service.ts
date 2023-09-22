@@ -93,7 +93,9 @@ const getUnitById = async <Key extends keyof Unit>(
     'institute',
     'instituteId',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Unit, Key> | null> => {

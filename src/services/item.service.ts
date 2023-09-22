@@ -89,7 +89,9 @@ const getItemById = async <Key extends keyof Item>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Item, Key> | null> => {

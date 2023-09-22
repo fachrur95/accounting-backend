@@ -89,7 +89,9 @@ const getItemCategoryById = async <Key extends keyof ItemCategory>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<ItemCategory, Key> | null> => {

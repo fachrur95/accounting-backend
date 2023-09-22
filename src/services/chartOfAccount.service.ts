@@ -89,7 +89,9 @@ const getChartOfAccountById = async <Key extends keyof ChartOfAccount>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<ChartOfAccount, Key> | null> => {

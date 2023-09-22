@@ -89,7 +89,9 @@ const getUnitOfMeasureById = async <Key extends keyof UnitOfMeasure>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<UnitOfMeasure, Key> | null> => {

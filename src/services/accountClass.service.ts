@@ -89,7 +89,9 @@ const getAccountClassById = async <Key extends keyof AccountClass>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<AccountClass, Key> | null> => {

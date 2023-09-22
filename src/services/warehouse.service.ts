@@ -93,7 +93,9 @@ const getWarehouseById = async <Key extends keyof Warehouse>(
     'unit',
     'unitId',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Warehouse, Key> | null> => {

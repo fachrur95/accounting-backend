@@ -23,6 +23,8 @@ const allRoles = {
     'manageUnits',
     'getWarehouses',
     'manageWarehouses',
+    'getAccountClasses',
+    'manageAccountClasses',
   ]
 };
 

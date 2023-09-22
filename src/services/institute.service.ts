@@ -89,7 +89,9 @@ const getInstituteById = async <Key extends keyof Institute>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Institute, Key> | null> => {
