@@ -8,9 +8,9 @@ import { FiltersType } from '../types/filtering';
 import { SessionData } from '../types/session';
 
 const createAccountClass = catchAsync(async (req, res) => {
-  const { type, code, name, balanceSheetPosition } = req.body;
+  const { type, code, group, name, balanceSheetPosition } = req.body;
   const user = req.user as SessionData;
-  const accountclass = await accountClassService.createAccountClass({ type, code, name, balanceSheetPosition, createdBy: user.email });
+  const accountclass = await accountClassService.createAccountClass({ type, code, group, name, balanceSheetPosition, createdBy: user.email });
   res.status(httpStatus.CREATED).send(accountclass);
 });
 

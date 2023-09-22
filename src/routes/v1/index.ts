@@ -4,6 +4,7 @@ import userRoute from './user.route';
 import instituteRoute from './institute.route';
 import unitRoute from './unit.route';
 import warehouseRoute from './warehouse.route';
+import accountClassRoute from './accountClass.route';
 import uploadRoute from './upload.route';
 import docsRoute from './docs.route';
 import config from '../../config/config';
@@ -30,6 +31,10 @@ const defaultRoutes = [
   {
     path: '/warehouses',
     route: warehouseRoute
+  },
+  {
+    path: '/account-classes',
+    route: accountClassRoute
   },
   {
     path: '/upload',

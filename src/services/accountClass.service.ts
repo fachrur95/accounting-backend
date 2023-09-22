@@ -42,6 +42,8 @@ const queryAccountClasses = async <Key extends keyof AccountClass>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
+    'code',
+    'group',
     'name',
     'createdAt',
     'updatedAt'
