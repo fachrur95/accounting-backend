@@ -21,6 +21,7 @@ model User {
   updatedAt       DateTime      @updatedAt
   Token           Token[]
   LogActivity     LogActivity[]
+  UserUnit        UserUnit[]
 }
 
 model Token {
@@ -60,10 +61,10 @@ model Unit {
   PriceBook      PriceBook[]
   MultipleUom    MultipleUom[]
   Prefix         Prefix[]
-  Image          Image[]
   Transaction    Transaction[]
   GeneralSetting GeneralSetting?
   UnitOfMeasure  UnitOfMeasure[]
+  UserUnit       UserUnit[]
 
   @@unique([instituteId, name])
 }
@@ -78,6 +79,18 @@ model Warehouse {
   unit        Unit          @relation(fields: [unitId], references: [id])
   unitId      String
   Transaction Transaction[]
+}
+
+model UserUnit {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  createdBy String
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  unit      Unit     @relation(fields: [unitId], references: [id])
+  unitId    String
 }
 
 model AccountClass {
@@ -241,8 +254,6 @@ model Image {
   updatedAt DateTime @updatedAt
   item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
   itemId    String
-  unit      Unit     @relation(fields: [unitId], references: [id])
-  unitId    String
 }
 
 model MultipleUom {
@@ -262,7 +273,7 @@ model MultipleUom {
   PriceBookDetail PriceBookDetail[]
 
   @@unique([unitId, barcode])
-  @@unique([unitOfMeasureId, itemId, unitId, conversionQty])
+  @@unique([unitOfMeasureId, itemId, unitId])
 }
 
 model PriceBook {
@@ -295,6 +306,8 @@ model PriceBookDetail {
   priceBookId   String
   multipleUom   MultipleUom @relation(fields: [multipleUomId], references: [id], onDelete: Cascade)
   multipleUomId String
+
+  @@unique([priceBookId, multipleUomId])
 }
 
 model Prefix {
@@ -410,6 +423,7 @@ enum Vector {
 enum Role {
   USER
   ADMIN
+  AUDITOR
   SUPERADMIN
 }
 
@@ -437,9 +451,11 @@ enum TableLog {
 enum ActivityType {
   REGISTER
   LOGIN
+  LOGOUT
   VERIFY_EMAIL
   RESET_PASSWORD
   VIEW
+  READ
   INSERT
   UPDATE
   DELETE

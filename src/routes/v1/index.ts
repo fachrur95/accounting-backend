@@ -5,7 +5,16 @@ import instituteRoute from './institute.route';
 import unitRoute from './unit.route';
 import warehouseRoute from './warehouse.route';
 import accountClassRoute from './accountClass.route';
-import uploadRoute from './upload.route';
+import accountSubClassRoute from './accountSubClass.route';
+import chartOfAccountRoute from './chartOfAccount.route';
+import peopleRoute from './people.route';
+import peopleCategoryRoute from './peopleCategory.route';
+import unitOfMeasureRoute from './unitOfMeasure.route';
+import itemTypeRoute from './itemType.route';
+import itemCategoryRoute from './itemCategory.route';
+import itemRoute from './item.route';
+import priceBookRoute from './priceBook.route';
+// import uploadRoute from './upload.route';
 import docsRoute from './docs.route';
 import config from '../../config/config';
 
@@ -37,9 +46,45 @@ const defaultRoutes = [
     route: accountClassRoute
   },
   {
+    path: '/account-sub-classes',
+    route: accountSubClassRoute
+  },
+  {
+    path: '/chart-of-accounts',
+    route: chartOfAccountRoute
+  },
+  {
+    path: '/peoples',
+    route: peopleRoute
+  },
+  {
+    path: '/people-categories',
+    route: peopleCategoryRoute
+  },
+  {
+    path: '/unit-of-measurements',
+    route: unitOfMeasureRoute
+  },
+  {
+    path: '/item-types',
+    route: itemTypeRoute
+  },
+  {
+    path: '/item-categories',
+    route: itemCategoryRoute
+  },
+  {
+    path: '/items',
+    route: itemRoute
+  },
+  {
+    path: '/price-books',
+    route: priceBookRoute
+  },
+  /* {
     path: '/upload',
     route: uploadRoute
-  },
+  }, */
 ];
 
 const devRoutes = [

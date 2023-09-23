@@ -65,7 +65,7 @@ const updateItem = {
           conversionQty: Joi.number().min(1).required(),
           barcode: Joi.string(),
         })
-      ).min(1),
+      ),
       images: Joi.array().items(Joi.string())
     })
     .min(1)

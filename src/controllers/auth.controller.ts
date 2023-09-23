@@ -1,6 +1,6 @@
 import httpStatus from 'http-status';
 import catchAsync from '../utils/catchAsync';
-import { authService, userService, tokenService, emailService, instituteService, unitService } from '../services';
+import { authService, userService, tokenService, emailService, instituteService, unitService, logActivityService } from '../services';
 import exclude from '../utils/exclude';
 import { User } from '@prisma/client';
 import { CookieOptions } from 'express';
@@ -24,6 +24,12 @@ const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(email, password);
   const userWithoutPassword = exclude(user, ['password', 'createdAt', 'updatedAt']);
   const tokens = await tokenService.generateAuthTokens(user);
+  await logActivityService.createLogActivity({
+    message: `Create New Register`,
+    activityType: "REGISTER",
+    createdBy: user.email,
+    data: JSON.stringify({ email, password }),
+  });
   res.cookie(
     'jwt', tokens.access.token, cookieOptions(tokens.access.expires)
   ).status(httpStatus.CREATED).send({ user: userWithoutPassword, tokens });
@@ -33,6 +39,12 @@ const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
   const user = await authService.loginUserWithEmailAndPassword(email, password);
   const tokens = await tokenService.generateAuthTokens(user);
+  await logActivityService.createLogActivity({
+    message: `Logged In`,
+    activityType: "LOGIN",
+    createdBy: user.email,
+    data: JSON.stringify({ email, password }),
+  });
   res.cookie(
     'jwt', tokens.access.token, cookieOptions(tokens.access.expires)
   ).send({ user, tokens });
@@ -45,6 +57,12 @@ const logout = catchAsync(async (req, res) => {
     })
   }
   await authService.logout(req.body.refreshToken);
+  /* const user = req.user as SessionData;
+  await logActivityService.createLogActivity({
+    message: `Logged Out`,
+    activityType: "LOGOUT",
+    createdBy: user.email,
+  }); */
   res
     .clearCookie('jwt')
     .status(httpStatus.OK)
@@ -59,7 +77,13 @@ const refreshTokens = catchAsync(async (req, res) => {
 });
 
 const setInstitute = catchAsync(async (req, res) => {
+  const user = req.user as SessionData;
   const tokens = await authService.setInstituteSession(req.body.instituteId as string, req.body.refreshToken as string);
+  await logActivityService.createLogActivity({
+    message: `Set Institute with id "${req.body.instituteId}"`,
+    activityType: "LOGIN",
+    createdBy: user.email,
+  });
   res.cookie(
     'jwt', tokens.access.token, cookieOptions(tokens.access.expires)
   ).send({ ...tokens });
@@ -76,16 +100,27 @@ const setUnit = catchAsync(async (req, res) => {
     instituteId: user.session.institute.id as string,
     unitId: req.body.unitId as string
   }, req.body.refreshToken as string);
+  await logActivityService.createLogActivity({
+    message: `Set Unit with id "${req.body.unitId}"`,
+    activityType: "LOGIN",
+    createdBy: user.email,
+  });
   res.cookie(
     'jwt', tokens.access.token, cookieOptions(tokens.access.expires)
   ).send({ ...tokens });
 });
 
 const allowedInstitutes = catchAsync(async (req, res) => {
+  const user = req.user as SessionData;
   const filter = pick(req.query, ['name']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
   const conditions = pickNested(req.query?.filters as FiltersType);
-  const result = await instituteService.queryInstitutes(filter, options, conditions);
+  const result = await instituteService.queryInstitutes(filter, options, user, conditions);
+  await logActivityService.createLogActivity({
+    message: "Read All allowed Institute",
+    activityType: "READ",
+    createdBy: user.email,
+  });
   res.send(result);
 });
 
@@ -100,22 +135,39 @@ const allowedUnits = catchAsync(async (req, res) => {
       instituteId: user.session.institute.id
     }
   }
+  await logActivityService.createLogActivity({
+    message: "Read All allowed Unit",
+    activityType: "READ",
+    createdBy: user.email,
+  });
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
   const conditions = pickNested(req.query?.filters as FiltersType);
-  const result = await unitService.queryUnits({ ...filterInstitute }, options, conditions);
+  const result = await unitService.queryUnits({ ...filterInstitute }, options, user, conditions);
   res.send(result);
 });
 
 const forgotPassword = catchAsync(async (req, res) => {
+  const user = req.user as SessionData;
   const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body.email);
   await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
+  await logActivityService.createLogActivity({
+    message: "Request reset password",
+    activityType: "RESET_PASSWORD",
+    createdBy: user.email,
+  });
   res.status(httpStatus.CREATED).send({
     message: "Reset password request has been sent to your email."
   });
 });
 
 const resetPassword = catchAsync(async (req, res) => {
+  const user = req.user as SessionData;
   await authService.resetPassword(req.query.token as string, req.body.password);
+  await logActivityService.createLogActivity({
+    message: "Success Reset password",
+    activityType: "RESET_PASSWORD",
+    createdBy: user.email,
+  });
   res.status(httpStatus.ACCEPTED).send({
     message: "Password has been reset."
   });
@@ -125,13 +177,24 @@ const sendVerificationEmail = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
   await emailService.sendVerificationEmail(user.email, verifyEmailToken);
+  await logActivityService.createLogActivity({
+    message: "Request Verify email",
+    activityType: "VERIFY_EMAIL",
+    createdBy: user.email,
+  });
   res.status(httpStatus.CREATED).send({
     message: "Email confirmation has been sent."
   });
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
+  const user = req.user as SessionData;
   await authService.verifyEmail(req.query.token as string);
+  await logActivityService.createLogActivity({
+    message: "Success Verify email",
+    activityType: "VERIFY_EMAIL",
+    createdBy: user.email,
+  });
   res.status(httpStatus.ACCEPTED).send({
     message: "Email confirmed."
   });

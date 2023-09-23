@@ -48,7 +48,7 @@ const logout = async (refreshToken: string): Promise<void> => {
     }
   });
   if (!refreshTokenData) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Not found');
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Not found');
   }
   await prisma.token.delete({ where: { id: refreshTokenData.id } });
 };

@@ -5,6 +5,8 @@ import ApiError from '../utils/ApiError';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
+import { SessionData } from '../types/session';
+import userUnitService from './userUnit.service';
 
 /**
  * Create a institute
@@ -39,6 +41,7 @@ const queryInstitutes = async <Key extends keyof Institute>(
     sortBy?: string;
     sortType?: 'asc' | 'desc';
   },
+  user: SessionData,
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
@@ -53,6 +56,13 @@ const queryInstitutes = async <Key extends keyof Institute>(
   const sortType = options.sortType ?? 'asc';
 
   const where = { ...filter, ...conditions };
+
+  if (user.role !== "SUPERADMIN" && user.role !== "AUDITOR") {
+    const { institutes: allowedInstitutes } = await userUnitService.queryUserUnits(user.id);
+
+    where["id"] = { in: allowedInstitutes };
+  }
+
   try {
     const getCountAll = prisma.institute.count({ where });
     const getInstitutes = prisma.institute.findMany({

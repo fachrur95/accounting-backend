@@ -5,6 +5,8 @@ import ApiError from '../utils/ApiError';
 import { NestedObject } from '../utils/pickNested';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
+import { SessionData } from '../types/session';
+import userUnitService from './userUnit.service';
 
 /**
  * Create a unit
@@ -39,6 +41,7 @@ const queryUnits = async <Key extends keyof Unit>(
     sortBy?: string;
     sortType?: 'asc' | 'desc';
   },
+  user: SessionData,
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
@@ -55,6 +58,13 @@ const queryUnits = async <Key extends keyof Unit>(
   const sortType = options.sortType ?? 'asc';
 
   const where = { ...filter, ...conditions };
+
+  if (user.role !== "SUPERADMIN" && user.role !== "AUDITOR") {
+    const { units: allowedUnits } = await userUnitService.queryUserUnits(user.id);
+
+    where["id"] = { in: allowedUnits };
+  }
+
   try {
     const getCountAll = prisma.unit.count({ where });
     const getUnits = prisma.unit.findMany({

@@ -14,6 +14,18 @@ const allRoles = {
     'getWarehouses',
     'manageWarehouses',
   ],
+  [Role.AUDITOR]: [
+    'getUsers',
+    'manageUsers',
+    'getInstitutes',
+    'manageInstitutes',
+    'getUnits',
+    'manageUnits',
+    'getWarehouses',
+    'manageWarehouses',
+    'getAccountClasses',
+    'manageAccountClasses',
+  ],
   [Role.SUPERADMIN]: [
     'getUsers',
     'manageUsers',

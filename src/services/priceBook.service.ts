@@ -6,24 +6,44 @@ import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
 
+interface ICreatePriceBookData extends Prisma.PriceBookUncheckedCreateInput {
+  priceBookDetail: Prisma.PriceBookDetailCreateManyPriceBookInput[],
+}
+
+interface IUpdatePriceBookData extends Prisma.PriceBookUncheckedUpdateInput {
+  priceBookDetail: Prisma.PriceBookDetailCreateManyPriceBookInput[],
+}
+
 /**
- * Create a pricebook
+ * Create a priceBook
  * @param {Object} data
  * @returns {Promise<PriceBook>}
  */
 const createPriceBook = async (
-  data: Prisma.PriceBookUncheckedCreateInput
+  data: ICreatePriceBookData
 ): Promise<PriceBook> => {
   if (await getPriceBookByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Price Book already taken');
   }
+  const { priceBookDetail, ...rest } = data;
+
   return prisma.priceBook.create({
-    data
+    data: {
+      ...rest,
+      PriceBookDetail: {
+        createMany: {
+          data: priceBookDetail.map((detail) => ({
+            ...detail,
+            createdBy: rest.createdBy,
+          }))
+        }
+      }
+    }
   });
 };
 
 /**
- * Query for pricebooks
+ * Query for priceBooks
  * @param {Object} filter - Mongo filter
  * @param {Object} options - Query options
  * @param {string} [options.sortBy] - Sort option in the format: sortField:(desc|asc)
@@ -62,15 +82,15 @@ const queryPriceBooks = async <Key extends keyof PriceBook>(
       take: limit,
       orderBy: sortBy ? { [sortBy]: sortType } : undefined
     });
-    const [countAll, pricebooks] = await Promise.all([getCountAll, getPriceBooks]);
+    const [countAll, priceBooks] = await Promise.all([getCountAll, getPriceBooks]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });
     return {
       currentPage: page,
       totalPages,
       nextPage,
-      countRows: pricebooks.length,
+      countRows: priceBooks.length,
       countAll,
-      rows: pricebooks as Pick<PriceBook, Key>[],
+      rows: priceBooks as Pick<PriceBook, Key>[],
     };
   } catch (error) {
     // Tangani kesalahan jika ada
@@ -79,7 +99,7 @@ const queryPriceBooks = async <Key extends keyof PriceBook>(
 };
 
 /**
- * Get pricebook by id
+ * Get priceBook by id
  * @param {ObjectId} id
  * @param {Array<Key>} keys
  * @returns {Promise<Pick<PriceBook, Key> | null>}
@@ -89,6 +109,7 @@ const getPriceBookById = async <Key extends keyof PriceBook>(
   keys: Key[] = [
     'id',
     'name',
+    'PriceBookDetail',
     'createdBy',
     'createdAt',
     'updatedBy',
@@ -102,7 +123,7 @@ const getPriceBookById = async <Key extends keyof PriceBook>(
 };
 
 /**
- * Get pricebook by email
+ * Get priceBook by email
  * @param {string} email
  * @param {Array<Key>} keys
  * @returns {Promise<Pick<PriceBook, Key> | null>}
@@ -124,43 +145,70 @@ const getPriceBookByName = async <Key extends keyof PriceBook>(
 };
 
 /**
- * Update pricebook by id
- * @param {ObjectId} pricebookId
+ * Update priceBook by id
+ * @param {ObjectId} priceBookId
  * @param {Object} updateBody
  * @returns {Promise<PriceBook>}
  */
 const updatePriceBookById = async <Key extends keyof PriceBook>(
-  pricebookId: string,
-  updateBody: Prisma.PriceBookUncheckedUpdateInput,
+  priceBookId: string,
+  updateBody: IUpdatePriceBookData,
   keys: Key[] = ['id', 'name'] as Key[]
 ): Promise<Pick<PriceBook, Key> | null> => {
-  const pricebook = await getPriceBookById(pricebookId, ['id', 'name']);
-  if (!pricebook) {
+  const priceBook = await getPriceBookById(priceBookId, ['id', 'name']);
+  if (!priceBook) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Price Book not found');
   }
   if (updateBody.name && (await getPriceBookByName(updateBody.name as string, updateBody.unitId as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Price Book name already taken');
   }
+  const { priceBookDetail, ...rest } = updateBody;
   const updatedPriceBook = await prisma.priceBook.update({
-    where: { id: pricebook.id },
-    data: updateBody,
+    where: { id: priceBook.id },
+    data: {
+      ...rest,
+      PriceBookDetail: {
+        deleteMany: {
+          priceBookId,
+          NOT: priceBookDetail.map(({ multipleUomId }) => ({
+            multipleUomId
+          }))
+        },
+        upsert: priceBookDetail.map((detail) => ({
+          where: {
+            priceBookId_multipleUomId: {
+              priceBookId,
+              multipleUomId: detail.multipleUomId,
+            }
+          },
+          create: {
+            ...detail,
+            createdBy: rest.updatedBy as string,
+          },
+          update: {
+            ...detail,
+            updatedBy: rest.updatedBy as string,
+          }
+        }))
+      }
+    },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   });
   return updatedPriceBook as Pick<PriceBook, Key> | null;
 };
 
 /**
- * Delete pricebook by id
- * @param {ObjectId} pricebookId
+ * Delete priceBook by id
+ * @param {ObjectId} priceBookId
  * @returns {Promise<PriceBook>}
  */
-const deletePriceBookById = async (pricebookId: string): Promise<PriceBook> => {
-  const pricebook = await getPriceBookById(pricebookId);
-  if (!pricebook) {
+const deletePriceBookById = async (priceBookId: string): Promise<PriceBook> => {
+  const priceBook = await getPriceBookById(priceBookId);
+  if (!priceBook) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Price Book not found');
   }
-  await prisma.priceBook.delete({ where: { id: pricebook.id } });
-  return pricebook;
+  await prisma.priceBook.delete({ where: { id: priceBook.id } });
+  return priceBook;
 };
 
 export default {

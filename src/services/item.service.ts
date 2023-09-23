@@ -5,6 +5,18 @@ import ApiError from '../utils/ApiError';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
+import uploadService from './upload.service';
+import { File } from '../types/file';
+
+interface ICreateItemData extends Prisma.ItemUncheckedCreateInput {
+  multipleUom: Prisma.MultipleUomCreateManyItemInput[],
+  images: File[],
+}
+
+interface IUpdateItemData extends Prisma.ItemUncheckedUpdateInput {
+  multipleUom: Prisma.MultipleUomCreateManyItemInput[],
+  images: File[],
+}
 
 /**
  * Create a item
@@ -12,13 +24,34 @@ import { NestedObject } from '../utils/pickNested';
  * @returns {Promise<Item>}
  */
 const createItem = async (
-  data: Prisma.ItemUncheckedCreateInput
+  data: ICreateItemData
 ): Promise<Item> => {
   if (await getItemByName(data.name)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item already taken');
   }
+  const { multipleUom, images, ...rest } = data;
+  const dataUploaded = await uploadService.upload(images);
+
   return prisma.item.create({
-    data
+    data: {
+      ...rest,
+      MultipleUom: {
+        createMany: {
+          data: multipleUom.map((uom) => ({
+            ...uom,
+            createdBy: rest.createdBy,
+          }))
+        },
+      },
+      Images: {
+        createMany: {
+          data: dataUploaded.map((uploaded) => ({
+            imageUrl: uploaded.secure_url,
+            createdBy: rest.createdBy
+          }))
+        }
+      }
+    }
   });
 };
 
@@ -130,7 +163,7 @@ const getItemByName = async <Key extends keyof Item>(
  */
 const updateItemById = async <Key extends keyof Item>(
   itemId: string,
-  updateBody: Prisma.ItemUncheckedUpdateInput,
+  updateBody: IUpdateItemData,
   keys: Key[] = ['id', 'name'] as Key[]
 ): Promise<Pick<Item, Key> | null> => {
   const item = await getItemById(itemId, ['id', 'name']);
@@ -140,9 +173,49 @@ const updateItemById = async <Key extends keyof Item>(
   if (updateBody.name && (await getItemByName(updateBody.name as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item name already taken');
   }
+  const { multipleUom, images, ...rest } = updateBody;
+  const dataUploaded = await uploadService.upload(images);
   const updatedItem = await prisma.item.update({
     where: { id: item.id },
-    data: updateBody,
+    data: {
+      ...rest,
+      MultipleUom: {
+        deleteMany: {
+          itemId,
+          NOT: multipleUom.map(({ unitOfMeasureId }) => ({
+            unitOfMeasureId
+          }))
+        },
+        upsert: multipleUom.map((uom) => ({
+          where: {
+            unitOfMeasureId_itemId_unitId: {
+              unitOfMeasureId: uom.unitOfMeasureId,
+              itemId,
+              unitId: uom.unitId,
+            }
+          },
+          create: {
+            ...uom,
+            createdBy: rest.updatedBy as string,
+          },
+          update: {
+            ...uom,
+            updatedBy: rest.updatedBy as string,
+          }
+        }))
+      },
+      Images: {
+        deleteMany: {
+          itemId,
+        },
+        createMany: {
+          data: dataUploaded.map((uploaded) => ({
+            imageUrl: uploaded.secure_url,
+            createdBy: rest.createdBy as string,
+          }))
+        }
+      }
+    },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   });
   return updatedItem as Pick<Item, Key> | null;

@@ -5,11 +5,15 @@ const storage = multer.memoryStorage();
 
 const fileFilter = (req: any, file: any, callback: any) => {
   const ext = path.extname(file.originalname);
-  if (ext === ".jpg" || ext === ".jpeg" || ext === ".png") {
-    callback(null, true);
-  } else {
-    callback(new Error("Image uploaded is not of type jpg/jpeg or png"), false);
+  if (
+    ext !== ".jpg" &&
+    ext !== ".jpeg" &&
+    ext !== ".png" &&
+    ext !== ".webp"
+  ) {
+    return callback(new Error("Image uploaded is not of type jpg/jpeg, png or webp"), false);
   }
+  callback(null, true);
 }
 
 const multerUpload = multer({ storage, fileFilter });
