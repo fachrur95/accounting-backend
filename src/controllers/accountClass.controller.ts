@@ -15,7 +15,7 @@ const createAccountClass = catchAsync(async (req, res) => {
 });
 
 const getAccountClasses = catchAsync(async (req, res) => {
-  const filter = pick(req.query, ['name', 'unitId']);
+  const filter = pick(req.query, ['code', 'name', 'unitId']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await accountClassService.queryAccountClasses(filter, options, conditions);
