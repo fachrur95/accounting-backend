@@ -13,7 +13,7 @@ interface ICreateItemData extends Prisma.ItemUncheckedCreateInput {
   images: File[],
 }
 
-interface IUpdateItemData extends Prisma.ItemUncheckedUpdateInput {
+interface IUpdateItemData extends Prisma.ItemUncheckedCreateInput {
   multipleUom: Prisma.MultipleUomCreateManyItemInput[],
   images: File[],
 }
@@ -40,6 +40,7 @@ const createItem = async (
           data: multipleUom.map((uom) => ({
             ...uom,
             createdBy: rest.createdBy,
+            unitId: rest.unitId,
           }))
         },
       },
@@ -47,7 +48,7 @@ const createItem = async (
         createMany: {
           data: dataUploaded.map((uploaded) => ({
             imageUrl: uploaded.secure_url,
-            createdBy: rest.createdBy
+            createdBy: rest.createdBy,
           }))
         }
       }
@@ -191,16 +192,18 @@ const updateItemById = async <Key extends keyof Item>(
             unitOfMeasureId_itemId_unitId: {
               unitOfMeasureId: uom.unitOfMeasureId,
               itemId,
-              unitId: uom.unitId,
+              unitId: rest.unitId as string,
             }
           },
           create: {
             ...uom,
             createdBy: rest.updatedBy as string,
+            unitId: rest.unitId as string,
           },
           update: {
             ...uom,
             updatedBy: rest.updatedBy as string,
+            unitId: rest.unitId as string,
           }
         }))
       },

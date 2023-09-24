@@ -55,6 +55,7 @@ const updatePriceBook = {
       note: Joi.string(),
       priceBookDetail: Joi.array().items(
         Joi.object().keys({
+          id: Joi.string(),
           unitOfMeasureId: Joi.string().required(),
           qty: Joi.number().min(1).required(),
           price: Joi.number().min(1).required(),

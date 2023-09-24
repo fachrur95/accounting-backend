@@ -12,6 +12,7 @@ const createWarehouse = catchAsync(async (req, res) => {
   const { unitId, name } = req.body;
   const warehouse = await warehouseService.createWarehouse({ unitId, name, createdBy: user.email });
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: "Create Warehouse",
     activityType: "INSERT",
     createdBy: user.email,
@@ -27,6 +28,7 @@ const getWarehouses = catchAsync(async (req, res) => {
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await warehouseService.queryWarehouses(filter, options, conditions);
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: "Read All Warehouse",
     activityType: "READ",
     createdBy: user.email,
@@ -41,6 +43,7 @@ const getWarehouse = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Warehouse not found');
   }
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: `Read By Id "${req.params.warehouseId}" Item`,
     activityType: "READ",
     createdBy: user.email,
@@ -55,6 +58,7 @@ const updateWarehouse = catchAsync(async (req, res) => {
     updatedBy: user.email,
   });
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: "Update Data Warehouse",
     activityType: "UPDATE",
     createdBy: user.email,
@@ -67,6 +71,7 @@ const deleteWarehouse = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   await warehouseService.deleteWarehouseById(req.params.warehouseId);
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: `Delete Id "${req.params.warehouseId}" Warehouse`,
     activityType: "DELETE",
     createdBy: user.email,

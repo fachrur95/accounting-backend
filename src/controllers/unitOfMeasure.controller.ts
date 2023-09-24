@@ -12,6 +12,7 @@ const createUnitOfMeasure = catchAsync(async (req, res) => {
   const { code, name, note } = req.body;
   const unitOfMeasure = await unitOfMeasureService.createUnitOfMeasure({ code, name, note, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: "Create Unit of Measure",
     activityType: "INSERT",
     createdBy: user.email,
@@ -27,6 +28,7 @@ const getUnitOfMeasures = catchAsync(async (req, res) => {
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await unitOfMeasureService.queryUnitOfMeasures(filter, options, conditions);
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: "Read All Unit of Measure",
     activityType: "READ",
     createdBy: user.email,
@@ -41,6 +43,7 @@ const getUnitOfMeasure = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'UnitOfMeasure not found');
   }
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: `Read By Id "${req.params.unitOfMeasureId}" Item`,
     activityType: "READ",
     createdBy: user.email,
@@ -55,6 +58,7 @@ const updateUnitOfMeasure = catchAsync(async (req, res) => {
     updatedBy: user.email,
   });
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: "Update Data Unit of Measure",
     activityType: "UPDATE",
     createdBy: user.email,
@@ -67,6 +71,7 @@ const deleteUnitOfMeasure = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   await unitOfMeasureService.deleteUnitOfMeasureById(req.params.unitOfMeasureId);
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: `Delete Id "${req.params.unitOfMeasureId}" Unit of Measure`,
     activityType: "DELETE",
     createdBy: user.email,

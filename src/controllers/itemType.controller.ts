@@ -12,6 +12,7 @@ const createItemType = catchAsync(async (req, res) => {
   const { name, isStock, isSale, isPurchase, isAdjustment, isTransfer } = req.body;
   const itemType = await itemTypeService.createItemType({ name, isStock, isSale, isPurchase, isAdjustment, isTransfer, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: "Create Item Type",
     activityType: "INSERT",
     createdBy: user.email,
@@ -27,6 +28,7 @@ const getItemTypes = catchAsync(async (req, res) => {
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await itemTypeService.queryItemTypes(filter, options, conditions);
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: "Read All Item Type",
     activityType: "READ",
     createdBy: user.email,
@@ -41,6 +43,7 @@ const getItemType = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'ItemType not found');
   }
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: `Read By Id "${req.params.itemTypeId}" Item`,
     activityType: "READ",
     createdBy: user.email,
@@ -53,8 +56,10 @@ const updateItemType = catchAsync(async (req, res) => {
   const itemType = await itemTypeService.updateItemTypeById(req.params.itemTypeId, {
     ...req.body,
     updatedBy: user.email,
+    unitId: user.session.unit?.id ?? ""
   });
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: "Update Data Item Type",
     activityType: "UPDATE",
     createdBy: user.email,
@@ -67,6 +72,7 @@ const deleteItemType = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   await itemTypeService.deleteItemTypeById(req.params.itemTypeId);
   await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id ?? "",
     message: `Delete Id "${req.params.itemTypeId}" Item Type`,
     activityType: "DELETE",
     createdBy: user.email,

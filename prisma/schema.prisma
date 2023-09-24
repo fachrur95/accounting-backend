@@ -65,6 +65,10 @@ model Unit {
   GeneralSetting GeneralSetting?
   UnitOfMeasure  UnitOfMeasure[]
   UserUnit       UserUnit[]
+  People         People[]
+  ItemCategory   ItemCategory[]
+  Item           Item[]
+  LogActivity    LogActivity[]
 
   @@unique([instituteId, name])
 }
@@ -181,21 +185,22 @@ model People {
   updatedBy        String?
   peopleCategory   PeopleCategory @relation(fields: [peopleCategoryId], references: [id])
   peopleCategoryId String
+  unit             Unit           @relation(fields: [unitId], references: [id])
+  unitId           String
 }
 
 model UnitOfMeasure {
-  id                String              @id @default(cuid())
-  code              String?
-  name              String
-  note              String?
-  createdAt         DateTime            @default(now())
-  createdBy         String
-  updatedAt         DateTime            @updatedAt
-  updatedBy         String?
-  unit              Unit                @relation(fields: [unitId], references: [id])
-  unitId            String
-  MultipleUom       MultipleUom[]
-  TransactionDetail TransactionDetail[]
+  id          String        @id @default(cuid())
+  code        String?
+  name        String
+  note        String?
+  createdAt   DateTime      @default(now())
+  createdBy   String
+  updatedAt   DateTime      @updatedAt
+  updatedBy   String?
+  unit        Unit          @relation(fields: [unitId], references: [id])
+  unitId      String
+  MultipleUom MultipleUom[]
 }
 
 model ItemType {
@@ -226,6 +231,8 @@ model ItemCategory {
   itemType   ItemType @relation(fields: [itemTypeId], references: [id])
   itemTypeId String
   Item       Item[]
+  unit       Unit     @relation(fields: [unitId], references: [id])
+  unitId     String
 }
 
 model Item {
@@ -244,6 +251,8 @@ model Item {
   itemCategoryId String
   MultipleUom    MultipleUom[]
   Images         Image[]
+  unit           Unit          @relation(fields: [unitId], references: [id])
+  unitId         String
 }
 
 model Image {
@@ -257,20 +266,21 @@ model Image {
 }
 
 model MultipleUom {
-  id              String            @id @default(cuid())
-  conversionQty   Float             @default(1.0)
-  barcode         String?
-  createdAt       DateTime          @default(now())
-  createdBy       String
-  updatedAt       DateTime          @updatedAt
-  updatedBy       String?
-  unit            Unit              @relation(fields: [unitId], references: [id])
-  unitId          String
-  unitOfMeasure   UnitOfMeasure     @relation(fields: [unitOfMeasureId], references: [id], onDelete: Cascade)
-  unitOfMeasureId String
-  item            Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  itemId          String
-  PriceBookDetail PriceBookDetail[]
+  id                String              @id @default(cuid())
+  conversionQty     Float               @default(1.0)
+  barcode           String?
+  createdAt         DateTime            @default(now())
+  createdBy         String
+  updatedAt         DateTime            @updatedAt
+  updatedBy         String?
+  unit              Unit                @relation(fields: [unitId], references: [id])
+  unitId            String
+  unitOfMeasure     UnitOfMeasure       @relation(fields: [unitOfMeasureId], references: [id], onDelete: Cascade)
+  unitOfMeasureId   String
+  item              Item                @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId            String
+  PriceBookDetail   PriceBookDetail[]
+  TransactionDetail TransactionDetail[]
 
   @@unique([unitId, barcode])
   @@unique([unitOfMeasureId, itemId, unitId])
@@ -307,7 +317,7 @@ model PriceBookDetail {
   multipleUom   MultipleUom @relation(fields: [multipleUomId], references: [id], onDelete: Cascade)
   multipleUomId String
 
-  @@unique([priceBookId, multipleUomId])
+  @@unique([priceBookId, multipleUomId, qty])
 }
 
 model Prefix {
@@ -365,8 +375,8 @@ model TransactionDetail {
   updatedBy        String?
   transaction      Transaction     @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   transactionId    String
-  unitOfMeasure    UnitOfMeasure?  @relation(fields: [unitOfMeasureId], references: [id])
-  unitOfMeasureId  String?
+  multipleUom      MultipleUom?    @relation(fields: [multipleUomId], references: [id], onDelete: Cascade)
+  multipleUomId    String?
   chartOfAccount   ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
   chartOfAccountId String?
 }
@@ -378,6 +388,8 @@ model LogActivity {
   activityType ActivityType
   createdAt    DateTime     @default(now())
   createdBy    String
+  unit         Unit?        @relation(fields: [unitId], references: [id])
+  unitId       String?
   user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId       String?
 }
