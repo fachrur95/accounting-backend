@@ -63,6 +63,9 @@ const queryPriceBooks = async <Key extends keyof PriceBook>(
   keys: Key[] = [
     'id',
     'name',
+    'peopleCategory',
+    'startDate',
+    'endDate',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -109,6 +112,9 @@ const getPriceBookById = async <Key extends keyof PriceBook>(
   keys: Key[] = [
     'id',
     'name',
+    'peopleCategory',
+    'startDate',
+    'endDate',
     'PriceBookDetail',
     'createdBy',
     'createdAt',

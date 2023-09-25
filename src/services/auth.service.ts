@@ -7,6 +7,8 @@ import prisma from '../client';
 import { encryptPassword, isPasswordMatch } from '../utils/encryption';
 import { AuthTokensResponse } from '../types/response';
 import exclude from '../utils/exclude';
+import { PayloadData } from '../types/session';
+import jwt from 'jsonwebtoken';
 
 /**
  * Login with username and password
@@ -61,10 +63,18 @@ const logout = async (refreshToken: string): Promise<void> => {
 const refreshAuth = async (refreshToken: string): Promise<AuthTokensResponse> => {
   try {
     const refreshTokenData = await tokenService.verifyToken(refreshToken, TokenType.REFRESH);
+    const payload = jwt.decode(refreshToken) as PayloadData;
     const { userId } = refreshTokenData;
     await prisma.token.delete({ where: { id: refreshTokenData.id } });
-    return tokenService.generateAuthTokens({ id: userId });
+    return tokenService.generateAuthTokens(
+      { id: userId },
+      {
+        institute: payload.session?.institute,
+        unit: payload.session?.unit
+      }
+    );
   } catch (error) {
+    console.log({ error })
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
   }
 };

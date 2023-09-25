@@ -3,10 +3,11 @@ import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
 import { itemCategoryValidation } from '../../validations';
 import { itemCategoryController } from '../../controllers';
+import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
-router
+router.use(authSession())
   .route('/')
   .post(
     auth('manageItemCategories'),
@@ -19,7 +20,7 @@ router
     itemCategoryController.getItemCategories
   );
 
-router
+router.use(authSession())
   .route('/:itemCategoryId')
   .get(
     auth('getItemCategories'),

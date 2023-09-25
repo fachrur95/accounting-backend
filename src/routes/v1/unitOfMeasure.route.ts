@@ -3,10 +3,11 @@ import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
 import { unitOfMeasureValidation } from '../../validations';
 import { unitOfMeasureController } from '../../controllers';
+import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
-router
+router.use(authSession())
   .route('/')
   .post(
     auth('manageUnitOfMeasures'),
@@ -19,7 +20,7 @@ router
     unitOfMeasureController.getUnitOfMeasures
   );
 
-router
+router.use(authSession())
   .route('/:unitOfMeasureId')
   .get(
     auth('getUnitOfMeasures'),

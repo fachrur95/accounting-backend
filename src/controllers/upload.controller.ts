@@ -13,7 +13,6 @@ const upload = catchAsync(async (req, res) => {
     return handleUpload(dataUri);
   });
   const data = await Promise.all(dataBuffer);
-  console.log({ data })
   res.status(httpStatus.CREATED).send({ data });
 });
 

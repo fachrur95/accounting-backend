@@ -3,10 +3,11 @@ import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
 import { itemTypeValidation } from '../../validations';
 import { itemTypeController } from '../../controllers';
+import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
-router
+router.use(authSession())
   .route('/')
   .post(
     auth('manageItemTypes'),
@@ -19,7 +20,7 @@ router
     itemTypeController.getItemTypes
   );
 
-router
+router.use(authSession())
   .route('/:itemTypeId')
   .get(
     auth('getItemTypes'),

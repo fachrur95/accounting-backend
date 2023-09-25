@@ -3,7 +3,7 @@ import path from "path";
 
 const storage = multer.memoryStorage();
 
-const fileFilter = (req: any, file: any, callback: any) => {
+const fileFilter = (_req: any, file: any, callback: any) => {
   const ext = path.extname(file.originalname);
   if (
     ext !== ".jpg" &&

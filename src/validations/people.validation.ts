@@ -6,9 +6,6 @@ const createPeople = {
     code: Joi.string(),
     name: Joi.string().required(),
     note: Joi.string(),
-    isCustomer: Joi.boolean().required(),
-    isSupplier: Joi.boolean().required(),
-    isEmployee: Joi.boolean().required(),
   })
 };
 
@@ -17,9 +14,6 @@ const getPeoples = {
     peopleCategoryId: Joi.string(),
     code: Joi.string(),
     name: Joi.string(),
-    isCustomer: Joi.boolean(),
-    isSupplier: Joi.boolean(),
-    isEmployee: Joi.boolean(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),

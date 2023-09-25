@@ -3,10 +3,11 @@ import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
 import { priceBookValidation } from '../../validations';
 import { priceBookController } from '../../controllers';
+import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
-router
+router.use(authSession())
   .route('/')
   .post(
     auth('managePriceBooks'),
@@ -19,7 +20,7 @@ router
     priceBookController.getPriceBooks
   );
 
-router
+router.use(authSession())
   .route('/:priceBookId')
   .get(
     auth('getPriceBooks'),

@@ -11,6 +11,7 @@ const createItemCategory = {
 const getItemCategories = {
   query: Joi.object().keys({
     name: Joi.string(),
+    unitId: Joi.string(),
     itemTypeId: Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),

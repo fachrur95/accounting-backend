@@ -1,4 +1,4 @@
-import { Institute, Unit, User } from "@prisma/client";
+import { Institute, TokenType, Unit, User } from "@prisma/client";
 
 export interface Session {
   institute?: string;
@@ -8,6 +8,9 @@ export interface Session {
 export interface PayloadData {
   userId: string;
   session?: Session;
+  iat?: number;
+  exp?: number;
+  type?: TokenType;
 }
 
 export interface SessionData extends User {

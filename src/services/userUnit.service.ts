@@ -3,13 +3,9 @@ import prisma from '../client';
 import ApiError from '../utils/ApiError';
 
 /**
- * Query for userunits
- * @param {Object} filter - Mongo filter
- * @param {Object} options - Query options
- * @param {string} [options.sortBy] - Sort option in the format: sortField:(desc|asc)
- * @param {number} [options.limit] - Maximum number of results per page (default = 10)
- * @param {number} [options.page] - Current page (default = 1)
- * @returns {Promise<QueryResult>}
+ * Query for UserUnits
+ * @param {String} userId
+ * @returns {Promise<{units: String[], institutes: String[]}>}
  */
 const queryUserUnits = async (
   userId: string,
@@ -35,6 +31,55 @@ const queryUserUnits = async (
   }
 };
 
+/**
+ * Query for Allowed Institute
+ * @param {String} userId
+ * @param {String} instituteId
+ * @returns {Promise<Boolean>}
+ */
+const checkAllowedInstitute = async (
+  userId: string,
+  instituteId: string
+): Promise<boolean> => {
+  try {
+    const allowedInstitutes = await prisma.userUnit.count({
+      where: {
+        userId,
+        unit: {
+          instituteId
+        }
+      },
+    });
+    return allowedInstitutes > 0;
+  } catch (error) {
+    // Tangani kesalahan jika ada
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
+};
+
+/**
+ * Query for Allowed Unit
+ * @param {String} userId
+ * @param {String} unitId
+ * @returns {Promise<Boolean>}
+ */
+const checkAllowedUnit = async (
+  userId: string,
+  unitId: string,
+): Promise<boolean> => {
+  try {
+    const allowedUnits = await prisma.userUnit.count({
+      where: { userId, unitId },
+    });
+    return allowedUnits > 0;
+  } catch (error) {
+    // Tangani kesalahan jika ada
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
+};
+
 export default {
   queryUserUnits,
+  checkAllowedInstitute,
+  checkAllowedUnit,
 };

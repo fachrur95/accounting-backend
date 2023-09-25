@@ -16,13 +16,14 @@ const createItem = {
         barcode: Joi.string(),
       })
     ).min(1),
-    images: Joi.array().items(Joi.string())
+    files: Joi.array().items(Joi.string())
   })
 };
 
 const getItems = {
   query: Joi.object().keys({
     name: Joi.string(),
+    unitId: Joi.string(),
     itemCategoryId: Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
@@ -42,13 +43,13 @@ const getItems = {
 
 const getItem = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    itemId: Joi.string()
   })
 };
 
 const updateItem = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    itemId: Joi.string()
   }),
   body: Joi.object()
     .keys({
@@ -66,14 +67,14 @@ const updateItem = {
           barcode: Joi.string(),
         })
       ),
-      images: Joi.array().items(Joi.string())
+      files: Joi.array().items(Joi.string())
     })
     .min(1)
 };
 
 const deleteItem = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    itemId: Joi.string()
   })
 };
 

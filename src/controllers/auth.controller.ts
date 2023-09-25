@@ -1,6 +1,6 @@
 import httpStatus from 'http-status';
 import catchAsync from '../utils/catchAsync';
-import { authService, userService, tokenService, emailService, instituteService, unitService, logActivityService } from '../services';
+import { authService, userService, tokenService, emailService, instituteService, unitService, logActivityService, userUnitService } from '../services';
 import exclude from '../utils/exclude';
 import { User } from '@prisma/client';
 import { CookieOptions } from 'express';
@@ -54,7 +54,6 @@ const logout = catchAsync(async (req, res) => {
       error: 'Invalid jwt'
     })
   }
-  await authService.logout(req.body.refreshToken);
   /* const user = req.user as SessionData;
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
@@ -62,6 +61,7 @@ const logout = catchAsync(async (req, res) => {
     activityType: "LOGOUT",
     createdBy: user.email,
   }); */
+  await authService.logout(req.body.refreshToken);
   res
     .clearCookie('jwt')
     .status(httpStatus.OK)
@@ -77,6 +77,12 @@ const refreshTokens = catchAsync(async (req, res) => {
 
 const setInstitute = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
+  if (user.role !== "SUPERADMIN" && user.role !== "AUDITOR") {
+    const allowed = await userUnitService.checkAllowedInstitute(user.id, req.body.instituteId);
+    if (!allowed) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'You can not to use this institute. Please contact the administrator to allow you.');
+    }
+  }
   const tokens = await authService.setInstituteSession(req.body.instituteId as string, req.body.refreshToken as string);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
@@ -95,6 +101,12 @@ const setUnit = catchAsync(async (req, res) => {
     return res.status(httpStatus.UNAUTHORIZED).send({
       error: 'Invalid jwt'
     })
+  }
+  if (user.role !== "SUPERADMIN" && user.role !== "AUDITOR") {
+    const allowed = await userUnitService.checkAllowedUnit(user.id, req.body.unitId);
+    if (!allowed) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'You can not to use this unit. Please contact the administrator to allow you.');
+    }
   }
   const tokens = await authService.setUnitSession({
     instituteId: user.session.institute.id as string,

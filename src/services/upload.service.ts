@@ -10,6 +10,7 @@ const upload = async (files: File[]) => {
     return handleUpload(dataUri);
   });
   const dataUploaded = await Promise.all(dataBuffer);
+  console.log({ dataUploaded });
   return dataUploaded;
 }
 

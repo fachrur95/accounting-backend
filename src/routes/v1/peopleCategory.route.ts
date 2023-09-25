@@ -3,10 +3,11 @@ import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
 import { peopleCategoryValidation } from '../../validations';
 import { peopleCategoryController } from '../../controllers';
+import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
-router
+router.use(authSession())
   .route('/')
   .post(
     auth('managePeopleCategories'),
@@ -19,7 +20,7 @@ router
     peopleCategoryController.getPeopleCategories
   );
 
-router
+router.use(authSession())
   .route('/:peopleCategoryId')
   .get(
     auth('getPeopleCategories'),

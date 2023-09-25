@@ -89,6 +89,11 @@ const getItemTypeById = async <Key extends keyof ItemType>(
   keys: Key[] = [
     'id',
     'name',
+    'isStock',
+    'isSale',
+    'isPurchase',
+    'isAdjustment',
+    'isTransfer',
     'createdBy',
     'createdAt',
     'updatedBy',

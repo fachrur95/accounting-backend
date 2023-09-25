@@ -27,10 +27,10 @@ const verifyCallback =
       }
       req.user = user;
       if (params.institute === true && !user.session?.institute) {
-        return reject(new ApiError(httpStatus.FORBIDDEN, 'Forbidden'));
+        return reject(new ApiError(httpStatus.FORBIDDEN, 'Forbidden. Please choose institute first'));
       }
       if (params.unit === true && !user.session?.unit) {
-        return reject(new ApiError(httpStatus.FORBIDDEN, 'Forbidden'));
+        return reject(new ApiError(httpStatus.FORBIDDEN, 'Forbidden. Please choose unit first'));
       }
 
       resolve();

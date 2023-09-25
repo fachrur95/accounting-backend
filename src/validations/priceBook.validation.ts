@@ -3,12 +3,13 @@ import Joi from 'joi';
 const createPriceBook = {
   body: Joi.object().keys({
     name: Joi.string().required(),
+    peopleCategoryId: Joi.string(),
     startDate: Joi.date(),
     endDate: Joi.date(),
     note: Joi.string(),
     priceBookDetail: Joi.array().items(
       Joi.object().keys({
-        unitOfMeasureId: Joi.string().required(),
+        multipleUomId: Joi.string().required(),
         qty: Joi.number().min(1).required(),
         price: Joi.number().min(1).required(),
         discount: Joi.number().required(),
@@ -20,7 +21,7 @@ const createPriceBook = {
 const getPriceBooks = {
   query: Joi.object().keys({
     name: Joi.string(),
-    itemCategoryId: Joi.string(),
+    unitId: Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
@@ -39,24 +40,25 @@ const getPriceBooks = {
 
 const getPriceBook = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    priceBookId: Joi.string()
   })
 };
 
 const updatePriceBook = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    priceBookId: Joi.string()
   }),
   body: Joi.object()
     .keys({
       name: Joi.string(),
+      peopleCategoryId: Joi.string(),
       startDate: Joi.date(),
       endDate: Joi.date(),
       note: Joi.string(),
       priceBookDetail: Joi.array().items(
         Joi.object().keys({
           id: Joi.string(),
-          unitOfMeasureId: Joi.string().required(),
+          multipleUomId: Joi.string().required(),
           qty: Joi.number().min(1).required(),
           price: Joi.number().min(1).required(),
           discount: Joi.number().required(),
@@ -68,7 +70,7 @@ const updatePriceBook = {
 
 const deletePriceBook = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    priceBookId: Joi.string()
   })
 };
 

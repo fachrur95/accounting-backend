@@ -12,6 +12,7 @@ const getUnitOfMeasures = {
   query: Joi.object().keys({
     code: Joi.string(),
     name: Joi.string(),
+    unitId: Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),

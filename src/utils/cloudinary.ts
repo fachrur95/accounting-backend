@@ -1,5 +1,7 @@
 import cloudinary from 'cloudinary';
 import config from '../config/config';
+import ApiError from './ApiError';
+import httpStatus from 'http-status';
 
 const cloudinaryConfig = cloudinary.v2;
 
@@ -10,8 +12,13 @@ cloudinaryConfig.config({
 })
 
 export async function handleUpload(file: string) {
-  const res = await cloudinaryConfig.uploader.upload(file, {
-    resource_type: "auto",
-  });
-  return res;
+  try {
+    const res = await cloudinaryConfig.uploader.upload(file, {
+      resource_type: "auto",
+    });
+    console.log({ res })
+    return res;
+  } catch (error) {
+    throw new ApiError(httpStatus.NOT_IMPLEMENTED, 'Error upload');
+  }
 }

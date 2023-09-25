@@ -3,10 +3,11 @@ import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
 import { chartOfAccountValidation } from '../../validations';
 import { chartOfAccountController } from '../../controllers';
+import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
-router
+router.use(authSession())
   .route('/')
   .post(
     auth('manageChartOfAccounts'),
@@ -19,7 +20,7 @@ router
     chartOfAccountController.getChartOfAccounts
   );
 
-router
+router.use(authSession())
   .route('/:chartOfAccountId')
   .get(
     auth('getChartOfAccounts'),

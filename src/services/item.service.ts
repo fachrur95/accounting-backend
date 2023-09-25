@@ -7,6 +7,7 @@ import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
 import uploadService from './upload.service';
 import { File } from '../types/file';
+import { UploadApiResponse } from 'cloudinary';
 
 interface ICreateItemData extends Prisma.ItemUncheckedCreateInput {
   multipleUom: Prisma.MultipleUomCreateManyItemInput[],
@@ -30,7 +31,11 @@ const createItem = async (
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item already taken');
   }
   const { multipleUom, images, ...rest } = data;
-  const dataUploaded = await uploadService.upload(images);
+
+  let dataUploaded: UploadApiResponse[] = [];
+  if (images) {
+    dataUploaded = await uploadService.upload(images);
+  }
 
   return prisma.item.create({
     data: {
@@ -76,7 +81,11 @@ const queryItems = async <Key extends keyof Item>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
+    'code',
     'name',
+    'itemCategory',
+    'MultipleUom',
+    'Images',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -122,7 +131,13 @@ const getItemById = async <Key extends keyof Item>(
   id: string,
   keys: Key[] = [
     'id',
+    'code',
     'name',
+    'itemCategory',
+    'MultipleUom',
+    'Images',
+    'minQty',
+    'maxQty',
     'createdBy',
     'createdAt',
     'updatedBy',

@@ -158,20 +158,21 @@ model GeneralSetting {
 }
 
 model PeopleCategory {
-  id         String   @id @default(cuid())
+  id         String      @id @default(cuid())
   code       String?
   name       String
   isCustomer Boolean
   isSupplier Boolean
   isEmployee Boolean
   note       String?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime    @default(now())
   createdBy  String
-  updatedAt  DateTime @updatedAt
+  updatedAt  DateTime    @updatedAt
   updatedBy  String?
   People     People[]
-  unit       Unit     @relation(fields: [unitId], references: [id])
+  unit       Unit        @relation(fields: [unitId], references: [id])
   unitId     String
+  PriceBook  PriceBook[]
 }
 
 model People {
@@ -179,6 +180,7 @@ model People {
   code             String?
   name             String
   note             String?
+  isActive         Boolean        @default(true)
   createdAt        DateTime       @default(now())
   createdBy        String
   updatedAt        DateTime       @updatedAt
@@ -194,6 +196,7 @@ model UnitOfMeasure {
   code        String?
   name        String
   note        String?
+  isActive    Boolean       @default(true)
   createdAt   DateTime      @default(now())
   createdBy   String
   updatedAt   DateTime      @updatedAt
@@ -241,6 +244,7 @@ model Item {
   name           String
   description    String?
   note           String?
+  isActive       Boolean       @default(true)
   minQty         Float         @default(0)
   maxQty         Float         @default(0)
   createdAt      DateTime      @default(now())
@@ -287,18 +291,21 @@ model MultipleUom {
 }
 
 model PriceBook {
-  id              String            @id @default(cuid())
-  name            String
-  startDate       DateTime?
-  endDate         DateTime?
-  note            String?
-  createdAt       DateTime          @default(now())
-  createdBy       String
-  updatedAt       DateTime          @updatedAt
-  updatedBy       String?
-  unit            Unit              @relation(fields: [unitId], references: [id])
-  unitId          String
-  PriceBookDetail PriceBookDetail[]
+  id               String            @id @default(cuid())
+  name             String
+  startDate        DateTime?
+  endDate          DateTime?
+  note             String?
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  createdBy        String
+  updatedAt        DateTime          @updatedAt
+  updatedBy        String?
+  peopleCategory   PeopleCategory?   @relation(fields: [peopleCategoryId], references: [id])
+  peopleCategoryId String?
+  unit             Unit              @relation(fields: [unitId], references: [id])
+  unitId           String
+  PriceBookDetail  PriceBookDetail[]
 
   @@unique([name, unitId])
 }
