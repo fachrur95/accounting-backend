@@ -12,7 +12,7 @@ const createInstitute = catchAsync(async (req, res) => {
   const { name } = req.body;
   const institute = await instituteService.createInstitute({ name, createdBy: user.email });
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Create Institute",
     activityType: "INSERT",
     createdBy: user.email,
@@ -28,7 +28,7 @@ const getInstitutes = catchAsync(async (req, res) => {
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await instituteService.queryInstitutes(filter, options, user, conditions);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Read All Institute",
     activityType: "READ",
     createdBy: user.email,
@@ -43,7 +43,7 @@ const getInstitute = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Institute not found');
   }
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: `Read By Id "${req.params.instituteId}" Institute`,
     activityType: "READ",
     createdBy: user.email,
@@ -58,7 +58,7 @@ const updateInstitute = catchAsync(async (req, res) => {
     updatedBy: user.email,
   });
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Update Data Institute",
     activityType: "UPDATE",
     createdBy: user.email,
@@ -71,7 +71,7 @@ const deleteInstitute = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   await instituteService.deleteInstituteById(req.params.instituteId);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: `Delete Id "${req.params.instituteId}" Institute`,
     activityType: "DELETE",
     createdBy: user.email,

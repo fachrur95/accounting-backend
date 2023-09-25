@@ -10,15 +10,15 @@ import { SessionData } from '../types/session';
 const createAccountSubClass = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const { accountClassId, code, group, name, balanceSheetPosition } = req.body;
-  const accountSubclass = await accountSubClassService.createAccountSubClass({ accountClassId, code, group, name, balanceSheetPosition, createdBy: user.email });
+  const accountSubClass = await accountSubClassService.createAccountSubClass({ accountClassId, code, group, name, balanceSheetPosition, createdBy: user.email });
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Create Account Sub Class",
     activityType: "INSERT",
     createdBy: user.email,
-    data: JSON.stringify(accountSubclass),
+    data: JSON.stringify(accountSubClass),
   });
-  res.status(httpStatus.CREATED).send(accountSubclass);
+  res.status(httpStatus.CREATED).send(accountSubClass);
 });
 
 const getAccountSubClasses = catchAsync(async (req, res) => {
@@ -28,7 +28,7 @@ const getAccountSubClasses = catchAsync(async (req, res) => {
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await accountSubClassService.queryAccountSubClasses(filter, options, conditions);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Read All Account Sub Class",
     activityType: "READ",
     createdBy: user.email,
@@ -38,46 +38,46 @@ const getAccountSubClasses = catchAsync(async (req, res) => {
 
 const getAccountSubClass = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
-  const accountSubclass = await accountSubClassService.getAccountSubClassById(req.params.accountSubclassId);
-  if (!accountSubclass) {
+  const accountSubClass = await accountSubClassService.getAccountSubClassById(req.params.accountSubClassId);
+  if (!accountSubClass) {
     throw new ApiError(httpStatus.NOT_FOUND, 'AccountSubClass not found');
   }
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
-    message: `Read By Id "${req.params.accountSubclassId}" Account Sub Class`,
+    unitId: user.session?.unit?.id,
+    message: `Read By Id "${req.params.accountSubClassId}" Account Sub Class`,
     activityType: "READ",
     createdBy: user.email,
   });
-  res.send(accountSubclass);
+  res.send(accountSubClass);
 });
 
 const updateAccountSubClass = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
-  const accountSubclass = await accountSubClassService.updateAccountSubClassById(req.params.accountSubclassId, {
+  const accountSubClass = await accountSubClassService.updateAccountSubClassById(req.params.accountSubClassId, {
     ...req.body,
     updatedBy: user.email,
   });
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Update Data Account Sub Class",
     activityType: "UPDATE",
     createdBy: user.email,
-    data: JSON.stringify(accountSubclass),
+    data: JSON.stringify(accountSubClass),
   });
-  res.send(accountSubclass);
+  res.send(accountSubClass);
 });
 
 const deleteAccountSubClass = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
-  await accountSubClassService.deleteAccountSubClassById(req.params.accountSubclassId);
+  await accountSubClassService.deleteAccountSubClassById(req.params.accountSubClassId);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
-    message: `Delete Id "${req.params.accountSubclassId}" Account Sub Class`,
+    unitId: user.session?.unit?.id,
+    message: `Delete Id "${req.params.accountSubClassId}" Account Sub Class`,
     activityType: "DELETE",
     createdBy: user.email,
   });
   // res.status(httpStatus.NO_CONTENT).send();
-  res.status(httpStatus.OK).send({ id: req.params.accountSubclassId, message: "Deleted" });
+  res.status(httpStatus.OK).send({ id: req.params.accountSubClassId, message: "Deleted" });
 });
 
 export default {

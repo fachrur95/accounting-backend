@@ -26,7 +26,7 @@ const createItem = catchAsync(async (req, res) => {
     unitId: user.session.unit?.id ?? ""
   });
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Create Item",
     activityType: "INSERT",
     createdBy: user.email,
@@ -42,7 +42,7 @@ const getItems = catchAsync(async (req, res) => {
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await itemService.queryItems(filter, options, conditions);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Read All Item",
     activityType: "READ",
     createdBy: user.email,
@@ -57,7 +57,7 @@ const getItem = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Item not found');
   }
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: `Read By Id "${req.params.itemId}" Item`,
     activityType: "READ",
     createdBy: user.email,
@@ -80,7 +80,7 @@ const updateItem = catchAsync(async (req, res) => {
     }
   );
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Update Data Item",
     activityType: "UPDATE",
     createdBy: user.email,
@@ -93,7 +93,7 @@ const deleteItem = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   await itemService.deleteItemById(req.params.itemId);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: `Delete Id "${req.params.itemId}" Item`,
     activityType: "DELETE",
     createdBy: user.email,

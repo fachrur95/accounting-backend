@@ -57,7 +57,7 @@ const logout = catchAsync(async (req, res) => {
   await authService.logout(req.body.refreshToken);
   /* const user = req.user as SessionData;
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: `Logged Out`,
     activityType: "LOGOUT",
     createdBy: user.email,
@@ -79,7 +79,7 @@ const setInstitute = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const tokens = await authService.setInstituteSession(req.body.instituteId as string, req.body.refreshToken as string);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: `Set Institute with id "${req.body.instituteId}"`,
     activityType: "LOGIN",
     createdBy: user.email,
@@ -101,7 +101,7 @@ const setUnit = catchAsync(async (req, res) => {
     unitId: req.body.unitId as string
   }, req.body.refreshToken as string);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: `Set Unit with id "${req.body.unitId}"`,
     activityType: "LOGIN",
     createdBy: user.email,
@@ -118,7 +118,7 @@ const allowedInstitutes = catchAsync(async (req, res) => {
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await instituteService.queryInstitutes(filter, options, user, conditions);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Read All allowed Institute",
     activityType: "READ",
     createdBy: user.email,
@@ -138,7 +138,7 @@ const allowedUnits = catchAsync(async (req, res) => {
     }
   }
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Read All allowed Unit",
     activityType: "READ",
     createdBy: user.email,
@@ -154,7 +154,7 @@ const forgotPassword = catchAsync(async (req, res) => {
   const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body.email);
   await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Request reset password",
     activityType: "RESET_PASSWORD",
     createdBy: user.email,
@@ -168,7 +168,7 @@ const resetPassword = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   await authService.resetPassword(req.query.token as string, req.body.password);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Success Reset password",
     activityType: "RESET_PASSWORD",
     createdBy: user.email,
@@ -183,7 +183,7 @@ const sendVerificationEmail = catchAsync(async (req, res) => {
   const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
   await emailService.sendVerificationEmail(user.email, verifyEmailToken);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Request Verify email",
     activityType: "VERIFY_EMAIL",
     createdBy: user.email,
@@ -197,7 +197,7 @@ const verifyEmail = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   await authService.verifyEmail(req.query.token as string);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id ?? "",
+    unitId: user.session?.unit?.id,
     message: "Success Verify email",
     activityType: "VERIFY_EMAIL",
     createdBy: user.email,

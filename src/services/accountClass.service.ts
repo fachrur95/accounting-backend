@@ -42,9 +42,11 @@ const queryAccountClasses = async <Key extends keyof AccountClass>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
+    'type',
     'code',
     'group',
     'name',
+    'balanceSheetPosition',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -90,7 +92,11 @@ const getAccountClassById = async <Key extends keyof AccountClass>(
   id: string,
   keys: Key[] = [
     'id',
+    'type',
+    'code',
+    'group',
     'name',
+    'balanceSheetPosition',
     'createdBy',
     'createdAt',
     'updatedBy',
