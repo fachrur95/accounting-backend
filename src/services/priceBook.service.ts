@@ -176,18 +176,13 @@ const updatePriceBookById = async <Key extends keyof PriceBook>(
       PriceBookDetail: {
         deleteMany: {
           priceBookId,
-          NOT: priceBookDetail.map(({ multipleUomId, qty }) => ({
-            multipleUomId,
-            qty,
+          NOT: priceBookDetail.map(({ id }) => ({
+            id,
           }))
         },
         upsert: priceBookDetail.map((detail) => ({
           where: {
-            priceBookId_multipleUomId_qty: {
-              priceBookId,
-              multipleUomId: detail.multipleUomId,
-              qty: detail.qty ?? 1,
-            }
+            id: detail.id
           },
           create: {
             ...detail,

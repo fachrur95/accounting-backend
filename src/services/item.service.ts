@@ -198,17 +198,13 @@ const updateItemById = async <Key extends keyof Item>(
       MultipleUom: {
         deleteMany: {
           itemId,
-          NOT: multipleUom.map(({ unitOfMeasureId }) => ({
-            unitOfMeasureId
+          NOT: multipleUom.map(({ id }) => ({
+            id
           }))
         },
         upsert: multipleUom.map((uom) => ({
           where: {
-            unitOfMeasureId_itemId_unitId: {
-              unitOfMeasureId: uom.unitOfMeasureId,
-              itemId,
-              unitId: rest.unitId as string,
-            }
+            id: uom.id
           },
           create: {
             ...uom,
