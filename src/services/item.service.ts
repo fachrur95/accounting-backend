@@ -27,7 +27,7 @@ interface IUpdateItemData extends Prisma.ItemUncheckedCreateInput {
 const createItem = async (
   data: ICreateItemData
 ): Promise<Item> => {
-  if (await getItemByName(data.name)) {
+  if (await getItemByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item already taken');
   }
   const { multipleUom, images, ...rest } = data;
@@ -158,6 +158,7 @@ const getItemById = async <Key extends keyof Item>(
  */
 const getItemByName = async <Key extends keyof Item>(
   name: string,
+  unitId: string,
   keys: Key[] = [
     'id',
     'name',
@@ -166,7 +167,7 @@ const getItemByName = async <Key extends keyof Item>(
   ] as Key[]
 ): Promise<Pick<Item, Key> | null> => {
   return prisma.item.findFirst({
-    where: { name },
+    where: { name, unitId },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<Item, Key> | null>;
 };
@@ -186,7 +187,7 @@ const updateItemById = async <Key extends keyof Item>(
   if (!item) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Item not found');
   }
-  if (updateBody.name && (await getItemByName(updateBody.name as string))) {
+  if (updateBody.name && (await getItemByName(updateBody.name as string, updateBody.unitId as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item name already taken');
   }
   const { multipleUom, images, ...rest } = updateBody;

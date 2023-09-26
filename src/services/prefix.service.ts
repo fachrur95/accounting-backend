@@ -5,6 +5,7 @@ import ApiError from '../utils/ApiError';
 import { NestedObject } from '../utils/pickNested';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
+import defaultPrefix from '../utils/templates/prefix-default';
 
 /**
  * Create a prefix
@@ -135,6 +136,7 @@ const getPrefixByName = async <Key extends keyof Prefix>(
  * @returns {Promise<Prefix>}
  */
 const updatePrefixById = async <Key extends keyof Prefix>(
+  unitId: string,
   prefixId: string,
   updateBody: Prisma.PrefixUncheckedUpdateInput,
   keys: Key[] = ['id', 'name', 'unitId'] as Key[]
@@ -147,7 +149,7 @@ const updatePrefixById = async <Key extends keyof Prefix>(
     throw new ApiError(httpStatus.BAD_REQUEST, 'Prefix name already taken');
   }
   const updatedPrefix = await prisma.prefix.update({
-    where: { id: prefix.id },
+    where: { id: prefix.id, unitId },
     data: updateBody,
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   });
@@ -168,11 +170,19 @@ const deletePrefixById = async (prefixId: string): Promise<Prefix> => {
   return prefix;
 };
 
+/**
+ * Get default prefix
+ * @returns {Omit<Prisma.PrefixCreateInput, "createdBy" | "unit">[]}
+ */
+const getDefaultPrefix = (): Omit<Prisma.PrefixCreateInput, "createdBy" | "unit">[] => defaultPrefix;
+
+
 export default {
   createPrefix,
   queryPrefixes,
   getPrefixById,
   getPrefixByName,
   updatePrefixById,
-  deletePrefixById
+  deletePrefixById,
+  getDefaultPrefix,
 };

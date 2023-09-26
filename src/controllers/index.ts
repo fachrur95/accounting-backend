@@ -14,3 +14,4 @@ export { default as itemCategoryController } from './itemCategory.controller';
 export { default as itemController } from './item.controller';
 export { default as priceBookController } from './priceBook.controller';
 export { default as uploadController } from './upload.controller';
+export { default as prefixController } from './prefix.controller';

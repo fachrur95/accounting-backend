@@ -21,14 +21,18 @@ const getPrefixes = {
 
 const updatePrefix = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    unitId: Joi.string()
   }),
-  body: Joi.object()
-    .keys({
-      prefix: Joi.string(),
-      lastCode: Joi.number(),
-    })
-    .min(1)
+  body: Joi.object().keys({
+    prefixes: Joi.array().items(
+      Joi.object()
+        .keys({
+          id: Joi.string().required(),
+          prefix: Joi.string(),
+          lastCode: Joi.number(),
+        }).min(1)
+    ).min(1)
+  })
 };
 
 export default {

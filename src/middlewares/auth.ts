@@ -26,6 +26,9 @@ const verifyCallback =
         if (!hasRequiredRights && req.params.userId !== user.id) {
           return reject(new ApiError(httpStatus.FORBIDDEN, 'Forbidden'));
         }
+        if (req.params.unitId && user.session?.unit?.id !== req.params.unitId) {
+          return reject(new ApiError(httpStatus.FORBIDDEN, 'Forbidden. Your session unit not match with params'));
+        }
       }
 
       resolve();

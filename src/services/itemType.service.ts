@@ -14,7 +14,7 @@ import { NestedObject } from '../utils/pickNested';
 const createItemType = async (
   data: Prisma.ItemTypeUncheckedCreateInput
 ): Promise<ItemType> => {
-  if (await getItemTypeByName(data.name)) {
+  if (await getItemTypeByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item Type already taken');
   }
   return prisma.itemType.create({
@@ -114,6 +114,7 @@ const getItemTypeById = async <Key extends keyof ItemType>(
  */
 const getItemTypeByName = async <Key extends keyof ItemType>(
   name: string,
+  unitId: string,
   keys: Key[] = [
     'id',
     'name',
@@ -122,7 +123,7 @@ const getItemTypeByName = async <Key extends keyof ItemType>(
   ] as Key[]
 ): Promise<Pick<ItemType, Key> | null> => {
   return prisma.itemType.findFirst({
-    where: { name },
+    where: { name, unitId },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<ItemType, Key> | null>;
 };
@@ -142,7 +143,7 @@ const updateItemTypeById = async <Key extends keyof ItemType>(
   if (!itemType) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Item Type not found');
   }
-  if (updateBody.name && (await getItemTypeByName(updateBody.name as string))) {
+  if (updateBody.name && (await getItemTypeByName(updateBody.name as string, updateBody.unitId as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item Type name already taken');
   }
   const updatedItemType = await prisma.itemType.update({

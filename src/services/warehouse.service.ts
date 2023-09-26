@@ -14,7 +14,7 @@ import getPagination from '../utils/pagination';
 const createWarehouse = async (
   data: { unitId: string, name: string, createdBy: string },
 ): Promise<Warehouse> => {
-  if (await getWarehouseByName(data.unitId, data.name)) {
+  if (await getWarehouseByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Warehouse name already taken');
   }
   return prisma.warehouse.create({
@@ -112,8 +112,8 @@ const getWarehouseById = async <Key extends keyof Warehouse>(
  * @returns {Promise<Pick<Warehouse, Key> | null>}
  */
 const getWarehouseByName = async <Key extends keyof Warehouse>(
-  unitId: string,
   name: string,
+  unitId: string,
   keys: Key[] = [
     'id',
     'unitId',
@@ -143,7 +143,7 @@ const updateWarehouseById = async <Key extends keyof Warehouse>(
   if (!warehouse) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Warehouse not found');
   }
-  if (updateBody.name && (await getWarehouseByName(updateBody.unitId as string, updateBody.name as string))) {
+  if (updateBody.name && (await getWarehouseByName(updateBody.name as string, updateBody.unitId as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Warehouse name already taken');
   }
   const updatedWarehouse = await prisma.warehouse.update({

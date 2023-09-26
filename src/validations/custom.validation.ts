@@ -9,3 +9,14 @@ export const password: Joi.CustomValidator<string> = (value, helpers) => {
   }
   return value;
 };
+
+export const balance: Joi.CustomValidator<[]> = (array, helpers) => {
+  const totalDebit = array.reduce((sum: number, item: { debit: number; }) => sum + (item.debit ?? 0), 0);
+  const totalCredit = array.reduce((sum: number, item: { credit: number; }) => sum + (item.credit ?? 0), 0);
+
+  if (totalDebit !== totalCredit) {
+    return helpers.error('Total debit dan credit harus sama.');
+  }
+
+  return array;
+}

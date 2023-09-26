@@ -14,7 +14,7 @@ import { NestedObject } from '../utils/pickNested';
 const createChartOfAccount = async (
   data: Prisma.ChartOfAccountUncheckedCreateInput
 ): Promise<ChartOfAccount> => {
-  if (await getChartOfAccountByName(data.name)) {
+  if (await getChartOfAccountByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Chart Of Account already taken');
   }
   return prisma.chartOfAccount.create({
@@ -109,6 +109,7 @@ const getChartOfAccountById = async <Key extends keyof ChartOfAccount>(
  */
 const getChartOfAccountByName = async <Key extends keyof ChartOfAccount>(
   name: string,
+  unitId: string,
   keys: Key[] = [
     'id',
     'name',
@@ -117,7 +118,7 @@ const getChartOfAccountByName = async <Key extends keyof ChartOfAccount>(
   ] as Key[]
 ): Promise<Pick<ChartOfAccount, Key> | null> => {
   return prisma.chartOfAccount.findFirst({
-    where: { name },
+    where: { name, unitId },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<ChartOfAccount, Key> | null>;
 };
@@ -137,7 +138,7 @@ const updateChartOfAccountById = async <Key extends keyof ChartOfAccount>(
   if (!chartOfAccount) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Chart Of Account not found');
   }
-  if (updateBody.name && (await getChartOfAccountByName(updateBody.name as string))) {
+  if (updateBody.name && (await getChartOfAccountByName(updateBody.name as string, updateBody.unitId as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Chart Of Account name already taken');
   }
   const updatedChartOfAccount = await prisma.chartOfAccount.update({

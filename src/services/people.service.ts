@@ -14,7 +14,7 @@ import { NestedObject } from '../utils/pickNested';
 const createPeople = async (
   data: Prisma.PeopleUncheckedCreateInput
 ): Promise<People> => {
-  if (await getPeopleByName(data.name)) {
+  if (await getPeopleByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'People  already taken');
   }
   return prisma.people.create({
@@ -111,6 +111,7 @@ const getPeopleById = async <Key extends keyof People>(
  */
 const getPeopleByName = async <Key extends keyof People>(
   name: string,
+  unitId: string,
   keys: Key[] = [
     'id',
     'name',
@@ -119,7 +120,7 @@ const getPeopleByName = async <Key extends keyof People>(
   ] as Key[]
 ): Promise<Pick<People, Key> | null> => {
   return prisma.people.findFirst({
-    where: { name },
+    where: { name, unitId },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<People, Key> | null>;
 };
@@ -139,7 +140,7 @@ const updatePeopleById = async <Key extends keyof People>(
   if (!people) {
     throw new ApiError(httpStatus.NOT_FOUND, 'People  not found');
   }
-  if (updateBody.name && (await getPeopleByName(updateBody.name as string))) {
+  if (updateBody.name && (await getPeopleByName(updateBody.name as string, updateBody.unitId as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'People  name already taken');
   }
   const updatedPeople = await prisma.people.update({

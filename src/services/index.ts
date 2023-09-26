@@ -18,3 +18,4 @@ export { default as unitOfMeasureService } from './unitOfMeasure.service';
 export { default as priceBookService } from './priceBook.service';
 export { default as uploadService } from './upload.service';
 export { default as logActivityService } from './logActivity.service';
+export { default as prefixService } from './prefix.service';

@@ -14,7 +14,7 @@ import { NestedObject } from '../utils/pickNested';
 const createItemCategory = async (
   data: Prisma.ItemCategoryUncheckedCreateInput
 ): Promise<ItemCategory> => {
-  if (await getItemCategoryByName(data.name, data.itemTypeId)) {
+  if (await getItemCategoryByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
   return prisma.itemCategory.create({
@@ -109,7 +109,7 @@ const getItemCategoryById = async <Key extends keyof ItemCategory>(
  */
 const getItemCategoryByName = async <Key extends keyof ItemCategory>(
   name: string,
-  itemTypeId: string,
+  unitId: string,
   keys: Key[] = [
     'id',
     'name',
@@ -118,7 +118,7 @@ const getItemCategoryByName = async <Key extends keyof ItemCategory>(
   ] as Key[]
 ): Promise<Pick<ItemCategory, Key> | null> => {
   return prisma.itemCategory.findFirst({
-    where: { name, itemTypeId },
+    where: { name, unitId },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<ItemCategory, Key> | null>;
 };
@@ -138,7 +138,7 @@ const updateItemCategoryById = async <Key extends keyof ItemCategory>(
   if (!itemCategory) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Item Category not found');
   }
-  if (updateBody.name && (await getItemCategoryByName(updateBody.name as string, updateBody.itemTypeId as string))) {
+  if (updateBody.name && (await getItemCategoryByName(updateBody.name as string, updateBody.unitId as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item Category name already taken');
   }
   const updatedItemCategory = await prisma.itemCategory.update({

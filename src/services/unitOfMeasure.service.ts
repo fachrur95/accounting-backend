@@ -14,7 +14,7 @@ import { NestedObject } from '../utils/pickNested';
 const createUnitOfMeasure = async (
   data: Prisma.UnitOfMeasureUncheckedCreateInput
 ): Promise<UnitOfMeasure> => {
-  if (await getUnitOfMeasureByName(data.name)) {
+  if (await getUnitOfMeasureByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item Type already taken');
   }
   return prisma.unitOfMeasure.create({
@@ -109,6 +109,7 @@ const getUnitOfMeasureById = async <Key extends keyof UnitOfMeasure>(
  */
 const getUnitOfMeasureByName = async <Key extends keyof UnitOfMeasure>(
   name: string,
+  unitId: string,
   keys: Key[] = [
     'id',
     'name',
@@ -117,7 +118,7 @@ const getUnitOfMeasureByName = async <Key extends keyof UnitOfMeasure>(
   ] as Key[]
 ): Promise<Pick<UnitOfMeasure, Key> | null> => {
   return prisma.unitOfMeasure.findFirst({
-    where: { name },
+    where: { name, unitId },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<UnitOfMeasure, Key> | null>;
 };
@@ -137,7 +138,7 @@ const updateUnitOfMeasureById = async <Key extends keyof UnitOfMeasure>(
   if (!unitOfMeasure) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Item Type not found');
   }
-  if (updateBody.name && (await getUnitOfMeasureByName(updateBody.name as string))) {
+  if (updateBody.name && (await getUnitOfMeasureByName(updateBody.name as string, updateBody.unitId as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item Type name already taken');
   }
   const updatedUnitOfMeasure = await prisma.unitOfMeasure.update({
