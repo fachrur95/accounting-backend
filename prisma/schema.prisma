@@ -69,6 +69,9 @@ model Unit {
   ItemCategory   ItemCategory[]
   Item           Item[]
   LogActivity    LogActivity[]
+  Tax            Tax[]
+  StockCard      StockCard[]
+  ItemCogs       ItemCogs[]
 
   @@unique([instituteId, name])
 }
@@ -84,6 +87,7 @@ model Warehouse {
   unitId                 String
   Transaction            Transaction[] @relation("warehouse")
   TransactionDestination Transaction[] @relation("warehouseDestination")
+  StockCard              StockCard[]
 }
 
 model UserUnit {
@@ -209,6 +213,22 @@ model UnitOfMeasure {
   MultipleUom MultipleUom[]
 }
 
+model Tax {
+  id                String              @id @default(cuid())
+  name              String
+  rate              Float               @default(0)
+  note              String?
+  isActive          Boolean             @default(true)
+  createdAt         DateTime            @default(now())
+  createdBy         String
+  updatedAt         DateTime            @updatedAt
+  updatedBy         String?
+  unit              Unit                @relation(fields: [unitId], references: [id])
+  unitId            String
+  Item              Item[]
+  TransactionDetail TransactionDetail[]
+}
+
 model ItemType {
   id           String         @id @default(cuid())
   name         String
@@ -254,12 +274,16 @@ model Item {
   createdBy      String
   updatedAt      DateTime      @updatedAt
   updatedBy      String?
+  tax            Tax           @relation(fields: [taxId], references: [id])
+  taxId          String
   itemCategory   ItemCategory  @relation(fields: [itemCategoryId], references: [id])
   itemCategoryId String
   MultipleUom    MultipleUom[]
   Images         Image[]
   unit           Unit          @relation(fields: [unitId], references: [id])
   unitId         String
+  StockCard      StockCard[]
+  ItemCogs       ItemCogs[]
 }
 
 model Image {
@@ -351,9 +375,12 @@ model Transaction {
   transactionType          TransactionType
   transactionNumber        String
   paymentInput             Float
+  change                   Float               @default(0)
   beforeTax                Float               @default(0)
   taxValue                 Float               @default(0)
   total                    Float               @default(0)
+  totalPayment             Float               @default(0)
+  underPayment             Float               @default(0)
   entryDate                DateTime            @default(now())
   dueDate                  DateTime            @default(now())
   note                     String?
@@ -384,12 +411,14 @@ model TransactionDetail {
   qtyInput             Float           @default(0)
   priceInput           Float           @default(0)
   discountInput        Float           @default(0)
+  taxRate              Float           @default(0)
   vector               Vector
   beforeDiscount       Float
   discount             Float
   amount               Float
   taxValue             Float
   total                Float
+  cogs                 Float           @default(0)
   note                 String?
   createdAt            DateTime        @default(now())
   createdBy            String
@@ -401,8 +430,43 @@ model TransactionDetail {
   transactionPaymentId String?
   multipleUom          MultipleUom?    @relation(fields: [multipleUomId], references: [id], onDelete: Cascade)
   multipleUomId        String?
+  tax                  Tax?            @relation(fields: [taxId], references: [id])
+  taxId                String?
   chartOfAccount       ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
   chartOfAccountId     String?
+}
+
+model ItemCogs {
+  id        String   @id @default(cuid())
+  qty       Float
+  cogs      Float
+  date      DateTime
+  createdAt DateTime @default(now())
+  createdBy String
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId    String
+  unit      Unit     @relation(fields: [unitId], references: [id])
+  unitId    String
+}
+
+model StockCard {
+  id          String    @id @default(cuid())
+  qty         Float
+  incoming    Float
+  createdAt   DateTime  @default(now())
+  createdBy   String
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?
+  item        Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId      String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  warehouseId String
+  unit        Unit      @relation(fields: [unitId], references: [id])
+  unitId      String
+
+  @@unique([itemId, warehouseId, unitId])
 }
 
 model LogActivity {
