@@ -14,6 +14,7 @@ const createSalesPurchase = {
         multipleUomId: Joi.string(),
         chartOfAccountId: Joi.string(),
         qtyInput: Joi.number().min(1).required(),
+        conversionQty: Joi.number().min(1).required(),
         priceInput: Joi.number().min(0).required(),
         discountInput: Joi.number().min(0).required(),
         note: Joi.string(),
@@ -66,8 +67,8 @@ const createTransferFund = {
     transactionDetail: Joi.array().items(
       Joi.object().keys({
         itemId: Joi.string().required(),
-        multipleUomId: Joi.string().required(),
-        qtyInput: Joi.number().min(1).required(),
+        chartOfAccountId: Joi.string().required(),
+        priceInput: Joi.number().min(1).required(),
         note: Joi.string(),
       })
     ).min(1),
@@ -86,6 +87,7 @@ const createTransferItem = {
         itemId: Joi.string().required(),
         multipleUomId: Joi.string().required(),
         qtyInput: Joi.number().min(1).required(),
+        conversionQty: Joi.number().min(1).required(),
         note: Joi.string(),
       })
     ).min(1),
@@ -183,6 +185,7 @@ const updateSalesPurchase = {
           multipleUomId: Joi.string(),
           chartOfAccountId: Joi.string(),
           qtyInput: Joi.number().min(1).required(),
+          conversionQty: Joi.number().min(1).required(),
           priceInput: Joi.number().min(0).required(),
           discountInput: Joi.number().min(0).required(),
           note: Joi.string(),
@@ -247,8 +250,8 @@ const updateTransferFund = {
       transactionDetail: Joi.array().items(
         Joi.object().keys({
           itemId: Joi.string().required(),
-          multipleUomId: Joi.string().required(),
-          qtyInput: Joi.number().min(1).required(),
+          chartOfAccountId: Joi.string().required(),
+          priceInput: Joi.number().min(1).required(),
           note: Joi.string(),
         })
       ).min(1),
@@ -271,6 +274,7 @@ const updateTransferItem = {
           itemId: Joi.string().required(),
           multipleUomId: Joi.string().required(),
           qtyInput: Joi.number().min(1).required(),
+          conversionQty: Joi.number().min(1).required(),
           note: Joi.string(),
         })
       ).min(1),

@@ -5,17 +5,22 @@ import ApiError from '../utils/ApiError';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
+import itemCogsService from './itemCogs.service';
+
+interface TransactionDetailWithItemId extends Prisma.TransactionDetailCreateManyTransactionInput {
+  itemId: string;
+}
 
 interface ICreateTransactionData extends Prisma.TransactionUncheckedCreateInput {
-  transactionDetail: Prisma.TransactionDetailCreateManyTransactionInput[],
+  transactionDetail: TransactionDetailWithItemId[],
 }
 
 interface IUpdateTransactionData extends Prisma.TransactionUncheckedUpdateInput {
-  transactionDetail: Prisma.TransactionDetailCreateManyTransactionInput[],
+  transactionDetail: TransactionDetailWithItemId[],
 }
 
 interface ReduceAmount {
-  dataLine: Prisma.TransactionDetailCreateManyTransactionInput[],
+  dataLine: Omit<TransactionDetailWithItemId, "itemId">[],
   beforeTax: number,
   taxValue: number,
   total: number
@@ -34,15 +39,23 @@ const createSell = async (
   }
   const { transactionDetail, ...rest } = data;
 
+  const cogsArr: Promise<number>[] = [];
+
   const details = transactionDetail.reduce((obj, detail) => {
-    const beforeDiscount = (detail.qtyInput ?? 0) * (detail.priceInput ?? 0);
-    const discount = (detail.qtyInput ?? 0) * (detail.discountInput ?? 0);
-    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
-    const amount = ((detail.qtyInput ?? 0) * afterDiscount);
-    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
+    const { itemId, ...restDetail } = detail;
+    const qty = (detail.qtyInput ?? 0) * (restDetail.conversionQty ?? 0)
+    const beforeDiscount = qty * (restDetail.priceInput ?? 0);
+    const discount = qty * (restDetail.discountInput ?? 0);
+    const afterDiscount = (restDetail.priceInput ?? 0) - (restDetail.discountInput ?? 0);
+    const amount = (qty * afterDiscount);
+    const taxValue = amount * ((restDetail.taxRate ?? 0) / 100);
     const total = amount + taxValue;
+
+    cogsArr.push(itemCogsService.getCogs(itemId, rest.unitId, qty))
+
     obj.dataLine.push({
-      ...detail,
+      ...restDetail,
+      qty,
       beforeDiscount,
       discount,
       amount,
@@ -56,7 +69,14 @@ const createSell = async (
     return obj;
   }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
 
+  const dataCogs = await Promise.all(cogsArr);
+
   const { dataLine, beforeTax, taxValue, total } = details;
+
+  const dataTransactionDetail = dataLine.map((detail, index) => ({
+    ...detail,
+    cogs: dataCogs[index] ?? 0
+  }));
 
   const totalPayment = rest.paymentInput <= total
     ? rest.paymentInput
@@ -75,7 +95,7 @@ const createSell = async (
         underPayment: total - totalPayment,
         TransactionDetail: {
           createMany: {
-            data: dataLine
+            data: dataTransactionDetail
           }
         }
       }

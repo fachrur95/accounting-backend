@@ -1,5 +1,10 @@
 import prisma from '../client';
 
+interface ItemCogsTemp {
+  cogs: number;
+  qty: number;
+}
+
 /**
  * Query for get ItemCogs
  * @param {String} itemId
@@ -10,7 +15,7 @@ import prisma from '../client';
 const getCogs = async (
   itemId: string,
   unitId: string,
-  // qty: number,
+  qty: number,
 ): Promise<number> => {
   const method = await prisma.generalSetting.findUnique({
     where: { unitId },
@@ -32,17 +37,32 @@ const getCogs = async (
     return avg._avg.cogs ?? 0;
   }
 
-  const fifo = await prisma.itemCogs.findFirst({
-    where: { itemId, unitId },
+  const fifo = await prisma.itemCogs.findMany({
+    where: { itemId, unitId, qty: { gt: 0 } },
     orderBy: [
       { date: "asc" }
     ],
     select: {
       cogs: true,
+      qty: true,
     }
   });
 
-  return fifo?.cogs ?? 0;
+  let accumulatedQty = 0;
+  const itemsSelected: ItemCogsTemp[] = [];
+
+  for (const item of fifo) {
+    if (accumulatedQty + item.qty > qty) {
+      break;
+    }
+    itemsSelected.push(item);
+    accumulatedQty += item.qty;
+  }
+
+  const sumCogs = itemsSelected.reduce((sum, item) => sum + item.qty, 0);
+  const cogs = sumCogs / qty;
+
+  return cogs ?? 0;
 };
 
 export default {
