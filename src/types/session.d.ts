@@ -1,4 +1,4 @@
-import { Institute, TokenType, Unit, User } from "@prisma/client";
+import { Institute, Prisma, TokenType, Unit, User } from "@prisma/client";
 
 export interface Session {
   institute?: string;
@@ -13,9 +13,15 @@ export interface PayloadData {
   type?: TokenType;
 }
 
+type UnitWithInclude = Prisma.UnitGetPayload<{
+  include: {
+    GeneralSetting: true,
+  }
+}>
+
 export interface SessionData extends User {
   session?: {
     institute?: Institute,
-    unit?: Unit,
+    unit?: Prisma.UnitGetPayload,
   }
 }
