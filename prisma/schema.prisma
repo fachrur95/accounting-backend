@@ -411,8 +411,10 @@ model TransactionDetail {
   qtyInput             Float           @default(0)
   priceInput           Float           @default(0)
   discountInput        Float           @default(0)
+  conversionQty        Float           @default(1.0)
   taxRate              Float           @default(0)
   vector               Vector
+  qty                  Float
   beforeDiscount       Float
   discount             Float
   amount               Float
