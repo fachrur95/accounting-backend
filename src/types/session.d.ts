@@ -1,4 +1,4 @@
-import { Institute, Prisma, TokenType, Unit, User } from "@prisma/client";
+import { Institute, Prisma, TokenType, User } from "@prisma/client";
 
 export interface Session {
   institute?: string;

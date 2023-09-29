@@ -9,8 +9,8 @@ import { SessionData } from '../types/session';
 
 const createItemType = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { name, isStock, isSale, isPurchase, isAdjustment, isTransfer } = req.body;
-  const itemType = await itemTypeService.createItemType({ name, isStock, isSale, isPurchase, isAdjustment, isTransfer, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
+  const { name, isStock, isSale, isPurchase, isAdjustment, isTransfer, note, isActive } = req.body;
+  const itemType = await itemTypeService.createItemType({ name, isStock, isSale, isPurchase, isAdjustment, isTransfer, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Item Type",

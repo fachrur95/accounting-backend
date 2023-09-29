@@ -3,12 +3,14 @@ import Joi from 'joi';
 const createItem = {
   body: Joi.object().keys({
     itemCategoryId: Joi.string().required(),
+    taxId: Joi.string(),
     code: Joi.string().required(),
     name: Joi.string().required(),
     description: Joi.string(),
     minQty: Joi.number(),
     maxQty: Joi.number(),
     note: Joi.string(),
+    isActive: Joi.boolean(),
     multipleUom: Joi.array().items(
       Joi.object().keys({
         unitOfMeasureId: Joi.string().required(),
@@ -54,12 +56,14 @@ const updateItem = {
   body: Joi.object()
     .keys({
       itemCategoryId: Joi.string(),
+      taxId: Joi.string(),
       code: Joi.string(),
       name: Joi.string(),
       description: Joi.string(),
       minQty: Joi.number(),
       maxQty: Joi.number(),
       note: Joi.string(),
+      isActive: Joi.boolean(),
       multipleUom: Joi.array().items(
         Joi.object().keys({
           unitOfMeasureId: Joi.string().required(),

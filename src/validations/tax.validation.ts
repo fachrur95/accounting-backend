@@ -1,20 +1,19 @@
 import Joi from 'joi';
 
-const createPeople = {
+const createTax = {
   body: Joi.object().keys({
-    peopleCategoryId: Joi.string().required(),
-    code: Joi.string(),
     name: Joi.string().required(),
+    rate: Joi.number().required(),
     note: Joi.string(),
     isActive: Joi.boolean(),
   })
 };
 
-const getPeoples = {
+const getTaxes = {
   query: Joi.object().keys({
-    peopleCategoryId: Joi.string(),
     code: Joi.string(),
     name: Joi.string(),
+    unitId: Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
@@ -31,37 +30,36 @@ const getPeoples = {
   })
 };
 
-const getPeople = {
+const getTax = {
   params: Joi.object().keys({
-    peopleId: Joi.string()
+    taxId: Joi.string()
   })
 };
 
-const updatePeople = {
+const updateTax = {
   params: Joi.object().keys({
-    peopleId: Joi.string()
+    taxId: Joi.string()
   }),
   body: Joi.object()
     .keys({
-      peopleCategoryId: Joi.string(),
-      code: Joi.string(),
       name: Joi.string(),
+      rate: Joi.number(),
       note: Joi.string(),
       isActive: Joi.boolean(),
     })
     .min(1)
 };
 
-const deletePeople = {
+const deleteTax = {
   params: Joi.object().keys({
-    peopleId: Joi.string()
+    taxId: Joi.string()
   })
 };
 
 export default {
-  createPeople,
-  getPeoples,
-  getPeople,
-  updatePeople,
-  deletePeople
+  createTax,
+  getTaxes,
+  getTax,
+  updateTax,
+  deleteTax
 };

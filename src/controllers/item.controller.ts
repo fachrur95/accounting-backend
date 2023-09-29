@@ -10,16 +10,30 @@ import { File } from '../types/file';
 
 const createItem = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { itemCategoryId, code, name, description, minQty, maxQty, note, multipleUom } = req.body;
-  const images = req.files as File[];
-  const item = await itemService.createItem({
+  const {
     itemCategoryId,
+    taxId,
     code,
     name,
     description,
     minQty,
     maxQty,
     note,
+    isActive,
+    multipleUom,
+  } = req.body;
+
+  const images = req.files as File[];
+  const item = await itemService.createItem({
+    itemCategoryId,
+    taxId,
+    code,
+    name,
+    description,
+    minQty,
+    maxQty,
+    note,
+    isActive,
     multipleUom,
     images,
     createdBy: user.email,
@@ -35,7 +49,8 @@ const createItem = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send(item);
 });
 
-const getItems = catchAsync(async (req, res) => {
+const getItems = catchAsync(async (req,
+  res) => {
   const user = req.user as Required<SessionData>;
   const filter = pick(req.query, ['name', 'itemCategoryId', 'unitId']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);

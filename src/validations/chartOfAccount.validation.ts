@@ -6,6 +6,7 @@ const createChartOfAccount = {
     code: Joi.string().required(),
     group: Joi.string(),
     name: Joi.string().required(),
+    isActive: Joi.boolean(),
   })
 };
 
@@ -45,6 +46,7 @@ const updateChartOfAccount = {
       code: Joi.string(),
       group: Joi.string(),
       name: Joi.string(),
+      isActive: Joi.boolean(),
     })
     .min(1)
 };

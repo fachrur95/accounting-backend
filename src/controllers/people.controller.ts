@@ -9,12 +9,13 @@ import { SessionData } from '../types/session';
 
 const createPeople = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { peopleCategoryId, code, name, note } = req.body;
+  const { peopleCategoryId, code, name, note, isActive } = req.body;
   const people = await peopleService.createPeople({
     peopleCategoryId,
     code,
     name,
     note,
+    isActive,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });

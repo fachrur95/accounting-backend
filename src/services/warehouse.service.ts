@@ -8,7 +8,7 @@ import getPagination from '../utils/pagination';
 
 /**
  * Create a warehouse
- * @param {Object} warehouseBody
+ * @param {Object} data
  * @returns {Promise<Warehouse>}
  */
 const createWarehouse = async (

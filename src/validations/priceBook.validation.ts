@@ -7,6 +7,7 @@ const createPriceBook = {
     startDate: Joi.date(),
     endDate: Joi.date(),
     note: Joi.string(),
+    isActive: Joi.boolean(),
     priceBookDetail: Joi.array().items(
       Joi.object().keys({
         multipleUomId: Joi.string().required(),
@@ -55,6 +56,7 @@ const updatePriceBook = {
       startDate: Joi.date(),
       endDate: Joi.date(),
       note: Joi.string(),
+      isActive: Joi.boolean(),
       priceBookDetail: Joi.array().items(
         Joi.object().keys({
           id: Joi.string(),

@@ -6,6 +6,7 @@ export { default as warehouseValidation } from './warehouse.validation';
 export { default as accountClassValidation } from './accountClass.validation';
 export { default as accountSubClassValidation } from './accountSubClass.validation';
 export { default as chartOfAccountValidation } from './chartOfAccount.validation';
+export { default as taxValidation } from './tax.validation';
 export { default as itemTypeValidation } from './itemType.validation';
 export { default as itemCategoryValidation } from './itemCategory.validation';
 export { default as itemValidation } from './item.validation';

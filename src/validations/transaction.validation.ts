@@ -10,9 +10,9 @@ const createSalesPurchase = {
     note: Joi.string(),
     transactionDetail: Joi.array().items(
       Joi.object().keys({
-        itemId: Joi.string(),
         multipleUomId: Joi.string(),
         chartOfAccountId: Joi.string(),
+        taxId: Joi.string(),
         qtyInput: Joi.number().min(1).required(),
         conversionQty: Joi.number().min(1).required(),
         priceInput: Joi.number().min(0).required(),
@@ -50,6 +50,7 @@ const createLiability = {
     transactionDetail: Joi.array().items(
       Joi.object().keys({
         chartOfAccountId: Joi.string().required(),
+        taxId: Joi.string(),
         priceInput: Joi.number().min(0).required(),
         discountInput: Joi.number().min(0).required(),
         note: Joi.string(),
@@ -66,7 +67,6 @@ const createTransferFund = {
     note: Joi.string(),
     transactionDetail: Joi.array().items(
       Joi.object().keys({
-        itemId: Joi.string().required(),
         chartOfAccountId: Joi.string().required(),
         priceInput: Joi.number().min(1).required(),
         note: Joi.string(),
@@ -84,7 +84,6 @@ const createTransferItem = {
     note: Joi.string(),
     transactionDetail: Joi.array().items(
       Joi.object().keys({
-        itemId: Joi.string().required(),
         multipleUomId: Joi.string().required(),
         qtyInput: Joi.number().min(1).required(),
         conversionQty: Joi.number().min(1).required(),
@@ -132,7 +131,6 @@ const createBeginBalanceStock = {
     note: Joi.string(),
     transactionDetail: Joi.array().items(
       Joi.object().keys({
-        itemId: Joi.string().required(),
         multipleUomId: Joi.string().required(),
         qtyInput: Joi.number().required(),
         hpp: Joi.number().required(),
@@ -181,9 +179,9 @@ const updateSalesPurchase = {
       note: Joi.string(),
       transactionDetail: Joi.array().items(
         Joi.object().keys({
-          itemId: Joi.string(),
           multipleUomId: Joi.string(),
           chartOfAccountId: Joi.string(),
+          taxId: Joi.string(),
           qtyInput: Joi.number().min(1).required(),
           conversionQty: Joi.number().min(1).required(),
           priceInput: Joi.number().min(0).required(),
@@ -229,6 +227,7 @@ const updateLiability = {
       transactionDetail: Joi.array().items(
         Joi.object().keys({
           chartOfAccountId: Joi.string().required(),
+          taxId: Joi.string(),
           priceInput: Joi.number().min(0).required(),
           discountInput: Joi.number().min(0).required(),
           note: Joi.string(),
@@ -249,7 +248,6 @@ const updateTransferFund = {
       note: Joi.string(),
       transactionDetail: Joi.array().items(
         Joi.object().keys({
-          itemId: Joi.string().required(),
           chartOfAccountId: Joi.string().required(),
           priceInput: Joi.number().min(1).required(),
           note: Joi.string(),
@@ -271,7 +269,6 @@ const updateTransferItem = {
       note: Joi.string(),
       transactionDetail: Joi.array().items(
         Joi.object().keys({
-          itemId: Joi.string().required(),
           multipleUomId: Joi.string().required(),
           qtyInput: Joi.number().min(1).required(),
           conversionQty: Joi.number().min(1).required(),
@@ -332,7 +329,6 @@ const updateBeginBalanceStock = {
       note: Joi.string(),
       transactionDetail: Joi.array().items(
         Joi.object().keys({
-          itemId: Joi.string().required(),
           multipleUomId: Joi.string().required(),
           qtyInput: Joi.number().required(),
           hpp: Joi.number().required(),

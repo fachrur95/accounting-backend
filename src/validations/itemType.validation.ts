@@ -9,6 +9,7 @@ const createItemType = {
     isAdjustment: Joi.boolean().required(),
     isTransfer: Joi.boolean().required(),
     note: Joi.string(),
+    isActive: Joi.boolean(),
   })
 };
 
@@ -56,6 +57,7 @@ const updateItemType = {
       isAdjustment: Joi.boolean(),
       isTransfer: Joi.boolean(),
       note: Joi.string(),
+      isActive: Joi.boolean(),
     })
     .min(1)
 };

@@ -5,6 +5,7 @@ const createUnitOfMeasure = {
     code: Joi.string(),
     name: Joi.string().required(),
     note: Joi.string(),
+    isActive: Joi.boolean(),
   })
 };
 
@@ -44,6 +45,7 @@ const updateUnitOfMeasure = {
       code: Joi.string(),
       name: Joi.string(),
       note: Joi.string(),
+      isActive: Joi.boolean(),
     })
     .min(1)
 };

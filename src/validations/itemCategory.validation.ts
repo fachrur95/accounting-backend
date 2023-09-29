@@ -5,6 +5,7 @@ const createItemCategory = {
     itemTypeId: Joi.string().required(),
     name: Joi.string().required(),
     note: Joi.string(),
+    isActive: Joi.boolean(),
   })
 };
 
@@ -44,6 +45,7 @@ const updateItemCategory = {
       itemTypeId: Joi.string(),
       name: Joi.string(),
       note: Joi.string(),
+      isActive: Joi.boolean(),
     })
     .min(1)
 };

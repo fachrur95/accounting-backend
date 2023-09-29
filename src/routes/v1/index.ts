@@ -7,6 +7,7 @@ import warehouseRoute from './warehouse.route';
 import accountClassRoute from './accountClass.route';
 import accountSubClassRoute from './accountSubClass.route';
 import chartOfAccountRoute from './chartOfAccount.route';
+import taxRoute from './tax.route';
 import peopleRoute from './people.route';
 import peopleCategoryRoute from './peopleCategory.route';
 import unitOfMeasureRoute from './unitOfMeasure.route';
@@ -52,6 +53,10 @@ const defaultRoutes = [
   {
     path: '/chart-of-accounts',
     route: chartOfAccountRoute
+  },
+  {
+    path: '/taxes',
+    route: taxRoute
   },
   {
     path: '/peoples',

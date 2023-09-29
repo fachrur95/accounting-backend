@@ -8,6 +8,7 @@ const createPeopleCategory = {
     isSupplier: Joi.boolean().required(),
     isEmployee: Joi.boolean().required(),
     note: Joi.string(),
+    isActive: Joi.boolean(),
   })
 };
 
@@ -52,6 +53,7 @@ const updatePeopleCategory = {
       isSupplier: Joi.boolean(),
       isEmployee: Joi.boolean(),
       note: Joi.string(),
+      isActive: Joi.boolean(),
     })
     .min(1)
 };

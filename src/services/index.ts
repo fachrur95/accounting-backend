@@ -9,6 +9,7 @@ export { default as warehouseService } from './warehouse.service';
 export { default as accountClassService } from './accountClass.service';
 export { default as accountSubClassService } from './accountSubClass.service';
 export { default as chartOfAccountService } from './chartOfAccount.service';
+export { default as taxService } from './tax.service';
 export { default as peopleCategoryService } from './peopleCategory.service';
 export { default as peopleService } from './people.service';
 export { default as itemTypeService } from './itemType.service';

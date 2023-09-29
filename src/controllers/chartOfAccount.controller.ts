@@ -9,8 +9,8 @@ import { SessionData } from '../types/session';
 
 const createChartOfAccount = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { accountSubClassId, code, group, name, } = req.body;
-  const chartOfAccount = await chartOfAccountService.createChartOfAccount({ accountSubClassId, code, group, name, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
+  const { accountSubClassId, code, group, name, isActive } = req.body;
+  const chartOfAccount = await chartOfAccountService.createChartOfAccount({ accountSubClassId, code, group, name, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Chart Of Account",

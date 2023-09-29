@@ -1,6 +1,7 @@
 import prisma from '../client';
 
-interface ItemCogsTemp {
+export interface ItemCogsTemp {
+  id: string;
   cogs: number;
   qty: number;
 }
@@ -10,13 +11,13 @@ interface ItemCogsTemp {
  * @param {String} itemId
  * @param {String} unitId
  * @param {Number} qty
- * @returns {Promise<number>}
+ * @returns {Promise<{cogs: number, ids: ItemCogsTemp[] | undefined}>}
  */
 const getCogs = async (
   itemId: string,
   unitId: string,
   qty: number,
-): Promise<number> => {
+): Promise<{ cogs: number, ids?: ItemCogsTemp[] }> => {
   const method = await prisma.generalSetting.findUnique({
     where: { unitId },
     select: { recalculateMethod: true }
@@ -26,6 +27,7 @@ const getCogs = async (
     const avg = await prisma.itemCogs.aggregate({
       _avg: {
         cogs: true,
+        qty: true,
       },
       where: {
         itemId,
@@ -33,8 +35,8 @@ const getCogs = async (
         qty: { gt: 0 }
       }
     });
-
-    return avg._avg.cogs ?? 0;
+    const cogsAvg = ((avg._avg.cogs ?? 0) / (avg._avg.qty ?? 0) ?? 0);
+    return { cogs: cogsAvg };
   }
 
   const fifo = await prisma.itemCogs.findMany({
@@ -43,6 +45,7 @@ const getCogs = async (
       { date: "asc" }
     ],
     select: {
+      id: true,
       cogs: true,
       qty: true,
     }
@@ -50,19 +53,25 @@ const getCogs = async (
 
   let accumulatedQty = 0;
   const itemsSelected: ItemCogsTemp[] = [];
+  let qtyCurrent = qty;
 
   for (const item of fifo) {
     if (accumulatedQty + item.qty > qty) {
       break;
     }
-    itemsSelected.push(item);
+    let qtyUsed = item.qty;
+    if (qtyCurrent < item.qty) {
+      qtyUsed = qtyCurrent;
+    }
+    itemsSelected.push({ ...item, qty: qtyUsed });
     accumulatedQty += item.qty;
+    qtyCurrent -= item.qty;
   }
 
-  const sumCogs = itemsSelected.reduce((sum, item) => sum + item.qty, 0);
+  const sumCogs = itemsSelected.reduce((sum, item) => sum + item.cogs, 0);
   const cogs = sumCogs / qty;
 
-  return cogs ?? 0;
+  return { cogs: cogs ?? 0, ids: itemsSelected };
 };
 
 export default {

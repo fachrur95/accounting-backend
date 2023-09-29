@@ -9,8 +9,8 @@ import { SessionData } from '../types/session';
 
 const createUnitOfMeasure = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { code, name, note } = req.body;
-  const unitOfMeasure = await unitOfMeasureService.createUnitOfMeasure({ code, name, note, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
+  const { code, name, note, isActive } = req.body;
+  const unitOfMeasure = await unitOfMeasureService.createUnitOfMeasure({ code, name, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Unit of Measure",

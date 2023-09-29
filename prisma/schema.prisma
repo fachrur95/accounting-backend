@@ -136,6 +136,7 @@ model ChartOfAccount {
   code              String
   group             String?
   name              String
+  isActive          Boolean             @default(true)
   createdAt         DateTime            @default(now())
   createdBy         String
   updatedAt         DateTime            @updatedAt
@@ -171,6 +172,7 @@ model PeopleCategory {
   isSupplier Boolean
   isEmployee Boolean
   note       String?
+  isActive   Boolean     @default(true)
   createdAt  DateTime    @default(now())
   createdBy  String
   updatedAt  DateTime    @updatedAt
@@ -237,6 +239,8 @@ model ItemType {
   isPurchase   Boolean
   isAdjustment Boolean
   isTransfer   Boolean
+  note         String?
+  isActive     Boolean        @default(true)
   createdAt    DateTime       @default(now())
   createdBy    String
   updatedAt    DateTime       @updatedAt
@@ -250,6 +254,7 @@ model ItemCategory {
   id         String   @id @default(cuid())
   name       String
   note       String?
+  isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   createdBy  String
   updatedAt  DateTime @updatedAt
@@ -274,8 +279,8 @@ model Item {
   createdBy      String
   updatedAt      DateTime      @updatedAt
   updatedBy      String?
-  tax            Tax           @relation(fields: [taxId], references: [id])
-  taxId          String
+  tax            Tax?          @relation(fields: [taxId], references: [id])
+  taxId          String?
   itemCategory   ItemCategory  @relation(fields: [itemCategoryId], references: [id])
   itemCategoryId String
   MultipleUom    MultipleUom[]
@@ -441,6 +446,7 @@ model TransactionDetail {
 model ItemCogs {
   id        String   @id @default(cuid())
   qty       Float
+  qtyStatic Float
   cogs      Float
   date      DateTime
   createdAt DateTime @default(now())
@@ -456,7 +462,7 @@ model ItemCogs {
 model StockCard {
   id          String    @id @default(cuid())
   qty         Float
-  incoming    Float
+  incoming    Float     @default(0)
   createdAt   DateTime  @default(now())
   createdBy   String
   updatedAt   DateTime  @updatedAt
