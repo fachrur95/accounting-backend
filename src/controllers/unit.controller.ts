@@ -2,7 +2,7 @@ import httpStatus from 'http-status';
 import pick from '../utils/pick';
 import ApiError from '../utils/ApiError';
 import catchAsync from '../utils/catchAsync';
-import { logActivityService, unitService, warehouseService } from '../services';
+import { logActivityService, unitService } from '../services';
 import pickNested from '../utils/pickNested';
 import { FiltersType } from '../types/filtering';
 import { SessionData } from '../types/session';
@@ -11,7 +11,7 @@ const createUnit = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const { instituteId, name } = req.body;
   const unit = await unitService.createUnit({ instituteId, name, createdBy: user.email });
-  const warehouse = await warehouseService.createWarehouse({ unitId: unit.id, name: `${name} Utama`, createdBy: user.email });
+  // const warehouse = await warehouseService.createWarehouse({ unitId: unit.id, name: `${name} Utama`, createdBy: user.email });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Unit",
@@ -19,7 +19,7 @@ const createUnit = catchAsync(async (req, res) => {
     createdBy: user.email,
     data: JSON.stringify(unit),
   });
-  res.status(httpStatus.CREATED).send({ ...unit, warehouse: [warehouse] });
+  res.status(httpStatus.CREATED).send(unit);
 });
 
 const getUnits = catchAsync(async (req, res) => {

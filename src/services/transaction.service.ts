@@ -142,9 +142,10 @@ const createSell = async (
           }
         })
 
+        const updateItemCogs = [];
         if (typeof dataItemCogs !== 'undefined') {
           for (const dataCogs of dataItemCogs) {
-            await tx.itemCogs.update({
+            updateItemCogs.push(tx.itemCogs.update({
               where: {
                 id: dataCogs.id,
               },
@@ -153,11 +154,11 @@ const createSell = async (
                   decrement: dataCogs.qty,
                 }
               }
-            })
+            }))
           }
         }
 
-        await Promise.all([createDetail, updateStockCard])
+        await Promise.all([createDetail, updateStockCard, ...updateItemCogs])
       }
 
       // Jika semua operasi berjalan lancar, transaksi akan di-commit
@@ -244,7 +245,7 @@ const createPurchase = async (
               }
             }
           }
-        })
+        });
 
         if (!getItem) {
           throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
@@ -304,6 +305,7 @@ const createPurchase = async (
       isolationLevel: 'Serializable'
     });
   } catch (error) {
+    console.log({ error });
     throw new ApiError(httpStatus.BAD_REQUEST, "Some Error occurred");
   }
 };

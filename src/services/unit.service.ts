@@ -7,6 +7,9 @@ import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { SessionData } from '../types/session';
 import userUnitService from './userUnit.service';
+import warehouseService from './warehouse.service';
+import prefixService from './prefix.service';
+import defaultPrefix from '../utils/templates/prefix-default';
 
 /**
  * Create a unit
@@ -19,9 +22,16 @@ const createUnit = async (
   if (await getUnitByName(data.instituteId, data.name)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Unit name already taken');
   }
-  return prisma.unit.create({
+  const unit = await prisma.unit.create({
     data
   });
+  const warehouse = warehouseService.createWarehouse({ unitId: unit.id, name: `${data.name} Utama`, createdBy: data.createdBy });
+
+  const prefixes = defaultPrefix.map((prefix) => prefixService.createPrefix({ ...prefix, unitId: unit.id, createdBy: data.createdBy }));
+
+  await Promise.all([warehouse, ...prefixes]);
+
+  return unit;
 };
 
 /**
