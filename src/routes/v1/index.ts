@@ -15,6 +15,7 @@ import itemTypeRoute from './itemType.route';
 import itemCategoryRoute from './itemCategory.route';
 import itemRoute from './item.route';
 import priceBookRoute from './priceBook.route';
+import transactionRoute from './transaction.route';
 // import uploadRoute from './upload.route';
 import docsRoute from './docs.route';
 import config from '../../config/config';
@@ -85,6 +86,10 @@ const defaultRoutes = [
   {
     path: '/price-books',
     route: priceBookRoute
+  },
+  {
+    path: '/transactions',
+    route: transactionRoute
   },
   /* {
     path: '/upload',

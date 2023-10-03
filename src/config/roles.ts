@@ -55,6 +55,8 @@ const allRoles = {
     'manageItems',
     'getPriceBooks',
     'managePriceBooks',
+    'getTransactions',
+    'manageTransactions',
   ]
 };
 

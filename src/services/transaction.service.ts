@@ -52,11 +52,12 @@ const createSell = async (
       amount,
       taxValue,
       total,
+      vector: "NEGATIVE",
       createdBy: rest.createdBy
     });
-    obj.beforeTax + amount;
-    obj.taxValue + taxValue;
-    obj.total + total;
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
     return obj;
   }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
 
@@ -102,8 +103,12 @@ const createSell = async (
 
         const itemId = getItem.itemId;
 
-        const stockCard = await tx.stockCard.findUnique({
-          where: { id: itemId },
+        const stockCard = await tx.stockCard.findFirst({
+          where: {
+            itemId,
+            warehouseId: rest.warehouseId as string,
+            unitId: rest.unitId,
+          },
         });
 
         if (!stockCard) {
@@ -137,10 +142,9 @@ const createSell = async (
           }
         })
 
-        const dataUpdateCogs = [];
         if (typeof dataItemCogs !== 'undefined') {
           for (const dataCogs of dataItemCogs) {
-            dataUpdateCogs.push(tx.itemCogs.update({
+            await tx.itemCogs.update({
               where: {
                 id: dataCogs.id,
               },
@@ -149,11 +153,11 @@ const createSell = async (
                   decrement: dataCogs.qty,
                 }
               }
-            }))
+            })
           }
         }
 
-        await Promise.all([createDetail, updateStockCard, dataUpdateCogs])
+        await Promise.all([createDetail, updateStockCard])
       }
 
       // Jika semua operasi berjalan lancar, transaksi akan di-commit
@@ -162,12 +166,13 @@ const createSell = async (
       isolationLevel: 'Serializable'
     });
   } catch (error) {
+    console.log({ error });
     throw new ApiError(httpStatus.BAD_REQUEST, "Some Error occurred");
   }
 };
 
 /**
- * Create a sell transaction
+ * Create a buy transaction
  * @param {Object} data
  * @returns {Promise<Transaction>}
  */
@@ -196,11 +201,12 @@ const createPurchase = async (
       amount,
       taxValue,
       total,
+      vector: "POSITIVE",
       createdBy: rest.createdBy
     });
-    obj.beforeTax + amount;
-    obj.taxValue + taxValue;
-    obj.total + total;
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
     return obj;
   }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
 
@@ -277,10 +283,10 @@ const createPurchase = async (
           },
           create: {
             qty: detail.qty,
-            createdBy: rest.createdBy,
             itemId,
             warehouseId: rest.warehouseId as string,
             unitId: rest.unitId,
+            createdBy: rest.createdBy,
           },
           update: {
             qty: {

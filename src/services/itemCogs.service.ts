@@ -51,19 +51,21 @@ const getCogs = async (
     }
   });
 
+  // console.log({ fifo })
+
   let accumulatedQty = 0;
   const itemsSelected: ItemCogsTemp[] = [];
   let qtyCurrent = qty;
 
   for (const item of fifo) {
-    if (accumulatedQty + item.qty > qty) {
-      break;
-    }
     let qtyUsed = item.qty;
     if (qtyCurrent < item.qty) {
       qtyUsed = qtyCurrent;
     }
     itemsSelected.push({ ...item, qty: qtyUsed });
+    if (accumulatedQty + item.qty > qty) {
+      break;
+    }
     accumulatedQty += item.qty;
     qtyCurrent -= item.qty;
   }

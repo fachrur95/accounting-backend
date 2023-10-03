@@ -7,6 +7,7 @@ const createSalesPurchase = {
     peopleId: Joi.string().required(),
     warehouseId: Joi.string().required(),
     entryDate: Joi.date().required(),
+    paymentInput: Joi.number().required(),
     note: Joi.string(),
     transactionDetail: Joi.array().items(
       Joi.object().keys({
