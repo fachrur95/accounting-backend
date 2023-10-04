@@ -6,6 +6,7 @@ const createSalesPurchase = {
   body: Joi.object().keys({
     transactionNumber: Joi.string().required(),
     peopleId: Joi.string().required(),
+    termId: Joi.string(),
     warehouseId: Joi.string().required(),
     entryDate: Joi.date().required(),
     paymentInput: Joi.number().required(),
@@ -175,7 +176,9 @@ const updateSalesPurchase = {
   }),
   body: Joi.object()
     .keys({
+      transactionNumber: Joi.string(),
       peopleId: Joi.string(),
+      termId: Joi.string(),
       warehouseId: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
@@ -201,6 +204,7 @@ const updatePayment = {
   }),
   body: Joi.object()
     .keys({
+      transactionNumber: Joi.string(),
       chartOfAccountId: Joi.string(),
       peopleId: Joi.string(),
       entryDate: Joi.date(),
@@ -222,6 +226,7 @@ const updateLiability = {
   }),
   body: Joi.object()
     .keys({
+      transactionNumber: Joi.string(),
       chartOfAccountId: Joi.string(),
       peopleId: Joi.string(),
       entryDate: Joi.date(),
@@ -245,6 +250,7 @@ const updateTransferFund = {
   }),
   body: Joi.object()
     .keys({
+      transactionNumber: Joi.string(),
       chartOfAccountId: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
@@ -265,6 +271,7 @@ const updateTransferItem = {
   }),
   body: Joi.object()
     .keys({
+      transactionNumber: Joi.string(),
       warehouseId: Joi.string(),
       warehouseDestinationId: Joi.string(),
       entryDate: Joi.date(),
@@ -287,6 +294,7 @@ const updateJournalEntry = {
   }),
   body: Joi.object()
     .keys({
+      transactionNumber: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
       transactionDetail: Joi.array().items(
@@ -307,6 +315,7 @@ const updateBeginBalancePayment = {
   }),
   body: Joi.object()
     .keys({
+      transactionNumber: Joi.string(),
       chartOfAccountId: Joi.string(),
       transactionDetail: Joi.array().items(
         Joi.object().keys({
@@ -326,6 +335,7 @@ const updateBeginBalanceStock = {
   }),
   body: Joi.object()
     .keys({
+      transactionNumber: Joi.string(),
       chartOfAccountId: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),

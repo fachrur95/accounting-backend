@@ -24,6 +24,20 @@ interface ReduceAmount {
   total: number
 }
 
+const generateDueDate = async (entryDate: Date, termId?: string): Promise<Date> => {
+  if (!termId) return entryDate;
+
+  const getTermPeriod = await prisma.term.findUnique({
+    where: { id: termId },
+    select: { period: true },
+  });
+  const daysToAdd = getTermPeriod?.period ?? 0;
+  const unixDueDate = entryDate.setDate(entryDate.getDate() + daysToAdd);
+  const dueDate = new Date(unixDueDate);
+
+  return dueDate;
+}
+
 /**
  * Create a sell transaction
  * @param {Object} data
@@ -36,6 +50,8 @@ const createSell = async (
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetail, ...rest } = data;
+
+  const dueDate = await generateDueDate(new Date(rest.entryDate as Date), rest.termId ?? undefined);
 
   const details = transactionDetail.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -75,6 +91,7 @@ const createSell = async (
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          dueDate,
           beforeTax,
           taxValue,
           total,
@@ -189,6 +206,8 @@ const createPurchase = async (
   }
   const { transactionDetail, ...rest } = data;
 
+  const dueDate = await generateDueDate(new Date(rest.entryDate as Date), rest.termId ?? undefined);
+
   const details = transactionDetail.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
@@ -227,6 +246,7 @@ const createPurchase = async (
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          dueDate,
           beforeTax,
           taxValue,
           total,

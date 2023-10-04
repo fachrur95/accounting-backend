@@ -72,6 +72,7 @@ model Unit {
   Tax            Tax[]
   StockCard      StockCard[]
   ItemCogs       ItemCogs[]
+  Term           Term[]
 
   @@unique([instituteId, name])
 }
@@ -213,6 +214,21 @@ model UnitOfMeasure {
   unit        Unit          @relation(fields: [unitId], references: [id])
   unitId      String
   MultipleUom MultipleUom[]
+}
+
+model Term {
+  id          String        @id @default(cuid())
+  name        String
+  period      Float         @default(0)
+  note        String?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  createdBy   String
+  updatedAt   DateTime      @updatedAt
+  updatedBy   String?
+  unit        Unit          @relation(fields: [unitId], references: [id])
+  unitId      String
+  Transaction Transaction[]
 }
 
 model Tax {
@@ -400,6 +416,8 @@ model Transaction {
   peopleId                 String?
   unit                     Unit                @relation(fields: [unitId], references: [id])
   unitId                   String
+  term                     Term?               @relation(fields: [termId], references: [id])
+  termId                   String?
   warehouse                Warehouse?          @relation("warehouse", fields: [warehouseId], references: [id])
   warehouseId              String?
   warehouseDestination     Warehouse?          @relation("warehouseDestination", fields: [warehouseDestinationId], references: [id])
