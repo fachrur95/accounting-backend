@@ -132,11 +132,20 @@ const deleteTransaction = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send({ id: req.params.transactionId, message: "Deleted" });
 });
 
+const generateTransactionNumber = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const { transactionType } = req.params;
+  const transactionNumber = await transactionService.generateTransactionNumber(transactionType, user.session?.unit?.id);
+
+  res.status(httpStatus.OK).send({ transactionNumber });
+})
+
 export default {
   createSell,
   createBuy,
   getTransactions,
   getTransaction,
   updateTransaction,
-  deleteTransaction
+  deleteTransaction,
+  generateTransactionNumber,
 };

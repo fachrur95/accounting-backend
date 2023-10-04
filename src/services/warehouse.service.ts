@@ -143,7 +143,8 @@ const updateWarehouseById = async <Key extends keyof Warehouse>(
   if (!warehouse) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Warehouse not found');
   }
-  if (updateBody.name && (await getWarehouseByName(updateBody.name as string, updateBody.unitId as string))) {
+  const checkName = await getWarehouseByName(updateBody.name as string, updateBody.unitId as string);
+  if (updateBody.name && checkName && checkName.name !== warehouse.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Warehouse name already taken');
   }
   const updatedWarehouse = await prisma.warehouse.update({

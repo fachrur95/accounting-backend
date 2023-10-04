@@ -1,4 +1,4 @@
-import { Transaction, Prisma } from '@prisma/client';
+import { Transaction, Prisma, TransactionType } from '@prisma/client';
 import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/ApiError';
@@ -6,6 +6,8 @@ import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
 import itemCogsService from './itemCogs.service';
+import prefixService from './prefix.service';
+import { checkNaN } from '../utils/helper';
 
 interface ICreateTransactionData extends Prisma.TransactionUncheckedCreateInput {
   transactionDetail: Prisma.TransactionDetailCreateManyTransactionInput[],
@@ -161,6 +163,8 @@ const createSell = async (
         await Promise.all([createDetail, updateStockCard, ...updateItemCogs])
       }
 
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
       // Jika semua operasi berjalan lancar, transaksi akan di-commit
       return resTransaction;
     }, {
@@ -252,7 +256,7 @@ const createPurchase = async (
         }
 
         const itemId = getItem.itemId;
-        const cogs = (detail.total / detail.qty);
+        const cogs = checkNaN(detail.total / detail.qty);
 
         const createDetail = tx.transactionDetail.create({
           data: {
@@ -271,6 +275,7 @@ const createPurchase = async (
             date: rest.entryDate as Date,
             createdBy: rest.createdBy,
             unitId: rest.unitId,
+            transactionId: resTransaction.id
           }
         });
 
@@ -299,6 +304,8 @@ const createPurchase = async (
 
         await Promise.all([createDetail, dataCreateItemCogs, dataCreateStockCard])
       }
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
       return resTransaction;
     }, {
@@ -437,7 +444,8 @@ const updateTransactionById = async <Key extends keyof Transaction>(
   if (!transaction) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
   }
-  if (updateBody.transactionNumber && (await getTransactionByNumber(updateBody.transactionNumber as string, updateBody.unitId as string))) {
+  const checkName = await getTransactionByNumber(updateBody.transactionNumber as string, updateBody.unitId as string);
+  if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetail, ...rest } = updateBody;
@@ -486,6 +494,34 @@ const deleteTransactionById = async (transactionId: string): Promise<Transaction
   return transaction;
 };
 
+/**
+ * Generate transaction number
+ * @param {String} transactionType
+ * @param {String} unitId
+ * @returns {Promise<String>}
+ */
+const generateTransactionNumber = async (transactionType: TransactionType, unitId: string): Promise<string> => {
+  const getPrefix = await prisma.prefix.findFirst({
+    where: {
+      transactionType,
+      unitId,
+    }
+  });
+  if (!getPrefix) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Transaction prefix not found');
+  }
+  const prefix = getPrefix.prefix;
+  const lastNumber = getPrefix.lastCode + 1;
+  const paddedNumber = String(lastNumber).padStart(8, '0');
+
+  const currentDate = new Date();
+  const year = currentDate.getFullYear().toString();
+  const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+  const middleText = `${year}${month}`;
+
+  return `${prefix}/${middleText}/${paddedNumber}`;
+};
+
 export default {
   createSell,
   createPurchase,
@@ -493,5 +529,6 @@ export default {
   getTransactionById,
   getTransactionByNumber,
   updateTransactionById,
-  deleteTransactionById
+  deleteTransactionById,
+  generateTransactionNumber,
 };

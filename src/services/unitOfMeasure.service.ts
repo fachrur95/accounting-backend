@@ -138,7 +138,8 @@ const updateUnitOfMeasureById = async <Key extends keyof UnitOfMeasure>(
   if (!unitOfMeasure) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Item Type not found');
   }
-  if (updateBody.name && (await getUnitOfMeasureByName(updateBody.name as string, updateBody.unitId as string))) {
+  const checkName = await getUnitOfMeasureByName(updateBody.name as string, updateBody.unitId as string);
+  if (updateBody.name && checkName && checkName.name !== unitOfMeasure.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item Type name already taken');
   }
   const updatedUnitOfMeasure = await prisma.unitOfMeasure.update({

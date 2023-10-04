@@ -138,7 +138,8 @@ const updateItemCategoryById = async <Key extends keyof ItemCategory>(
   if (!itemCategory) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Item Category not found');
   }
-  if (updateBody.name && (await getItemCategoryByName(updateBody.name as string, updateBody.unitId as string))) {
+  const checkName = await getItemCategoryByName(updateBody.name as string, updateBody.unitId as string);
+  if (updateBody.name && checkName && checkName.name !== itemCategory.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item Category name already taken');
   }
   const updatedItemCategory = await prisma.itemCategory.update({

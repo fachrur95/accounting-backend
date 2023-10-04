@@ -11,7 +11,6 @@ const createUnit = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const { instituteId, name } = req.body;
   const unit = await unitService.createUnit({ instituteId, name, createdBy: user.email });
-  // const warehouse = await warehouseService.createWarehouse({ unitId: unit.id, name: `${name} Utama`, createdBy: user.email });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Unit",

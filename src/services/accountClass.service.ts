@@ -145,7 +145,8 @@ const updateAccountClassById = async <Key extends keyof AccountClass>(
   if (!accountClass) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Account Class not found');
   }
-  if (updateBody.name && (await getAccountClassByName(updateBody.name as string))) {
+  const checkName = await getAccountClassByName(updateBody.name as string);
+  if (updateBody.name && checkName && checkName.name !== accountClass.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Account Class name already taken');
   }
   const updatedAccountClass = await prisma.accountClass.update({

@@ -165,7 +165,8 @@ const updatePriceBookById = async <Key extends keyof PriceBook>(
   if (!priceBook) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Price Book not found');
   }
-  if (updateBody.name && (await getPriceBookByName(updateBody.name as string, updateBody.unitId as string))) {
+  const checkName = await getPriceBookByName(updateBody.name as string, updateBody.unitId as string);
+  if (updateBody.name && checkName && checkName.name !== priceBook.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Price Book name already taken');
   }
   const { priceBookDetail, ...rest } = updateBody;

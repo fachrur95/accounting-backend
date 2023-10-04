@@ -147,7 +147,8 @@ const updateInstituteById = async <Key extends keyof Institute>(
   if (!institute) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Institute not found');
   }
-  if (updateBody.name && (await getInstituteByName(updateBody.name as string))) {
+  const checkName = await getInstituteByName(updateBody.name as string);
+  if (updateBody.name && checkName && checkName.name !== institute.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Institute name already taken');
   }
   const updatedInstitute = await prisma.institute.update({

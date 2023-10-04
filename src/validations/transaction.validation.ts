@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import { balance } from './custom.validation';
+import { TransactionType } from '@prisma/client';
 
 const createSalesPurchase = {
   body: Joi.object().keys({
@@ -346,6 +347,33 @@ const deleteTransaction = {
   })
 };
 
+const generateTransactionNumber = {
+  params: Joi.object().keys({
+    transactionType: Joi.string().valid(
+      TransactionType.SALE_QUOTATION,
+      TransactionType.SALE_ORDER,
+      TransactionType.SALE_INVOICE,
+      TransactionType.SALE_RETURN,
+      TransactionType.PURCHASE_QUOTATION,
+      TransactionType.PURCHASE_ORDER,
+      TransactionType.PURCHASE_INVOICE,
+      TransactionType.PURCHASE_RETURN,
+      TransactionType.RECEIVEABLE_PAYMENT,
+      TransactionType.DEBT_PAYMENT,
+      TransactionType.EXPENSE,
+      TransactionType.REVENUE,
+      TransactionType.TRANSFER_FUND,
+      TransactionType.TRANSFER_ITEM_SEND,
+      TransactionType.TRANSFER_ITEM_RECEIVE,
+      TransactionType.STOCK_OPNAME,
+      TransactionType.JOURNAL_ENTRY,
+      TransactionType.BEGINNING_BALANCE_STOCK,
+      TransactionType.BEGINNING_BALANCE_DEBT,
+      TransactionType.BEGINNING_BALANCE_RECEIVABLE,
+    ),
+  })
+};
+
 export default {
   createSalesPurchase,
   createPayment,
@@ -365,5 +393,6 @@ export default {
   updateJournalEntry,
   updateBeginBalancePayment,
   updateBeginBalanceStock,
-  deleteTransaction
+  deleteTransaction,
+  generateTransactionNumber,
 };

@@ -33,6 +33,14 @@ router.use(authSession())
     transactionController.getTransactions
   );
 
+router.use(authSession())
+  .route('/generate-number/:transactionType')
+  .get(
+    auth('getTransactions'),
+    validate(transactionValidation.generateTransactionNumber),
+    transactionController.generateTransactionNumber,
+  )
+
 /* router.use(authSession())
   .route('/:transactionId')
   .get(

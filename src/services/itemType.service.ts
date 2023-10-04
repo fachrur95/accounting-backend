@@ -143,7 +143,8 @@ const updateItemTypeById = async <Key extends keyof ItemType>(
   if (!itemType) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Item Type not found');
   }
-  if (updateBody.name && (await getItemTypeByName(updateBody.name as string, updateBody.unitId as string))) {
+  const checkName = await getItemTypeByName(updateBody.name as string, updateBody.unitId as string);
+  if (updateBody.name && checkName && checkName.name !== itemType.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item Type name already taken');
   }
   const updatedItemType = await prisma.itemType.update({

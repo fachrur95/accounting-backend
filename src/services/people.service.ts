@@ -140,7 +140,8 @@ const updatePeopleById = async <Key extends keyof People>(
   if (!people) {
     throw new ApiError(httpStatus.NOT_FOUND, 'People  not found');
   }
-  if (updateBody.name && (await getPeopleByName(updateBody.name as string, updateBody.unitId as string))) {
+  const checkName = await getPeopleByName(updateBody.name as string, updateBody.unitId as string);
+  if (updateBody.name && checkName && checkName.name !== people.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'People  name already taken');
   }
   const updatedPeople = await prisma.people.update({

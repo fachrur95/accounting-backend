@@ -145,7 +145,8 @@ const updateTaxById = async <Key extends keyof Tax>(
   if (!tax) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Tax not found');
   }
-  if (updateBody.name && (await getTaxByName(updateBody.name as string, updateBody.unitId as string))) {
+  const checkName = await getTaxByName(updateBody.name as string, updateBody.unitId as string);
+  if (updateBody.name && checkName && checkName.name !== tax.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Tax name already taken');
   }
   const updatedTax = await prisma.tax.update({

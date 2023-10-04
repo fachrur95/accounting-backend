@@ -1,4 +1,4 @@
-import { Prefix, Prisma } from '@prisma/client';
+import { Prefix, Prisma, TransactionType } from '@prisma/client';
 import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/ApiError';
@@ -6,6 +6,7 @@ import { NestedObject } from '../utils/pickNested';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import defaultPrefix from '../utils/templates/prefix-default';
+import { getLastNumberFromString } from '../utils/helper';
 
 /**
  * Create a prefix
@@ -15,7 +16,7 @@ import defaultPrefix from '../utils/templates/prefix-default';
 const createPrefix = async (
   data: Prisma.PrefixUncheckedCreateInput,
 ): Promise<Prefix> => {
-  if (await getPrefixByName(data.unitId, data.name)) {
+  if (await getPrefixByPrefix(data.unitId, data.prefix)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Prefix name already taken');
   }
   return prisma.prefix.create({
@@ -112,19 +113,20 @@ const getPrefixById = async <Key extends keyof Prefix>(
  * @param {Array<Key>} keys
  * @returns {Promise<Pick<Prefix, Key> | null>}
  */
-const getPrefixByName = async <Key extends keyof Prefix>(
+const getPrefixByPrefix = async <Key extends keyof Prefix>(
   unitId: string,
-  name: string,
+  prefix: string,
   keys: Key[] = [
     'id',
     'unitId',
     'name',
+    'prefix',
     'createdAt',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Prefix, Key> | null> => {
   return prisma.prefix.findFirst({
-    where: { unitId, name },
+    where: { unitId, prefix },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<Prefix, Key> | null>;
 };
@@ -141,16 +143,53 @@ const updatePrefixById = async <Key extends keyof Prefix>(
   updateBody: Prisma.PrefixUncheckedUpdateInput,
   keys: Key[] = ['id', 'name', 'unitId'] as Key[]
 ): Promise<Pick<Prefix, Key> | null> => {
-  const prefix = await getPrefixById(prefixId, ['id', 'name']);
+  const prefix = await getPrefixById(prefixId, ['id', 'prefix']);
   if (!prefix) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Prefix not found');
   }
-  if (updateBody.name && (await getPrefixByName(updateBody.unitId as string, updateBody.name as string))) {
+  const checkName = await getPrefixByPrefix(updateBody.unitId as string, updateBody.prefix as string);
+  if (updateBody.prefix && checkName && checkName.prefix !== prefix.prefix) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Prefix name already taken');
   }
   const updatedPrefix = await prisma.prefix.update({
     where: { id: prefix.id, unitId },
     data: updateBody,
+    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+  });
+  return updatedPrefix as Pick<Prefix, Key> | null;
+};
+
+/**
+ * Update prefix by transaction type
+ * @param {String} unitId
+ * @param {TransactionType} transactionType
+ * @param {String} transactionNumber
+ * @param {Object} updateBody
+ * @returns {Promise<Prefix>}
+ */
+const updatePrefixByTransactionType = async <Key extends keyof Prefix>(
+  unitId: string,
+  transactionType: TransactionType,
+  transactionNumber: string,
+  keys: Key[] = ['id', 'name', 'unitId'] as Key[]
+): Promise<Pick<Prefix, Key> | null> => {
+  // const prefix = await getPrefixById(prefixId, ['id', 'name']);
+  const prefix = await prisma.prefix.findFirst({
+    where: {
+      transactionType,
+      unitId,
+    }
+  });
+  if (!prefix) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Prefix not found');
+  }
+  const lastNumber = getLastNumberFromString(transactionNumber);
+  if (typeof lastNumber !== 'number') {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Prefix invalid');
+  }
+  const updatedPrefix = await prisma.prefix.update({
+    where: { id: prefix.id, unitId },
+    data: { lastCode: lastNumber },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   });
   return updatedPrefix as Pick<Prefix, Key> | null;
@@ -181,8 +220,9 @@ export default {
   createPrefix,
   queryPrefixes,
   getPrefixById,
-  getPrefixByName,
+  getPrefixByPrefix,
   updatePrefixById,
+  updatePrefixByTransactionType,
   deletePrefixById,
   getDefaultPrefix,
 };

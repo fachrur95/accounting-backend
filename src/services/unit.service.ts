@@ -7,9 +7,9 @@ import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { SessionData } from '../types/session';
 import userUnitService from './userUnit.service';
-import warehouseService from './warehouse.service';
-import prefixService from './prefix.service';
 import defaultPrefix from '../utils/templates/prefix-default';
+
+const defaultWarehouseName = (unitName: string): string => `${unitName} Utama`;
 
 /**
  * Create a unit
@@ -22,16 +22,35 @@ const createUnit = async (
   if (await getUnitByName(data.instituteId, data.name)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Unit name already taken');
   }
-  const unit = await prisma.unit.create({
-    data
-  });
-  const warehouse = warehouseService.createWarehouse({ unitId: unit.id, name: `${data.name} Utama`, createdBy: data.createdBy });
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const unit = await tx.unit.create({ data });
 
-  const prefixes = defaultPrefix.map((prefix) => prefixService.createPrefix({ ...prefix, unitId: unit.id, createdBy: data.createdBy }));
+      const createWarehouse = tx.warehouse.create({
+        data: {
+          unitId: unit.id,
+          name: defaultWarehouseName(data.name),
+          createdBy: data.createdBy,
+        }
+      });
+      const prefixes = defaultPrefix.map((prefix) => tx.prefix.create({
+        data: {
+          ...prefix,
+          unitId: unit.id,
+          createdBy: data.createdBy,
+        }
+      }));
 
-  await Promise.all([warehouse, ...prefixes]);
+      await Promise.all([createWarehouse, ...prefixes]);
 
-  return unit;
+      return unit;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error) {
+    console.log({ error });
+    throw new ApiError(httpStatus.BAD_REQUEST, "Some Error occurred");
+  }
 };
 
 /**
@@ -163,15 +182,51 @@ const updateUnitById = async <Key extends keyof Unit>(
   if (!unit) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Unit not found');
   }
-  if (updateBody.name && (await getUnitByName(updateBody.instituteId as string, updateBody.name as string))) {
+  const checkName = await getUnitByName(updateBody.instituteId as string, updateBody.name as string);
+  console.log({
+    checkName: checkName?.name,
+    updateBody: unit.name,
+    result: checkName?.name !== unit.name
+  })
+  if (updateBody.name && checkName && checkName.name !== unit.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Unit name already taken');
   }
-  const updatedUnit = await prisma.unit.update({
-    where: { id: unit.id },
-    data: updateBody,
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+  return await prisma.$transaction(async (tx) => {
+    const updatedUnit = await tx.unit.update({
+      where: { id: unit.id },
+      data: updateBody,
+      select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+    });
+    const getCountWarehouse = tx.warehouse.count({ where: { unitId: unit.id } });
+    const getCountPrefixes = tx.prefix.count({ where: { unitId: unit.id } });
+    const [countWarehouse, countPrefixes] = await Promise.all([getCountWarehouse, getCountPrefixes]);
+
+    if (countWarehouse === 0) {
+      await tx.warehouse.create({
+        data: {
+          unitId: unit.id,
+          name: defaultWarehouseName(updateBody.name as string),
+          createdBy: updateBody.updatedBy as string,
+        }
+      });
+    }
+
+    if (countPrefixes === 0) {
+      const prefixes = defaultPrefix.map((prefix) => tx.prefix.create({
+        data: {
+          ...prefix,
+          unitId: unit.id,
+          createdBy: updateBody.updatedBy as string,
+        }
+      }));
+
+      await Promise.all(prefixes);
+    }
+
+    return updatedUnit as Pick<Unit, Key> | null;
+  }, {
+    isolationLevel: 'Serializable'
   });
-  return updatedUnit as Pick<Unit, Key> | null;
 };
 
 /**

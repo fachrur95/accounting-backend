@@ -19,6 +19,6 @@ export async function handleUpload(file: string) {
     console.log({ res })
     return res;
   } catch (error) {
-    throw new ApiError(httpStatus.NOT_IMPLEMENTED, 'Error upload');
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Error upload');
   }
 }

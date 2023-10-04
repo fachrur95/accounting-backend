@@ -138,7 +138,8 @@ const updatePeopleCategoryById = async <Key extends keyof PeopleCategory>(
   if (!peopleCategory) {
     throw new ApiError(httpStatus.NOT_FOUND, 'People Category not found');
   }
-  if (updateBody.name && (await getPeopleCategoryByName(updateBody.name as string, updateBody.unitId as string))) {
+  const checkName = await getPeopleCategoryByName(updateBody.name as string, updateBody.unitId as string);
+  if (updateBody.name && checkName && checkName.name !== peopleCategory.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'People Category name already taken');
   }
   const updatedPeopleCategory = await prisma.peopleCategory.update({

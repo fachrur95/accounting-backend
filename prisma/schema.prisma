@@ -373,6 +373,7 @@ model Prefix {
   unitId          String
 
   @@unique([transactionType, unitId])
+  @@unique([prefix, unitId])
 }
 
 model Transaction {
@@ -407,6 +408,7 @@ model Transaction {
   chartOfAccountId         String?
   TransactionDetail        TransactionDetail[] @relation("transaction")
   TransactionDetailPayment TransactionDetail[] @relation("transactionPayment")
+  ItemCogs                 ItemCogs[]
 
   @@unique([transactionNumber, unitId])
 }
@@ -444,19 +446,21 @@ model TransactionDetail {
 }
 
 model ItemCogs {
-  id        String   @id @default(cuid())
-  qty       Float
-  qtyStatic Float
-  cogs      Float
-  date      DateTime
-  createdAt DateTime @default(now())
-  createdBy String
-  updatedAt DateTime @updatedAt
-  updatedBy String?
-  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  itemId    String
-  unit      Unit     @relation(fields: [unitId], references: [id])
-  unitId    String
+  id            String      @id @default(cuid())
+  qty           Float
+  qtyStatic     Float
+  cogs          Float
+  date          DateTime
+  createdAt     DateTime    @default(now())
+  createdBy     String
+  updatedAt     DateTime    @updatedAt
+  updatedBy     String?
+  item          Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId        String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId String
+  unit          Unit        @relation(fields: [unitId], references: [id])
+  unitId        String
 }
 
 model StockCard {

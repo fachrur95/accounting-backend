@@ -187,7 +187,8 @@ const updateItemById = async <Key extends keyof Item>(
   if (!item) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Item not found');
   }
-  if (updateBody.name && (await getItemByName(updateBody.name as string, updateBody.unitId as string))) {
+  const checkName = await getItemByName(updateBody.name as string, updateBody.unitId as string);
+  if (updateBody.name && checkName && checkName.name !== item.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item name already taken');
   }
   const { multipleUom, images, ...rest } = updateBody;
