@@ -35,3 +35,23 @@ export const checkNaN = (value: number): number => {
     return 0
   }
 }
+
+export const groupByAndSum = <T extends Record<string, any>, K extends keyof T>(
+  data: T[],
+  key: K,
+  sumKey: K
+): T[] => {
+  const groupedData: { [key: string]: T } = {};
+
+  data.forEach((item) => {
+    const keyValue = item[key] as string;
+    if (!groupedData[keyValue]) {
+      groupedData[keyValue] = { ...item };
+    }
+    groupedData[keyValue][sumKey] += item[sumKey];
+  });
+
+  const result: T[] = Object.values(groupedData);
+
+  return result;
+}

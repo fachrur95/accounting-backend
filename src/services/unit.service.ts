@@ -26,6 +26,13 @@ const createUnit = async (
     return await prisma.$transaction(async (tx) => {
       const unit = await tx.unit.create({ data });
 
+      const createGeneralSetting = tx.generalSetting.create({
+        data: {
+          companyName: unit.name,
+          createdBy: unit.createdBy,
+          unitId: unit.id,
+        }
+      });
       const createWarehouse = tx.warehouse.create({
         data: {
           unitId: unit.id,
@@ -41,7 +48,7 @@ const createUnit = async (
         }
       }));
 
-      await Promise.all([createWarehouse, ...prefixes]);
+      await Promise.all([createGeneralSetting, createWarehouse, ...prefixes]);
 
       return unit;
     }, {
@@ -197,9 +204,21 @@ const updateUnitById = async <Key extends keyof Unit>(
       data: updateBody,
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
     });
+    const getCountGeneralSetting = tx.generalSetting.count({ where: { unitId: unit.id } });
     const getCountWarehouse = tx.warehouse.count({ where: { unitId: unit.id } });
     const getCountPrefixes = tx.prefix.count({ where: { unitId: unit.id } });
-    const [countWarehouse, countPrefixes] = await Promise.all([getCountWarehouse, getCountPrefixes]);
+    const [countGeneralSetting, countWarehouse, countPrefixes] = await Promise.all([getCountGeneralSetting, getCountWarehouse, getCountPrefixes]);
+
+
+    if (countGeneralSetting === 0) {
+      await tx.generalSetting.create({
+        data: {
+          unitId: unit.id,
+          companyName: unit.name,
+          createdBy: updateBody.updatedBy as string,
+        }
+      });
+    }
 
     if (countWarehouse === 0) {
       await tx.warehouse.create({

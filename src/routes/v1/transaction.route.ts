@@ -39,7 +39,20 @@ router.use(authSession())
     auth('getTransactions'),
     validate(transactionValidation.generateTransactionNumber),
     transactionController.generateTransactionNumber,
+  );
+
+router.use(authSession())
+  .route('/:transactionId')
+  .get(
+    auth('getTransactions'),
+    validate(transactionValidation.getTransaction),
+    transactionController.getTransaction
   )
+  .delete(
+    auth('manageTransactions'),
+    validate(transactionValidation.deleteTransaction),
+    transactionController.deleteTransaction
+  );
 
 /* router.use(authSession())
   .route('/:transactionId')

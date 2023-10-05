@@ -284,28 +284,29 @@ model ItemCategory {
 }
 
 model Item {
-  id             String        @id @default(cuid())
+  id             String           @id @default(cuid())
   code           String
   name           String
   description    String?
   note           String?
-  isActive       Boolean       @default(true)
-  minQty         Float         @default(0)
-  maxQty         Float         @default(0)
-  createdAt      DateTime      @default(now())
+  isActive       Boolean          @default(true)
+  minQty         Float            @default(0)
+  maxQty         Float            @default(0)
+  createdAt      DateTime         @default(now())
   createdBy      String
-  updatedAt      DateTime      @updatedAt
+  updatedAt      DateTime         @updatedAt
   updatedBy      String?
-  tax            Tax?          @relation(fields: [taxId], references: [id])
+  tax            Tax?             @relation(fields: [taxId], references: [id])
   taxId          String?
-  itemCategory   ItemCategory  @relation(fields: [itemCategoryId], references: [id])
+  itemCategory   ItemCategory     @relation(fields: [itemCategoryId], references: [id])
   itemCategoryId String
   MultipleUom    MultipleUom[]
   Images         Image[]
-  unit           Unit          @relation(fields: [unitId], references: [id])
+  unit           Unit             @relation(fields: [unitId], references: [id])
   unitId         String
   StockCard      StockCard[]
   ItemCogs       ItemCogs[]
+  ItemCogsDetail ItemCogsDetail[]
 }
 
 model Image {
@@ -487,10 +488,13 @@ model ItemCogsDetail {
   id                  String            @id @default(cuid())
   qty                 Float
   cogs                Float
+  date                DateTime
   transactionDetail   TransactionDetail @relation(fields: [transactionDetailId], references: [id], onDelete: Cascade)
   transactionDetailId String
   itemCogs            ItemCogs          @relation(fields: [itemCogsId], references: [id], onDelete: Cascade)
   itemCogsId          String
+  Item                Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId              String
   unit                Unit              @relation(fields: [unitId], references: [id])
   unitId              String
 }

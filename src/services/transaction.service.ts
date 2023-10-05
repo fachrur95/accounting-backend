@@ -111,86 +111,6 @@ const createSell = async (
 
       await itemCogsService.calculateCogs(tx, resTransaction.id);
 
-      /* for (const detail of dataLine) {
-        const getItem = await tx.multipleUom.findUnique({
-          where: {
-            id: detail.multipleUomId ?? "",
-          },
-          select: {
-            itemId: true,
-            item: {
-              select: {
-                name: true,
-              }
-            }
-          }
-        })
-
-        if (!getItem) {
-          throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
-        }
-
-        const itemId = getItem.itemId;
-
-        const stockCard = await tx.stockCard.findFirst({
-          where: {
-            itemId,
-            warehouseId: rest.warehouseId as string,
-            unitId: rest.unitId,
-          },
-        });
-
-        if (!stockCard) {
-          throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
-        }
-
-        const { id: stockCardId, qty: qtyInStock } = stockCard;
-
-        if (qtyInStock < detail.qty) {
-          throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            `Item ${getItem.item.name} out of stock. Only ${qtyInStock} in base unit.`
-          );
-        }
-
-        const itemCogs = await itemCogsService.getCogs(itemId, rest.unitId, detail.qty);
-        const { cogs, ids: dataItemCogs } = itemCogs;
-
-        tx.transactionDetail.create({
-          data: { ...detail, transactionId: resTransaction.id }
-        });
-
-        const updateStockCard = tx.stockCard.update({
-          where: {
-            id: stockCardId,
-          },
-          data: {
-            qty: {
-              decrement: detail.qty,
-            }
-          }
-        })
-
-        const updateItemCogs = [];
-        if (typeof dataItemCogs !== 'undefined') {
-          for (const dataCogs of dataItemCogs) {
-            updateItemCogs.push(tx.itemCogs.update({
-              where: {
-                id: dataCogs.id,
-              },
-              data: {
-                qty: {
-                  decrement: dataCogs.qty,
-                }
-              }
-            }))
-          }
-        }
-
-        await Promise.all([createDetail, updateStockCard, ...updateItemCogs]);
-        await Promise.all(createDetail);
-      } */
-
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
       // Jika semua operasi berjalan lancar, transaksi akan di-commit
@@ -198,9 +118,8 @@ const createSell = async (
     }, {
       isolationLevel: 'Serializable'
     });
-  } catch (error) {
-    console.log({ error });
-    throw new ApiError(httpStatus.BAD_REQUEST, "Some Error occurred");
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
   }
 };
 
@@ -341,9 +260,8 @@ const createPurchase = async (
     }, {
       isolationLevel: 'Serializable'
     });
-  } catch (error) {
-    console.log({ error });
-    throw new ApiError(httpStatus.BAD_REQUEST, "Some Error occurred");
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
   }
 };
 
