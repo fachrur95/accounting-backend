@@ -73,6 +73,7 @@ model Unit {
   StockCard      StockCard[]
   ItemCogs       ItemCogs[]
   Term           Term[]
+  ItemCogsDetail ItemCogsDetail[]
 
   @@unique([instituteId, name])
 }
@@ -426,18 +427,17 @@ model Transaction {
   chartOfAccountId         String?
   TransactionDetail        TransactionDetail[] @relation("transaction")
   TransactionDetailPayment TransactionDetail[] @relation("transactionPayment")
-  ItemCogs                 ItemCogs[]
 
   @@unique([transactionNumber, unitId])
 }
 
 model TransactionDetail {
-  id                   String          @id @default(cuid())
-  qtyInput             Float           @default(0)
-  priceInput           Float           @default(0)
-  discountInput        Float           @default(0)
-  conversionQty        Float           @default(1.0)
-  taxRate              Float           @default(0)
+  id                   String           @id @default(cuid())
+  qtyInput             Float            @default(0)
+  priceInput           Float            @default(0)
+  discountInput        Float            @default(0)
+  conversionQty        Float            @default(1.0)
+  taxRate              Float            @default(0)
   vector               Vector
   qty                  Float
   beforeDiscount       Float
@@ -445,40 +445,54 @@ model TransactionDetail {
   amount               Float
   taxValue             Float
   total                Float
-  cogs                 Float           @default(0)
   note                 String?
-  createdAt            DateTime        @default(now())
+  createdAt            DateTime         @default(now())
   createdBy            String
-  updatedAt            DateTime        @updatedAt
+  updatedAt            DateTime         @updatedAt
   updatedBy            String?
-  transaction          Transaction     @relation("transaction", fields: [transactionId], references: [id], onDelete: Cascade)
+  transaction          Transaction      @relation("transaction", fields: [transactionId], references: [id], onDelete: Cascade)
   transactionId        String
-  transactionPayment   Transaction?    @relation("transactionPayment", fields: [transactionPaymentId], references: [id], onDelete: Cascade)
+  transactionPayment   Transaction?     @relation("transactionPayment", fields: [transactionPaymentId], references: [id], onDelete: Cascade)
   transactionPaymentId String?
-  multipleUom          MultipleUom?    @relation(fields: [multipleUomId], references: [id], onDelete: Cascade)
+  multipleUom          MultipleUom?     @relation(fields: [multipleUomId], references: [id], onDelete: Cascade)
   multipleUomId        String?
-  tax                  Tax?            @relation(fields: [taxId], references: [id])
+  tax                  Tax?             @relation(fields: [taxId], references: [id])
   taxId                String?
-  chartOfAccount       ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
+  chartOfAccount       ChartOfAccount?  @relation(fields: [chartOfAccountId], references: [id])
   chartOfAccountId     String?
+  ItemCogs             ItemCogs[]
+  ItemCogsDetail       ItemCogsDetail[]
 }
 
 model ItemCogs {
-  id            String      @id @default(cuid())
-  qty           Float
-  qtyStatic     Float
-  cogs          Float
-  date          DateTime
-  createdAt     DateTime    @default(now())
-  createdBy     String
-  updatedAt     DateTime    @updatedAt
-  updatedBy     String?
-  item          Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  itemId        String
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  transactionId String
-  unit          Unit        @relation(fields: [unitId], references: [id])
-  unitId        String
+  id                  String            @id @default(cuid())
+  qty                 Float
+  qtyStatic           Float
+  cogs                Float
+  date                DateTime
+  createdAt           DateTime          @default(now())
+  createdBy           String
+  updatedAt           DateTime          @updatedAt
+  updatedBy           String?
+  item                Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId              String
+  transactionDetail   TransactionDetail @relation(fields: [transactionDetailId], references: [id], onDelete: Cascade)
+  transactionDetailId String
+  unit                Unit              @relation(fields: [unitId], references: [id])
+  unitId              String
+  ItemCogsDetail      ItemCogsDetail[]
+}
+
+model ItemCogsDetail {
+  id                  String            @id @default(cuid())
+  qty                 Float
+  cogs                Float
+  transactionDetail   TransactionDetail @relation(fields: [transactionDetailId], references: [id], onDelete: Cascade)
+  transactionDetailId String
+  itemCogs            ItemCogs          @relation(fields: [itemCogsId], references: [id], onDelete: Cascade)
+  itemCogsId          String
+  unit                Unit              @relation(fields: [unitId], references: [id])
+  unitId              String
 }
 
 model StockCard {

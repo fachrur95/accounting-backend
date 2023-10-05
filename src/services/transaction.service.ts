@@ -101,7 +101,17 @@ const createSell = async (
         }
       });
 
-      for (const detail of dataLine) {
+      // const createDetails = dataLine.map((detail) => tx.transactionDetail.create)
+      await tx.transactionDetail.createMany({
+        data: dataLine.map((detail) => ({
+          ...detail,
+          transactionId: resTransaction.id,
+        }))
+      });
+
+      await itemCogsService.calculateCogs(tx, resTransaction.id);
+
+      /* for (const detail of dataLine) {
         const getItem = await tx.multipleUom.findUnique({
           where: {
             id: detail.multipleUomId ?? "",
@@ -146,9 +156,9 @@ const createSell = async (
         const itemCogs = await itemCogsService.getCogs(itemId, rest.unitId, detail.qty);
         const { cogs, ids: dataItemCogs } = itemCogs;
 
-        const createDetail = tx.transactionDetail.create({
-          data: { ...detail, cogs, transactionId: resTransaction.id }
-        })
+        tx.transactionDetail.create({
+          data: { ...detail, transactionId: resTransaction.id }
+        });
 
         const updateStockCard = tx.stockCard.update({
           where: {
@@ -177,8 +187,9 @@ const createSell = async (
           }
         }
 
-        await Promise.all([createDetail, updateStockCard, ...updateItemCogs])
-      }
+        await Promise.all([createDetail, updateStockCard, ...updateItemCogs]);
+        await Promise.all(createDetail);
+      } */
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
@@ -278,10 +289,9 @@ const createPurchase = async (
         const itemId = getItem.itemId;
         const cogs = checkNaN(detail.total / detail.qty);
 
-        const createDetail = tx.transactionDetail.create({
+        const createDetail = await tx.transactionDetail.create({
           data: {
             ...detail,
-            cogs,
             transactionId: resTransaction.id
           }
         })
@@ -295,7 +305,7 @@ const createPurchase = async (
             date: rest.entryDate as Date,
             createdBy: rest.createdBy,
             unitId: rest.unitId,
-            transactionId: resTransaction.id
+            transactionDetailId: createDetail.id
           }
         });
 
@@ -322,7 +332,7 @@ const createPurchase = async (
           }
         });
 
-        await Promise.all([createDetail, dataCreateItemCogs, dataCreateStockCard])
+        await Promise.all([dataCreateItemCogs, dataCreateStockCard])
       }
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
