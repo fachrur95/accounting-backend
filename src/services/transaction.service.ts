@@ -50,8 +50,9 @@ const createSell = async (
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetail, ...rest } = data;
+  const entryDate = new Date();
 
-  const dueDate = await generateDueDate(new Date(rest.entryDate as Date), rest.termId ?? undefined);
+  const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
 
   const details = transactionDetail.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -98,6 +99,7 @@ const createSell = async (
           change,
           totalPayment,
           underPayment: total - totalPayment,
+          entryDate,
         }
       });
 
@@ -135,8 +137,9 @@ const createPurchase = async (
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetail, ...rest } = data;
+  const entryDate = new Date();
 
-  const dueDate = await generateDueDate(new Date(rest.entryDate as Date), rest.termId ?? undefined);
+  const dueDate = await generateDueDate(entryDate, rest.termId ?? undefined);
 
   const details = transactionDetail.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -221,7 +224,7 @@ const createPurchase = async (
             qty: detail.qty,
             qtyStatic: detail.qty,
             cogs,
-            date: rest.entryDate as Date,
+            date: entryDate,
             createdBy: rest.createdBy,
             unitId: rest.unitId,
             transactionDetailId: createDetail.id
@@ -406,7 +409,7 @@ const updateSellById = async <Key extends keyof Transaction>(
   updateBody: IUpdateTransactionData,
   keys: Key[] = ['id', 'transactionNumber'] as Key[]
 ): Promise<Pick<Transaction, Key> | null> => {
-  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'TransactionDetail']);
+  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'TransactionDetail', 'entryDate']);
   if (!transaction) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
   }
@@ -414,6 +417,7 @@ const updateSellById = async <Key extends keyof Transaction>(
   if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
+  const entryDate = transaction.entryDate;
   const lastFinancialClosing = await prisma.financialClosing.findFirst({
     where: { unitId: updateBody.unitId },
     select: { entryDate: true },
@@ -422,7 +426,7 @@ const updateSellById = async <Key extends keyof Transaction>(
 
   if (
     lastFinancialClosing &&
-    new Date(lastFinancialClosing.entryDate) < new Date(updateBody.entryDate as Date)
+    new Date(lastFinancialClosing.entryDate) < new Date(entryDate as Date)
   ) {
     throw new ApiError(
       httpStatus.FORBIDDEN,
@@ -447,7 +451,7 @@ const updateSellById = async <Key extends keyof Transaction>(
 
   const { transactionDetail, ...rest } = updateBody;
 
-  const dueDate = await generateDueDate(new Date(rest.entryDate as Date), rest.termId ?? undefined);
+  const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
 
   const details = transactionDetail.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -548,7 +552,7 @@ const updateSellById = async <Key extends keyof Transaction>(
       console.log({ dataItemIds });
       const recalculateCogsItem = [];
       for (const itemId of dataItemIds) {
-        recalculateCogsItem.push(itemCogsService.recalculateFIFO(tx, itemId, rest.unitId));
+        recalculateCogsItem.push(itemCogsService.recalculateCogs(tx, itemId, rest.unitId));
       }
 
       await Promise.all(recalculateCogsItem);
@@ -574,7 +578,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
   updateBody: IUpdateTransactionData,
   keys: Key[] = ['id', 'transactionNumber'] as Key[]
 ): Promise<Pick<Transaction, Key> | null> => {
-  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'TransactionDetail']);
+  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'TransactionDetail', 'entryDate']);
   if (!transaction) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
   }
@@ -582,6 +586,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
   if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
+  const entryDate = transaction.entryDate;
   const lastFinancialClosing = await prisma.financialClosing.findFirst({
     where: { unitId: updateBody.unitId },
     select: { entryDate: true },
@@ -590,7 +595,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
 
   if (
     lastFinancialClosing &&
-    new Date(lastFinancialClosing.entryDate) < new Date(updateBody.entryDate as Date)
+    new Date(lastFinancialClosing.entryDate) < new Date(entryDate as Date)
   ) {
     throw new ApiError(
       httpStatus.FORBIDDEN,
@@ -615,7 +620,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
 
   const { transactionDetail, ...rest } = updateBody;
 
-  const dueDate = await generateDueDate(new Date(rest.entryDate as Date), rest.termId ?? undefined);
+  const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
 
   const details = transactionDetail.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -738,7 +743,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
             qty: detail.qty,
             qtyStatic: detail.qty,
             cogs,
-            date: rest.entryDate as Date,
+            date: entryDate as Date,
             unitId: rest.unitId,
             transactionDetailId: upsertDetail.id,
             createdBy: rest.updatedBy as string,
@@ -746,7 +751,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
           update: {
             qtyStatic: detail.qty,
             cogs,
-            date: rest.entryDate as Date,
+            date: entryDate as Date,
             updatedBy: rest.updatedBy as string,
           }
         });
@@ -779,7 +784,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
       console.log({ dataItemIds });
       const recalculateCogsItem = [];
       for (const itemId of dataItemIds) {
-        recalculateCogsItem.push(itemCogsService.recalculateFIFO(tx, itemId, rest.unitId));
+        recalculateCogsItem.push(itemCogsService.recalculateCogs(tx, itemId, rest.unitId));
       }
 
       await Promise.all(recalculateCogsItem);
@@ -870,7 +875,7 @@ const deleteTransactionById = async (transactionId: string): Promise<Transaction
       const recalculateCogsItem = [];
       for (const itemId of dataItemIds) {
         if (itemId) {
-          recalculateCogsItem.push(itemCogsService.recalculateFIFO(tx, itemId, transaction.unitId));
+          recalculateCogsItem.push(itemCogsService.recalculateCogs(tx, itemId, transaction.unitId));
         }
       }
 

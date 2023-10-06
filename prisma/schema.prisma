@@ -75,6 +75,7 @@ model Unit {
   Term             Term[]
   ItemCogsDetail   ItemCogsDetail[]
   FinancialClosing FinancialClosing[]
+  CashRegister     CashRegister[]
 
   @@unique([instituteId, name])
 }
@@ -135,30 +136,49 @@ model AccountSubClass {
 }
 
 model ChartOfAccount {
-  id                String              @id @default(cuid())
-  code              String
-  group             String?
-  name              String
-  isActive          Boolean             @default(true)
-  createdAt         DateTime            @default(now())
-  createdBy         String
-  updatedAt         DateTime            @updatedAt
-  updatedBy         String?
-  accountSubClass   AccountSubClass     @relation(fields: [accountSubClassId], references: [id])
-  accountSubClassId String
-  unit              Unit                @relation(fields: [unitId], references: [id])
-  unitId            String
-  TransactionDetail TransactionDetail[]
-  Transaction       Transaction[]
+  id                       String              @id @default(cuid())
+  code                     String
+  group                    String?
+  name                     String
+  isActive                 Boolean             @default(true)
+  createdAt                DateTime            @default(now())
+  createdBy                String
+  updatedAt                DateTime            @updatedAt
+  updatedBy                String?
+  accountSubClass          AccountSubClass     @relation(fields: [accountSubClassId], references: [id])
+  accountSubClassId        String
+  unit                     Unit                @relation(fields: [unitId], references: [id])
+  unitId                   String
+  TransactionDetail        TransactionDetail[]
+  Transaction              Transaction[]
+  CashRegisterDeposit      CashRegister[]      @relation("deposit")
+  CashRegisterBeginBalance CashRegister[]      @relation("beginBalance")
 
   @@unique([code, unitId])
   @@unique([group, unitId])
 }
 
+model CashRegister {
+  id                    String         @id @default(cuid())
+  name                  String
+  isActive              Boolean        @default(true)
+  createdAt             DateTime       @default(now())
+  createdBy             String
+  updatedAt             DateTime       @updatedAt
+  updatedBy             String?
+  depositAccount        ChartOfAccount @relation("deposit", fields: [depositAccountId], references: [id])
+  depositAccountId      String
+  beginBalanceAccount   ChartOfAccount @relation("beginBalance", fields: [beginBalanceAccountId], references: [id])
+  beginBalanceAccountId String
+  unit                  Unit           @relation(fields: [unitId], references: [id])
+  unitId                String
+  Transaction           Transaction[]
+}
+
 model GeneralSetting {
   id                String            @id @default(cuid())
   companyName       String
-  recalculateMethod RecalculateMethod @default(AVG)
+  recalculateMethod RecalculateMethod @default(FIFO)
   isStrictMode      Boolean           @default(true)
   createdAt         DateTime          @default(now())
   createdBy         String
@@ -187,20 +207,21 @@ model PeopleCategory {
 }
 
 model People {
-  id               String         @id @default(cuid())
-  code             String?
-  name             String
-  note             String?
-  isActive         Boolean        @default(true)
-  createdAt        DateTime       @default(now())
-  createdBy        String
-  updatedAt        DateTime       @updatedAt
-  updatedBy        String?
-  peopleCategory   PeopleCategory @relation(fields: [peopleCategoryId], references: [id])
-  peopleCategoryId String
-  unit             Unit           @relation(fields: [unitId], references: [id])
-  unitId           String
-  Transaction      Transaction[]
+  id                 String         @id @default(cuid())
+  code               String?
+  name               String
+  note               String?
+  isActive           Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  createdBy          String
+  updatedAt          DateTime       @updatedAt
+  updatedBy          String?
+  peopleCategory     PeopleCategory @relation(fields: [peopleCategoryId], references: [id])
+  peopleCategoryId   String
+  unit               Unit           @relation(fields: [unitId], references: [id])
+  unitId             String
+  TransactionPeople  Transaction[]  @relation("people")
+  TransactionCashier Transaction[]  @relation("cashier")
 }
 
 model UnitOfMeasure {
@@ -293,6 +314,7 @@ model Item {
   isActive       Boolean       @default(true)
   minQty         Float         @default(0)
   maxQty         Float         @default(0)
+  manualCogs     Float         @default(0)
   createdAt      DateTime      @default(now())
   createdBy      String
   updatedAt      DateTime      @updatedAt
@@ -414,8 +436,10 @@ model Transaction {
   updatedBy                String?
   deletedAt                DateTime?
   deletedBy                String?
-  people                   People?             @relation(fields: [peopleId], references: [id])
+  people                   People?             @relation("people", fields: [peopleId], references: [id])
   peopleId                 String?
+  cashier                  People?             @relation("cashier", fields: [cashierId], references: [id])
+  cashierId                String?
   unit                     Unit                @relation(fields: [unitId], references: [id])
   unitId                   String
   term                     Term?               @relation(fields: [termId], references: [id])
@@ -426,6 +450,11 @@ model Transaction {
   warehouseDestinationId   String?
   chartOfAccount           ChartOfAccount?     @relation(fields: [chartOfAccountId], references: [id])
   chartOfAccountId         String?
+  cashRegister             CashRegister?       @relation(fields: [cashRegisterId], references: [id])
+  cashRegisterId           String?
+  transactionParent        Transaction?        @relation("transactionSelf", fields: [transactionParentId], references: [id])
+  transactionParentId      String?
+  transactionChildren      Transaction[]       @relation("transactionSelf")
   TransactionDetail        TransactionDetail[] @relation("transaction")
   TransactionDetailPayment TransactionDetail[] @relation("transactionPayment")
 
@@ -558,11 +587,14 @@ enum TransactionType {
   BEGINNING_BALANCE_STOCK
   BEGINNING_BALANCE_DEBT
   BEGINNING_BALANCE_RECEIVABLE
+  OPEN_REGISTER
+  CLOSE_REGISTER
 }
 
 enum RecalculateMethod {
   AVG
   FIFO
+  MANUAL
 }
 
 enum BalanceSheet {
