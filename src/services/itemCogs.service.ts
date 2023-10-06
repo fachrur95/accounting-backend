@@ -10,6 +10,17 @@ export interface ItemCogsTemp {
   qty: number;
 }
 
+interface IItemCogs {
+  id?: string;
+  qty: number;
+  cogs: number;
+  date: Date;
+  transactionDetailId: string;
+  unitId: string;
+  createdBy: string,
+  children?: IItemCogs[];
+}
+
 /**
  * Query for get ItemCogs
  * @param {String} itemId
@@ -96,19 +107,9 @@ const calculateCogs = async (
       id: transactionId,
     },
     select: {
-      transactionType: true,
-      unitId: true,
-      warehouseId: true,
-      entryDate: true,
       TransactionDetail: {
         select: {
           id: true,
-          multipleUom: {
-            select: {
-              itemId: true,
-            }
-          },
-          qty: true,
         }
       }
     }
@@ -116,30 +117,10 @@ const calculateCogs = async (
   if (!transaction) {
     throw new ApiError(httpStatus.NOT_FOUND, "Transaction not found");
   }
-  const entryDate = transaction.entryDate;
-  const transactionType = transaction.transactionType;
-
-  const updateType = transactionType === "SALE_INVOICE" ? "decrement" : "increment";
 
   const transactionDetails = transaction.TransactionDetail;
   for (const detail of transactionDetails) {
-    const itemId = detail.multipleUom?.itemId ?? "";
-    await calculateFIFOByItemId(tx, detail.id, itemId, detail.qty, entryDate);
-
-    await tx.stockCard.update({
-      where: {
-        itemId_warehouseId_unitId: {
-          itemId,
-          warehouseId: transaction.warehouseId ?? "",
-          unitId: transaction.unitId,
-        }
-      },
-      data: {
-        qty: {
-          [updateType]: detail.qty
-        }
-      }
-    })
+    await calculateFIFOByTransDetailId(tx, detail.id);
   }
 
 }
@@ -148,19 +129,54 @@ const calculateCogs = async (
  * Calculate Cogs with FIFO method
  * @param {Object} tx
  * @param {String} transactionDetailId
- * @param {String} itemId
- * @param {Number} qty
- * @param {Date} date
  * @returns {Promise<void>}
  */
-const calculateFIFOByItemId = async (
+const calculateFIFOByTransDetailId = async (
   tx: TransactionMethod,
   transactionDetailId: string,
-  itemId: string,
-  qty: number,
-  date: Date
 ): Promise<void> => {
-  const getTransBefore = tx.itemCogs.findMany({
+  const getTrans = await tx.transactionDetail.findUnique({
+    where: { id: transactionDetailId },
+    select: {
+      transaction: {
+        select: {
+          entryDate: true,
+          transactionType: true,
+          warehouseId: true,
+          unitId: true,
+        }
+      },
+      multipleUom: {
+        select: {
+          itemId: true,
+          item: {
+            select: {
+              name: true,
+            }
+          }
+        }
+      },
+      qty: true,
+    }
+  })
+
+  if (!getTrans) {
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Transaction not found!");
+  }
+  if (!getTrans.multipleUom) {
+    return;
+  }
+
+  const item = getTrans.multipleUom.item;
+  const itemId = getTrans.multipleUom.itemId;
+  const qty = getTrans.qty;
+  const trans = getTrans.transaction;
+  const date = trans.entryDate;
+  // const transactionType = trans.transactionType;
+
+  // const updateStockCardType = transactionType === "SALE_INVOICE" ? "decrement" : "increment";
+
+  const transBefore = await tx.itemCogs.findMany({
     where: {
       itemId: itemId,
       date: { lte: date },
@@ -168,14 +184,6 @@ const calculateFIFOByItemId = async (
     },
     orderBy: { date: "asc" },
   });
-
-  const getItem = tx.item.findUnique({ where: { id: itemId }, select: { name: true } });
-
-  const [transBefore, item] = await Promise.all([getTransBefore, getItem]);
-
-  if (!item) {
-    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Item not found!");
-  }
 
   let totalStockSold = 0;
   let currentQty = qty;
@@ -188,7 +196,7 @@ const calculateFIFOByItemId = async (
     if (index + 1 === transBefore.length && currentStock < qty) {
       throw new ApiError(
         httpStatus.INTERNAL_SERVER_ERROR,
-        `Insufficient stock of "${item.name}"! Only : ${currentStock} left`
+        `Insufficient stock of "${item?.name}"! Only : ${currentStock} left`
       );
     }
 
@@ -244,73 +252,108 @@ const calculateFIFOByItemId = async (
 
     await Promise.all([createItemCogsDetail, updateItemCogs]);
   }
-}
-
-interface IItemCogs {
-  id?: string;
-  qty: number;
-  cogs: number;
-  date: Date;
-  transactionDetailId: string;
-  unitId: string;
-  createdBy: string,
-  children?: IItemCogs[];
+  /* await tx.stockCard.update({
+    where: {
+      itemId_warehouseId_unitId: {
+        itemId,
+        warehouseId: trans.warehouseId ?? "",
+        unitId: trans.unitId,
+      }
+    },
+    data: {
+      qty: {
+        [updateStockCardType]: qty
+      }
+    }
+  }) */
 }
 
 /**
  * Calculate Cogs with FIFO method
  * @param {Object} tx
  * @param {String} itemId
- * @param {Date} date
+ * @param {String} unitId
  * @returns {Promise<void>}
  */
 const recalculateFIFO = async (
   tx: TransactionMethod,
   itemId: string,
-  date: Date,
+  unitId: string,
 ): Promise<void> => {
-  const transactionDetail = await tx.transactionDetail.findMany({
+  const lastFinancialClosing = await tx.financialClosing.findFirst({
+    where: { unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  const date = lastFinancialClosing?.entryDate;
+
+  const getTransactionDetail = tx.transactionDetail.findMany({
     where: {
       multipleUom: {
         itemId,
       },
       transaction: {
         entryDate: { gte: date }
-      }
+      },
+      vector: "NEGATIVE",
     },
     include: {
       transaction: true,
+    },
+    orderBy: {
+      transaction: {
+        entryDate: "asc",
+      }
     }
   });
 
-  const getItemCogs = await tx.itemCogs.findMany({
+  const getItemCogs = tx.itemCogs.findMany({
     where: {
-      itemId,
-      date: { gte: date },
+      OR: [
+        { itemId },
+        {
+          itemId,
+          ItemCogsDetail: {
+            some: {
+              date: { gte: date }
+            }
+          }
+        },
+        {
+          itemId,
+          date: { gte: date }
+        },
+      ],
     },
     include: {
       ItemCogsDetail: true,
+    },
+    orderBy: {
+      date: "asc",
     }
   });
 
-  const cogsIds = getItemCogs.map((cogs) => cogs.id);
+  const [transactionDetail, itemCogs] = await Promise.all([getTransactionDetail, getItemCogs]);
+
+  const cogsIds = itemCogs.map((cogs) => cogs.id);
 
   await tx.itemCogsDetail.deleteMany({ where: { itemCogsId: { in: cogsIds } } });
 
-  const dataCogs: IItemCogs[] = getItemCogs.map((cogs) => ({
+  const dataCogs: IItemCogs[] = itemCogs.map((cogs) => ({
     id: cogs.id,
-    qty: cogs.qty,
+    qty: cogs.qtyStatic,
     cogs: cogs.cogs,
     date: cogs.date,
     transactionDetailId: cogs.transactionDetailId,
-    unitId: cogs.unitId,
+    unitId: unitId,
     createdBy: cogs.createdBy,
   }));
   const dataTransDetail: IItemCogs[] = transactionDetail.map((detail) => ({
     qty: detail.qty,
     date: detail.transaction.entryDate,
     transactionDetailId: detail.id,
-    unitId: detail.transaction.unitId,
+    unitId: unitId,
     createdBy: detail.createdBy,
     cogs: 0,
   }));
@@ -327,6 +370,12 @@ const recalculateFIFO = async (
 
     while (remainingQty > 0 && dataIndex2 < dataTransDetail.length) {
       const item2 = dataTransDetail[dataIndex2];
+      if (dataIndex1 + 1 === dataCogs.length && remainingQty < item2.qty) {
+        throw new ApiError(
+          httpStatus.INTERNAL_SERVER_ERROR,
+          `Insufficient out of stock detailId: "${item2.transactionDetailId}`
+        );
+      }
 
       const qtyToTake = Math.min(remainingQty, item2.qty);
       remainingQty -= qtyToTake;
@@ -337,7 +386,7 @@ const recalculateFIFO = async (
           qty: qtyToTake,
           date: item2.date,
           transactionDetailId: item2.transactionDetailId,
-          unitId: item2.unitId,
+          unitId: unitId,
           createdBy: item2.createdBy,
           cogs: item1.cogs,
         });
@@ -353,10 +402,15 @@ const recalculateFIFO = async (
     result.push(mergedItem);
   }
 
-  const dataUpdateHead = []
+  /* for (const row of result) {
+    console.log({ row });
+    console.log({ children: row.children });
+  } */
+
+  const dataUpdateCogs = [];
   for (const item of result) {
     const { children, ...rest } = item;
-    dataUpdateHead.push(tx.itemCogs.update({
+    dataUpdateCogs.push(tx.itemCogs.update({
       where: {
         id: item.id,
       },
@@ -365,7 +419,12 @@ const recalculateFIFO = async (
         ...(children ? {
           ItemCogsDetail: {
             createMany: {
-              data: children,
+              data: children.map(child => ({
+                ...child,
+                unitId,
+                createdBy: undefined,
+                id: undefined,
+              })),
             }
           }
         } : null)
@@ -373,11 +432,12 @@ const recalculateFIFO = async (
     }));
   }
 
-  await Promise.all(dataUpdateHead);
+  await Promise.all(dataUpdateCogs);
 }
 
 export default {
   getCogs,
   calculateCogs,
+  calculateFIFOByTransDetailId,
   recalculateFIFO,
 };

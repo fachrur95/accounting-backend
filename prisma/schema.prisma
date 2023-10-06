@@ -46,34 +46,35 @@ model Institute {
 }
 
 model Unit {
-  id             String           @id @default(cuid())
-  name           String
-  createdAt      DateTime         @default(now())
-  createdBy      String
-  updatedAt      DateTime         @updatedAt
-  updatedBy      String?
-  institute      Institute        @relation(fields: [instituteId], references: [id])
-  instituteId    String
-  Warehouse      Warehouse[]
-  ChartOfAccount ChartOfAccount[]
-  PeopleCategory PeopleCategory[]
-  ItemType       ItemType[]
-  PriceBook      PriceBook[]
-  MultipleUom    MultipleUom[]
-  Prefix         Prefix[]
-  Transaction    Transaction[]
-  GeneralSetting GeneralSetting?
-  UnitOfMeasure  UnitOfMeasure[]
-  UserUnit       UserUnit[]
-  People         People[]
-  ItemCategory   ItemCategory[]
-  Item           Item[]
-  LogActivity    LogActivity[]
-  Tax            Tax[]
-  StockCard      StockCard[]
-  ItemCogs       ItemCogs[]
-  Term           Term[]
-  ItemCogsDetail ItemCogsDetail[]
+  id               String             @id @default(cuid())
+  name             String
+  createdAt        DateTime           @default(now())
+  createdBy        String
+  updatedAt        DateTime           @updatedAt
+  updatedBy        String?
+  institute        Institute          @relation(fields: [instituteId], references: [id])
+  instituteId      String
+  Warehouse        Warehouse[]
+  ChartOfAccount   ChartOfAccount[]
+  PeopleCategory   PeopleCategory[]
+  ItemType         ItemType[]
+  PriceBook        PriceBook[]
+  MultipleUom      MultipleUom[]
+  Prefix           Prefix[]
+  Transaction      Transaction[]
+  GeneralSetting   GeneralSetting?
+  UnitOfMeasure    UnitOfMeasure[]
+  UserUnit         UserUnit[]
+  People           People[]
+  ItemCategory     ItemCategory[]
+  Item             Item[]
+  LogActivity      LogActivity[]
+  Tax              Tax[]
+  // StockCard        StockCard[]
+  ItemCogs         ItemCogs[]
+  Term             Term[]
+  ItemCogsDetail   ItemCogsDetail[]
+  FinancialClosing FinancialClosing[]
 
   @@unique([instituteId, name])
 }
@@ -89,7 +90,7 @@ model Warehouse {
   unitId                 String
   Transaction            Transaction[] @relation("warehouse")
   TransactionDestination Transaction[] @relation("warehouseDestination")
-  StockCard              StockCard[]
+  // StockCard              StockCard[]
 }
 
 model UserUnit {
@@ -304,7 +305,7 @@ model Item {
   Images         Image[]
   unit           Unit          @relation(fields: [unitId], references: [id])
   unitId         String
-  StockCard      StockCard[]
+  // StockCard      StockCard[]
   ItemCogs       ItemCogs[]
 }
 
@@ -460,8 +461,17 @@ model TransactionDetail {
   taxId                String?
   chartOfAccount       ChartOfAccount?  @relation(fields: [chartOfAccountId], references: [id])
   chartOfAccountId     String?
-  ItemCogs             ItemCogs[]
   ItemCogsDetail       ItemCogsDetail[]
+  ItemCogs             ItemCogs?
+}
+
+model FinancialClosing {
+  id        String   @id @default(cuid())
+  entryDate DateTime @default(now())
+  createdAt DateTime @default(now())
+  createdBy String
+  unit      Unit     @relation(fields: [unitId], references: [id])
+  unitId    String
 }
 
 model ItemCogs {
@@ -477,7 +487,7 @@ model ItemCogs {
   item                Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
   itemId              String
   transactionDetail   TransactionDetail @relation(fields: [transactionDetailId], references: [id], onDelete: Cascade)
-  transactionDetailId String
+  transactionDetailId String            @unique
   unit                Unit              @relation(fields: [unitId], references: [id])
   unitId              String
   ItemCogsDetail      ItemCogsDetail[]
@@ -496,23 +506,23 @@ model ItemCogsDetail {
   unitId              String
 }
 
-model StockCard {
-  id          String    @id @default(cuid())
-  qty         Float
-  incoming    Float     @default(0)
-  createdAt   DateTime  @default(now())
-  createdBy   String
-  updatedAt   DateTime  @updatedAt
-  updatedBy   String?
-  item        Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  itemId      String
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
-  warehouseId String
-  unit        Unit      @relation(fields: [unitId], references: [id])
-  unitId      String
+// model StockCard {
+//   id          String    @id @default(cuid())
+//   qty         Float
+//   incoming    Float     @default(0)
+//   createdAt   DateTime  @default(now())
+//   createdBy   String
+//   updatedAt   DateTime  @updatedAt
+//   updatedBy   String?
+//   item        Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+//   itemId      String
+//   warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+//   warehouseId String
+//   unit        Unit      @relation(fields: [unitId], references: [id])
+//   unitId      String
 
-  @@unique([itemId, warehouseId, unitId])
-}
+//   @@unique([itemId, warehouseId, unitId])
+// }
 
 model LogActivity {
   id           String       @id @default(cuid())

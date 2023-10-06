@@ -42,6 +42,22 @@ router.use(authSession())
   );
 
 router.use(authSession())
+  .route('/sell/:transactionId')
+  .patch(
+    auth('manageTransactions'),
+    validate(transactionValidation.updateSalesPurchase),
+    transactionController.updateSell
+  );
+
+router.use(authSession())
+  .route('/purchase/:transactionId')
+  .patch(
+    auth('manageTransactions'),
+    validate(transactionValidation.updateSalesPurchase),
+    transactionController.updateBuy
+  );
+
+router.use(authSession())
   .route('/:transactionId')
   .get(
     auth('getTransactions'),

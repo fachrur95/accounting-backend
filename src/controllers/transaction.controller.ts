@@ -103,6 +103,40 @@ const getTransaction = catchAsync(async (req, res) => {
   res.send(transaction);
 });
 
+const updateSell = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateSellById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Update Data Transaction",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
+const updateBuy = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updatePurchaseById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Update Data Transaction",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
 const updateTransaction = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const transaction = await transactionService.updateTransactionById(req.params.transactionId, {
@@ -143,6 +177,8 @@ const generateTransactionNumber = catchAsync(async (req, res) => {
 export default {
   createSell,
   createBuy,
+  updateSell,
+  updateBuy,
   getTransactions,
   getTransaction,
   updateTransaction,

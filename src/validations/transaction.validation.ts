@@ -181,9 +181,11 @@ const updateSalesPurchase = {
       termId: Joi.string(),
       warehouseId: Joi.string(),
       entryDate: Joi.date(),
+      paymentInput: Joi.number(),
       note: Joi.string(),
       transactionDetail: Joi.array().items(
         Joi.object().keys({
+          id: Joi.string(),
           multipleUomId: Joi.string(),
           chartOfAccountId: Joi.string(),
           taxId: Joi.string(),
