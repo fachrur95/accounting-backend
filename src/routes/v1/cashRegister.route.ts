@@ -1,125 +1,59 @@
 import express from 'express';
 import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
-import { transactionValidation } from '../../validations';
-import { transactionController } from '../../controllers';
+import { cashRegisterValidation } from '../../validations';
+import { cashRegisterController } from '../../controllers';
 import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
 router.use(authSession())
-  .route('/sell')
+  .route('/')
   .post(
-    auth('manageTransactions'),
-    validate(transactionValidation.createSalesPurchase),
-    transactionController.createSell
+    auth('manageCashRegisters'),
+    validate(cashRegisterValidation.createCashRegister),
+    cashRegisterController.createCashRegister
   )
   .get(
-    auth('getTransactions'),
-    validate(transactionValidation.getTransactions),
-    transactionController.getTransactions
+    auth('getCashRegisters'),
+    validate(cashRegisterValidation.getCashRegisters),
+    cashRegisterController.getCashRegisters
   );
 
 router.use(authSession())
-  .route('/purchase')
-  .post(
-    auth('manageTransactions'),
-    validate(transactionValidation.createSalesPurchase),
-    transactionController.createBuy
+  .route('/:cashRegisterId')
+  .get(
+    auth('getCashRegisters'),
+    validate(cashRegisterValidation.getCashRegister),
+    cashRegisterController.getCashRegister
   )
-  .get(
-    auth('getTransactions'),
-    validate(transactionValidation.getTransactions),
-    transactionController.getTransactions
-  );
-
-router.use(authSession())
-  .route('/generate-number/:transactionType')
-  .get(
-    auth('getTransactions'),
-    validate(transactionValidation.generateTransactionNumber),
-    transactionController.generateTransactionNumber,
-  );
-
-router.use(authSession())
-  .route('/sell/:transactionId')
   .patch(
-    auth('manageTransactions'),
-    validate(transactionValidation.updateSalesPurchase),
-    transactionController.updateSell
-  );
-
-router.use(authSession())
-  .route('/purchase/:transactionId')
-  .patch(
-    auth('manageTransactions'),
-    validate(transactionValidation.updateSalesPurchase),
-    transactionController.updateBuy
-  );
-
-router.use(authSession())
-  .route('/:transactionId')
-  .get(
-    auth('getTransactions'),
-    validate(transactionValidation.getTransaction),
-    transactionController.getTransaction
+    auth('manageCashRegisters'),
+    validate(cashRegisterValidation.updateCashRegister),
+    cashRegisterController.updateCashRegister
   )
   .delete(
-    auth('manageTransactions'),
-    validate(transactionValidation.deleteTransaction),
-    transactionController.deleteTransaction
+    auth('manageCashRegisters'),
+    validate(cashRegisterValidation.deleteCashRegister),
+    cashRegisterController.deleteCashRegister
   );
-
-router.use(authSession())
-  .route('/cash-register/open')
-  .post(
-    auth('manageTransactions'),
-    validate(transactionValidation.openCashRegister),
-    transactionController.openCashRegister
-  );
-
-router.use(authSession())
-  .route('/cash-register/close')
-  .post(
-    auth('manageTransactions'),
-    validate(transactionValidation.closeCashRegister),
-    transactionController.closeCashRegister
-  );
-
-/* router.use(authSession())
-  .route('/:transactionId')
-  .get(
-    auth('getTransactions'),
-    validate(transactionValidation.getTransaction),
-    transactionController.getTransaction
-  )
-  .patch(
-    auth('manageTransactions'),
-    validate(transactionValidation.updateTransaction),
-    transactionController.updateTransaction
-  )
-  .delete(
-    auth('manageTransactions'),
-    validate(transactionValidation.deleteTransaction),
-    transactionController.deleteTransaction
-  ); */
 
 export default router;
 
 /**
  * @swagger
  * tags:
- *   name: Transactions
- *   description: Transaction management and retrieval
+ *   name: CashRegisters
+ *   description: CashRegister management and retrieval
  */
 
 /**
  * @swagger
- * /transactions:
+ * /cashRegisters:
  *   post:
- *     summary: Create a transaction
- *     description: Only admins can create other transactions.
- *     tags: [Transactions]
+ *     summary: Create a cashRegister
+ *     description: Only admins can create other cashRegisters.
+ *     tags: [CashRegisters]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -147,19 +81,19 @@ export default router;
  *                 description: At least one number and one letter
  *               role:
  *                  type: string
- *                  enum: [transaction, admin]
+ *                  enum: [cashRegister, admin]
  *             example:
  *               name: fake name
  *               email: fake@example.com
  *               password: password1
- *               role: transaction
+ *               role: cashRegister
  *     responses:
  *       "201":
  *         description: Created
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Transaction'
+ *                $ref: '#/components/schemas/CashRegister'
  *       "400":
  *         $ref: '#/components/responses/DuplicateEmail'
  *       "401":
@@ -168,9 +102,9 @@ export default router;
  *         $ref: '#/components/responses/Forbidden'
  *
  *   get:
- *     summary: Get all transactions
- *     description: Only admins can retrieve all transactions.
- *     tags: [Transactions]
+ *     summary: Get all cashRegisters
+ *     description: Only admins can retrieve all cashRegisters.
+ *     tags: [CashRegisters]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -178,12 +112,12 @@ export default router;
  *         name: name
  *         schema:
  *           type: string
- *         description: Transaction name
+ *         description: CashRegister name
  *       - in: query
  *         name: role
  *         schema:
  *           type: string
- *         description: Transaction role
+ *         description: CashRegister role
  *       - in: query
  *         name: sortBy
  *         schema:
@@ -195,7 +129,7 @@ export default router;
  *           type: integer
  *           minimum: 1
  *         default: 10
- *         description: Maximum number of transactions
+ *         description: Maximum number of cashRegisters
  *       - in: query
  *         name: page
  *         schema:
@@ -214,7 +148,7 @@ export default router;
  *                 results:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Transaction'
+ *                     $ref: '#/components/schemas/CashRegister'
  *                 page:
  *                   type: integer
  *                   example: 1
@@ -235,11 +169,11 @@ export default router;
 
 /**
  * @swagger
- * /transactions/{id}:
+ * /cashRegisters/{id}:
  *   get:
- *     summary: Get a transaction
- *     description: Logged in transactions can fetch only their own transaction information. Only admins can fetch other transactions.
- *     tags: [Transactions]
+ *     summary: Get a cashRegister
+ *     description: Logged in cashRegisters can fetch only their own cashRegister information. Only admins can fetch other cashRegisters.
+ *     tags: [CashRegisters]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -248,14 +182,14 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Transaction id
+ *         description: CashRegister id
  *     responses:
  *       "200":
  *         description: OK
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Transaction'
+ *                $ref: '#/components/schemas/CashRegister'
  *       "401":
  *         $ref: '#/components/responses/Unauthorized'
  *       "403":
@@ -264,9 +198,9 @@ export default router;
  *         $ref: '#/components/responses/NotFound'
  *
  *   patch:
- *     summary: Update a transaction
- *     description: Logged in transactions can only update their own information. Only admins can update other transactions.
- *     tags: [Transactions]
+ *     summary: Update a cashRegister
+ *     description: Logged in cashRegisters can only update their own information. Only admins can update other cashRegisters.
+ *     tags: [CashRegisters]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -275,7 +209,7 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Transaction id
+ *         description: CashRegister id
  *     requestBody:
  *       required: true
  *       content:
@@ -304,7 +238,7 @@ export default router;
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Transaction'
+ *                $ref: '#/components/schemas/CashRegister'
  *       "400":
  *         $ref: '#/components/responses/DuplicateEmail'
  *       "401":
@@ -315,9 +249,9 @@ export default router;
  *         $ref: '#/components/responses/NotFound'
  *
  *   delete:
- *     summary: Delete a transaction
- *     description: Logged in transactions can delete only themselves. Only admins can delete other transactions.
- *     tags: [Transactions]
+ *     summary: Delete a cashRegister
+ *     description: Logged in cashRegisters can delete only themselves. Only admins can delete other cashRegisters.
+ *     tags: [CashRegisters]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -326,7 +260,7 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Transaction id
+ *         description: CashRegister id
  *     responses:
  *       "200":
  *         description: No content

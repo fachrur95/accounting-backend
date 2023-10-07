@@ -6,6 +6,7 @@ export { default as warehouseController } from './warehouse.controller';
 export { default as accountClassController } from './accountClass.controller';
 export { default as accountSubClassController } from './accountSubClass.controller';
 export { default as chartOfAccountController } from './chartOfAccount.controller';
+export { default as cashRegisterController } from './cashRegister.controller';
 export { default as taxController } from './tax.controller';
 export { default as termController } from './term.controller';
 export { default as peopleCategoryController } from './peopleCategory.controller';

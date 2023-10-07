@@ -101,6 +101,16 @@ const defaultPrefix: Omit<Prisma.PrefixCreateInput, "createdBy" | "unit">[] = [
     transactionType: "BEGINNING_BALANCE_RECEIVABLE",
     prefix: "SAP",
   },
+  {
+    name: "Buka Kasir",
+    transactionType: "OPEN_REGISTER",
+    prefix: "OCR",
+  },
+  {
+    name: "Tutup Kasir",
+    transactionType: "CLOSE_REGISTER",
+    prefix: "CCR",
+  },
 ];
 
 export default defaultPrefix;

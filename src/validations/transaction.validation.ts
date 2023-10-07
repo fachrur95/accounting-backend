@@ -2,6 +2,25 @@ import Joi from 'joi';
 import { balance } from './custom.validation';
 import { TransactionType } from '@prisma/client';
 
+const openCashRegister = {
+  body: Joi.object().keys({
+    transactionNumber: Joi.string().required(),
+    cashRegisterId: Joi.string().required(),
+    amount: Joi.number().min(0),
+    note: Joi.string(),
+  })
+};
+
+const closeCashRegister = {
+  body: Joi.object().keys({
+    transactionOpenId: Joi.string().required(),
+    transactionNumber: Joi.string().required(),
+    cashRegisterId: Joi.string().required(),
+    amount: Joi.number().min(0),
+    note: Joi.string(),
+  })
+};
+
 const createSalesPurchase = {
   body: Joi.object().keys({
     transactionNumber: Joi.string().required(),
@@ -382,11 +401,15 @@ const generateTransactionNumber = {
       TransactionType.BEGINNING_BALANCE_STOCK,
       TransactionType.BEGINNING_BALANCE_DEBT,
       TransactionType.BEGINNING_BALANCE_RECEIVABLE,
+      TransactionType.OPEN_REGISTER,
+      TransactionType.CLOSE_REGISTER,
     ),
   })
 };
 
 export default {
+  openCashRegister,
+  closeCashRegister,
   createSalesPurchase,
   createPayment,
   createLiability,

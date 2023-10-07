@@ -161,6 +161,7 @@ model ChartOfAccount {
 model CashRegister {
   id                    String         @id @default(cuid())
   name                  String
+  note                  String?
   isActive              Boolean        @default(true)
   createdAt             DateTime       @default(now())
   createdBy             String
@@ -420,7 +421,7 @@ model Transaction {
   id                       String              @id @default(cuid())
   transactionType          TransactionType
   transactionNumber        String
-  paymentInput             Float
+  paymentInput             Float               @default(0)
   change                   Float               @default(0)
   beforeTax                Float               @default(0)
   taxValue                 Float               @default(0)

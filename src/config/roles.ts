@@ -13,6 +13,8 @@ const allRoles = {
     'manageUnits',
     'getWarehouses',
     'manageWarehouses',
+    'getCashRegisters',
+    'manageCashRegisters',
   ],
   [Role.AUDITOR]: [
     'getUsers',
@@ -57,6 +59,8 @@ const allRoles = {
     'managePriceBooks',
     'getTransactions',
     'manageTransactions',
+    'getCashRegisters',
+    'manageCashRegisters',
   ]
 };
 

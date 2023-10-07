@@ -7,6 +7,60 @@ import pickNested from '../utils/pickNested';
 import { FiltersType } from '../types/filtering';
 import { SessionData } from '../types/session';
 
+const openCashRegister = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const {
+    transactionNumber,
+    cashRegisterId,
+    amount,
+    note,
+  } = req.body;
+  const transaction = await transactionService.openRegister({
+    transactionNumber,
+    cashRegisterId,
+    amount,
+    note,
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Open Cash Register",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
+const closeCashRegister = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const {
+    transactionOpenId,
+    transactionNumber,
+    cashRegisterId,
+    amount,
+    note,
+  } = req.body;
+  const transaction = await transactionService.closeRegister({
+    transactionOpenId,
+    transactionNumber,
+    cashRegisterId,
+    amount,
+    note,
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Close Cash Register",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
 const createSell = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const {
@@ -175,6 +229,8 @@ const generateTransactionNumber = catchAsync(async (req, res) => {
 })
 
 export default {
+  openCashRegister,
+  closeCashRegister,
   createSell,
   createBuy,
   updateSell,

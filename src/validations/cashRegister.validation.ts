@@ -1,19 +1,19 @@
 import Joi from 'joi';
 
-const createItemCategory = {
+const createCashRegister = {
   body: Joi.object().keys({
-    itemTypeId: Joi.string().required(),
+    depositAccountId: Joi.string().required(),
+    beginBalanceAccountId: Joi.string().required(),
     name: Joi.string().required(),
     note: Joi.string(),
     isActive: Joi.boolean(),
   })
 };
 
-const getItemCategories = {
+const getCashRegisters = {
   query: Joi.object().keys({
     name: Joi.string(),
     unitId: Joi.string(),
-    itemTypeId: Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
@@ -30,19 +30,20 @@ const getItemCategories = {
   })
 };
 
-const getItemCategory = {
+const getCashRegister = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    cashRegisterId: Joi.string()
   })
 };
 
-const updateItemCategory = {
+const updateCashRegister = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    cashRegisterId: Joi.string()
   }),
   body: Joi.object()
     .keys({
-      itemTypeId: Joi.string(),
+      depositAccountId: Joi.string(),
+      beginBalanceAccountId: Joi.string(),
       name: Joi.string(),
       note: Joi.string(),
       isActive: Joi.boolean(),
@@ -50,16 +51,16 @@ const updateItemCategory = {
     .min(1)
 };
 
-const deleteItemCategory = {
+const deleteCashRegister = {
   params: Joi.object().keys({
-    itemCategoryId: Joi.string()
+    cashRegisterId: Joi.string()
   })
 };
 
 export default {
-  createItemCategory,
-  getItemCategories,
-  getItemCategory,
-  updateItemCategory,
-  deleteItemCategory
+  createCashRegister,
+  getCashRegisters,
+  getCashRegister,
+  updateCashRegister,
+  deleteCashRegister
 };

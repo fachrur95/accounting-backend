@@ -1,4 +1,4 @@
-import { Transaction, Prisma, TransactionType } from '@prisma/client';
+import { Transaction, Prisma, TransactionType, CashRegister } from '@prisma/client';
 import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/ApiError';
@@ -37,6 +37,131 @@ const generateDueDate = async (entryDate: Date, termId?: string): Promise<Date> 
 
   return dueDate;
 }
+
+interface ICashRegisterDataOpen {
+  transactionNumber: string;
+  cashRegisterId: string;
+  amount: number;
+  note?: string;
+  createdBy: string;
+  unitId: string;
+}
+
+interface ICashRegisterDataClose {
+  transactionOpenId: string;
+  transactionNumber: string;
+  cashRegisterId: string;
+  amount: number;
+  note?: string;
+  createdBy: string;
+  unitId: string;
+}
+
+interface IQueryRawCheckRegister {
+  id: string;
+  name: string;
+  status: boolean;
+}
+
+/**
+ * Get Cash Register By Id and UnitId
+ * @param {String} id
+ * @param {String} unitId
+ * @returns {Promise<CashRegister | null>}
+ */
+const getCashRegisterById = async (id: string, unitId: string): Promise<CashRegister | null> => {
+  return prisma.cashRegister.findFirst({ where: { id, unitId } });
+}
+
+/**
+ * Get All Cash Register By UnitId
+ * @param {String} id?
+ * @param {String} unitId
+ * @returns {Promise<CashRegister | null>}
+ */
+const getAllCashRegisterByUnitId = async (unitId: string, id?: string): Promise<IQueryRawCheckRegister[]> => {
+  return prisma.$queryRaw<IQueryRawCheckRegister[]>`
+    SELECT
+      cr."id",
+      cr."name",
+      CASE
+        WHEN open_trans."cashRegisterId" = cr."id" THEN FALSE
+        ELSE TRUE
+      END AS status
+    FROM
+      "CashRegister" cr
+    LEFT JOIN (
+      SELECT DISTINCT "id", "cashRegisterId"
+      FROM "Transaction"
+      WHERE "transactionType" = 'OPEN_REGISTER' AND "id" NOT IN (SELECT DISTINCT "transactionParentId" FROM "Transaction" close_trans WHERE close_trans."transactionType" = 'CLOSE_REGISTER')
+    ) AS open_trans 
+    ON cr."id" = open_trans."cashRegisterId"
+    WHERE cr."unitId" = ${unitId}
+    ${id ? Prisma.sql` AND cr."id" = ${id}` : Prisma.empty}
+    ORDER BY cr."name" ASC;
+  `;
+}
+
+/**
+ * Open cash register
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const openRegister = async (
+  data: ICashRegisterDataOpen
+): Promise<Transaction> => {
+  const cashRegister = await getCashRegisterById(data.cashRegisterId, data.unitId);
+  if (!cashRegister) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Cash Register not found');
+  }
+  const checkOpen = await getAllCashRegisterByUnitId(data.unitId, data.cashRegisterId);
+  // const getAll = await getAllCashRegisterByUnitId(data.unitId);
+
+  // console.log({ checkOpen });
+
+  if (checkOpen.length === 0) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Cash Register not exists yet');
+  }
+
+  const allowed = checkOpen[0]?.status ?? false;
+
+  if (!allowed) {
+    throw new ApiError(httpStatus.FORBIDDEN, `Cash Register "${cashRegister.name}" has been opened`);
+  }
+
+  return prisma.transaction.create({
+    data: {
+      transactionNumber: data.transactionNumber,
+      cashRegisterId: data.cashRegisterId,
+      transactionType: "OPEN_REGISTER",
+      total: data.amount,
+      createdBy: data.createdBy,
+      unitId: data.unitId,
+    }
+  })
+};
+
+/**
+ * Close cash register
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const closeRegister = async (
+  data: ICashRegisterDataClose
+): Promise<Transaction> => {
+
+  return prisma.transaction.create({
+    data: {
+      transactionParentId: data.transactionOpenId,
+      transactionNumber: data.transactionNumber,
+      cashRegisterId: data.cashRegisterId,
+      transactionType: "CLOSE_REGISTER",
+      total: data.amount,
+      createdBy: data.createdBy,
+      unitId: data.unitId,
+    }
+  })
+};
 
 /**
  * Create a sell transaction
@@ -82,10 +207,10 @@ const createSell = async (
 
   const { dataLine, beforeTax, taxValue, total } = details;
 
-  const totalPayment = rest.paymentInput <= total
-    ? rest.paymentInput
+  const totalPayment = (rest?.paymentInput ?? 0) <= total
+    ? rest.paymentInput ?? 0
     : total;
-  const change = rest.paymentInput - total;
+  const change = (rest?.paymentInput ?? 0) - total;
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -169,10 +294,10 @@ const createPurchase = async (
 
   const { dataLine, beforeTax, taxValue, total } = details;
 
-  const totalPayment = rest.paymentInput <= total
-    ? rest.paymentInput
+  const totalPayment = (rest?.paymentInput ?? 0) <= total
+    ? rest.paymentInput ?? 0
     : total;
-  const change = rest.paymentInput - total;
+  const change = (rest?.paymentInput ?? 0) - total;
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -502,11 +627,11 @@ const updateSellById = async <Key extends keyof Transaction>(
 
   const dataItemIds = getItemChanges(dataLineBefore, dataLineBecome);
 
-  const totalPayment = rest.paymentInput <= total
-    ? rest.paymentInput
+  const totalPayment = (rest.paymentInput ?? 0) <= total
+    ? (rest.paymentInput ?? 0)
     : total;
 
-  const change = rest.paymentInput - total;
+  const change = (rest.paymentInput ?? 0) - total;
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -671,11 +796,11 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
 
   const dataItemIds = getItemChanges(dataLineBefore, dataLineBecome);
 
-  const totalPayment = rest.paymentInput <= total
-    ? rest.paymentInput
+  const totalPayment = (rest.paymentInput ?? 0) <= total
+    ? (rest.paymentInput ?? 0)
     : total;
 
-  const change = rest.paymentInput - total;
+  const change = (rest.paymentInput ?? 0) - total;
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -919,6 +1044,8 @@ const generateTransactionNumber = async (transactionType: TransactionType, unitI
 };
 
 export default {
+  openRegister,
+  closeRegister,
   createSell,
   createPurchase,
   queryTransactions,
