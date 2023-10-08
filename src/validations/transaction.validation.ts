@@ -15,7 +15,6 @@ const closeCashRegister = {
   body: Joi.object().keys({
     transactionOpenId: Joi.string().required(),
     transactionNumber: Joi.string().required(),
-    cashRegisterId: Joi.string().required(),
     amount: Joi.number().min(0),
     note: Joi.string(),
   })

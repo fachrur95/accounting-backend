@@ -9,13 +9,16 @@ import { SessionData } from '../types/session';
 
 const openCashRegister = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
+  if (user.session.cashRegister) {
+    throw new ApiError(httpStatus.FORBIDDEN, `You still have a cash register "${user.session.cashRegister.name}" that has not been closed.`);
+  }
   const {
     transactionNumber,
     cashRegisterId,
     amount,
     note,
   } = req.body;
-  const transaction = await transactionService.openRegister({
+  const transaction = await transactionService.openCashRegister({
     transactionNumber,
     cashRegisterId,
     amount,
@@ -35,17 +38,18 @@ const openCashRegister = catchAsync(async (req, res) => {
 
 const closeCashRegister = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
+  if (!user.session.cashRegister) {
+    throw new ApiError(httpStatus.FORBIDDEN, `You can't close the till because you've never opened it before or if you've opened it maybe you've closed it.`);
+  }
   const {
     transactionOpenId,
     transactionNumber,
-    cashRegisterId,
     amount,
     note,
   } = req.body;
-  const transaction = await transactionService.closeRegister({
+  const transaction = await transactionService.closeCashRegister({
     transactionOpenId,
     transactionNumber,
-    cashRegisterId,
     amount,
     note,
     createdBy: user.email,
@@ -63,6 +67,10 @@ const closeCashRegister = catchAsync(async (req, res) => {
 
 const createSell = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
+  const cashRegisterId = user.session.cashRegister?.id;
+  if (user.role === 'USER' && !cashRegisterId) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'You must open the cash register before making a sale.');
+  }
   const {
     transactionNumber,
     paymentInput,
@@ -75,6 +83,7 @@ const createSell = catchAsync(async (req, res) => {
   const transaction = await transactionService.createSell({
     transactionType: "SALE_INVOICE",
     transactionNumber,
+    cashRegisterId,
     paymentInput,
     entryDate,
     note,

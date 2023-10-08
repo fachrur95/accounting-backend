@@ -2,7 +2,7 @@ import prisma from '../client';
 import { Strategy as JwtStrategy, ExtractJwt, VerifyCallback, StrategyOptions } from 'passport-jwt';
 import config from './config';
 import { TokenType } from '@prisma/client';
-import { SessionData } from '../types/session';
+import { ICashRegister, SessionData } from '../types/session';
 
 const cookieExtractor = (req: { cookies: any; signedCookies: { [x: string]: any; }; }) => {
   let jwt = null
@@ -40,16 +40,37 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
       return done(null, false);
     }
 
-    const institute = await prisma.institute.findUnique({
+    const getInstitute = prisma.institute.findUnique({
       where: { id: payload.session?.institute ?? "" }
     });
-    const unit = await prisma.unit.findUnique({
+    const getUnit = prisma.unit.findUnique({
       where: { id: payload.session?.unit ?? "" },
       include: {
         GeneralSetting: true,
       }
     });
-    const dataSession = { ...user, session: { institute, unit } } as SessionData;
+    const getCheckCashRegister = prisma.$queryRaw<ICashRegister[]>`
+      SELECT DISTINCT "cashRegisterId" AS "id", cr."name", "Transaction"."id" AS "transactionId", "transactionNumber", "entryDate" AS "openDate", "Transaction"."createdBy" AS "openedBy"
+      FROM "Transaction"
+      LEFT JOIN "CashRegister" cr ON (cr."id" = "Transaction"."cashRegisterId")
+      WHERE "transactionType" = 'OPEN_REGISTER'
+      AND "Transaction"."id" NOT IN (SELECT DISTINCT "transactionParentId" FROM "Transaction" close_trans WHERE close_trans."transactionType" = 'CLOSE_REGISTER')
+      AND "Transaction"."createdBy" = ${user.email};
+    `;
+    const [institute, unit, checkCashRegister] = await Promise.all([getInstitute, getUnit, getCheckCashRegister]);
+
+    let cashRegister = undefined;
+    if (checkCashRegister.length > 0) {
+      cashRegister = checkCashRegister[0];
+    }
+    const dataSession = {
+      ...user,
+      session: {
+        institute,
+        unit,
+        cashRegister
+      }
+    } as SessionData;
     done(null, dataSession);
   } catch (error) {
     done(error, false);

@@ -50,7 +50,6 @@ interface ICashRegisterDataOpen {
 interface ICashRegisterDataClose {
   transactionOpenId: string;
   transactionNumber: string;
-  cashRegisterId: string;
   amount: number;
   note?: string;
   createdBy: string;
@@ -107,7 +106,7 @@ const getAllCashRegisterByUnitId = async (unitId: string, id?: string): Promise<
  * @param {Object} data
  * @returns {Promise<Transaction>}
  */
-const openRegister = async (
+const openCashRegister = async (
   data: ICashRegisterDataOpen
 ): Promise<Transaction> => {
   const cashRegister = await getCashRegisterById(data.cashRegisterId, data.unitId);
@@ -129,6 +128,8 @@ const openRegister = async (
     throw new ApiError(httpStatus.FORBIDDEN, `Cash Register "${cashRegister.name}" has been opened`);
   }
 
+  await prefixService.updatePrefixByTransactionType(data.unitId, "OPEN_REGISTER", data.transactionNumber);
+
   return prisma.transaction.create({
     data: {
       transactionNumber: data.transactionNumber,
@@ -137,6 +138,7 @@ const openRegister = async (
       total: data.amount,
       createdBy: data.createdBy,
       unitId: data.unitId,
+      note: data.note,
     }
   })
 };
@@ -146,19 +148,33 @@ const openRegister = async (
  * @param {Object} data
  * @returns {Promise<Transaction>}
  */
-const closeRegister = async (
+const closeCashRegister = async (
   data: ICashRegisterDataClose
 ): Promise<Transaction> => {
+  const transactionOpen = await prisma.transaction.findFirst({
+    where: {
+      id: data.transactionOpenId,
+      unitId: data.unitId,
+      transactionType: "OPEN_REGISTER",
+      createdBy: data.createdBy,
+    },
+  });
+  if (!transactionOpen) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Transaction Open Register not found. Maybe you weren't the one who opened this cash register before");
+  }
+
+  await prefixService.updatePrefixByTransactionType(data.unitId, "CLOSE_REGISTER", data.transactionNumber);
 
   return prisma.transaction.create({
     data: {
-      transactionParentId: data.transactionOpenId,
+      transactionParentId: transactionOpen.id,
       transactionNumber: data.transactionNumber,
-      cashRegisterId: data.cashRegisterId,
+      cashRegisterId: transactionOpen.cashRegisterId,
       transactionType: "CLOSE_REGISTER",
       total: data.amount,
-      createdBy: data.createdBy,
-      unitId: data.unitId,
+      createdBy: transactionOpen.createdBy,
+      unitId: transactionOpen.unitId,
+      note: data.note,
     }
   })
 };
@@ -1044,8 +1060,8 @@ const generateTransactionNumber = async (transactionType: TransactionType, unitI
 };
 
 export default {
-  openRegister,
-  closeRegister,
+  openCashRegister,
+  closeCashRegister,
   createSell,
   createPurchase,
   queryTransactions,
