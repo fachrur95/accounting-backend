@@ -49,17 +49,22 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
         GeneralSetting: true,
       }
     });
-    const getCheckCashRegister = prisma.$queryRaw<ICashRegister[]>`
+    const [institute, unit] = await Promise.all([getInstitute, getUnit]);
+
+    let checkCashRegister: ICashRegister[] = [];
+    if (unit) {
+      checkCashRegister = await prisma.$queryRaw<ICashRegister[]>`
       SELECT DISTINCT "cashRegisterId" AS "id", cr."name", "Transaction"."id" AS "transactionId", "transactionNumber", "entryDate" AS "openDate", "Transaction"."createdBy" AS "openedBy"
       FROM "Transaction"
       LEFT JOIN "CashRegister" cr ON (cr."id" = "Transaction"."cashRegisterId")
       WHERE "transactionType" = 'OPEN_REGISTER'
       AND "Transaction"."id" NOT IN (SELECT DISTINCT "transactionParentId" FROM "Transaction" close_trans WHERE close_trans."transactionType" = 'CLOSE_REGISTER')
+      AND "Transaction"."unitId" = ${unit?.id}
       AND "Transaction"."createdBy" = ${user.email};
     `;
-    const [institute, unit, checkCashRegister] = await Promise.all([getInstitute, getUnit, getCheckCashRegister]);
+    }
 
-    let cashRegister = undefined;
+    let cashRegister = null;
     if (checkCashRegister.length > 0) {
       cashRegister = checkCashRegister[0];
     }

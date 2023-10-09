@@ -16,7 +16,7 @@ export async function handleUpload(file: string) {
     const res = await cloudinaryConfig.uploader.upload(file, {
       resource_type: "auto",
     });
-    console.log({ res })
+    // console.log({ res });
     return res;
   } catch (error) {
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Error upload');

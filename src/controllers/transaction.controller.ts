@@ -41,8 +41,8 @@ const closeCashRegister = catchAsync(async (req, res) => {
   if (!user.session.cashRegister) {
     throw new ApiError(httpStatus.FORBIDDEN, `You can't close the till because you've never opened it before or if you've opened it maybe you've closed it.`);
   }
+  const transactionOpenId = user.session.cashRegister.transactionId;
   const {
-    transactionOpenId,
     transactionNumber,
     amount,
     note,

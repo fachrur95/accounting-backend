@@ -204,6 +204,13 @@ const calculateFIFOByTransDetailId = async (
     orderBy: { date: "asc" },
   });
 
+  if (transBefore.length === 0) {
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      `Insufficient stock of "${item?.name}"! Only: 0 left`
+    );
+  }
+
   let totalStockSold = 0;
   let currentQty = qty;
   for (const [index, purchase] of transBefore.entries()) {
@@ -215,7 +222,7 @@ const calculateFIFOByTransDetailId = async (
     if (index + 1 === transBefore.length && currentStock < qty) {
       throw new ApiError(
         httpStatus.INTERNAL_SERVER_ERROR,
-        `Insufficient stock of "${item?.name}"! Only : ${currentStock} left`
+        `Insufficient stock of "${item?.name}"! Only: ${currentStock} left`
       );
     }
 
@@ -356,7 +363,14 @@ const calculateAVGByTransDetailId = async (
     },
   });
 
-  const [transBefore, cogs] = await Promise.all([getTansBefore, getCogs])
+  const [transBefore, cogs] = await Promise.all([getTansBefore, getCogs]);
+
+  if (transBefore.length === 0) {
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      `Insufficient stock of "${item?.name}"! Only: 0 left`
+    );
+  }
 
   const currentCogs = cogs._avg.cogs ?? 0;
 
@@ -370,7 +384,7 @@ const calculateAVGByTransDetailId = async (
     if (index + 1 === transBefore.length && currentStock < qty) {
       throw new ApiError(
         httpStatus.INTERNAL_SERVER_ERROR,
-        `Insufficient stock of "${item?.name}"! Only : ${currentStock} left`
+        `Insufficient stock of "${item?.name}"! Only: ${currentStock} left`
       );
     }
 
@@ -475,7 +489,7 @@ const calculateManualByTransDetailId = async (
       },
       qty: true,
     }
-  })
+  });
 
   if (!getTrans) {
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Transaction not found!");
@@ -511,7 +525,14 @@ const calculateManualByTransDetailId = async (
     }
   });
 
-  const [transBefore, cogs] = await Promise.all([getTansBefore, getCogs])
+  const [transBefore, cogs] = await Promise.all([getTansBefore, getCogs]);
+
+  if (transBefore.length === 0) {
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      `Insufficient stock of "${item?.name}"! Only: 0 left`
+    );
+  }
 
   const currentCogs = cogs?.manualCogs ?? 0;
 
@@ -525,7 +546,7 @@ const calculateManualByTransDetailId = async (
     if (index + 1 === transBefore.length && currentStock < qty) {
       throw new ApiError(
         httpStatus.INTERNAL_SERVER_ERROR,
-        `Insufficient stock of "${item?.name}"! Only : ${currentStock} left`
+        `Insufficient stock of "${item?.name}"! Only: ${currentStock} left`
       );
     }
 
@@ -758,11 +779,6 @@ const recalculateFIFO = async (
     result.push(mergedItem);
   }
 
-  /* for (const row of result) {
-    console.log({ row });
-    console.log({ children: row.children });
-  } */
-
   const dataUpdateCogs = [];
   for (const item of result) {
     const { children, ...rest } = item;
@@ -932,11 +948,6 @@ const recalculateAVG = async (
     result.push(mergedItem);
   }
 
-  /* for (const row of result) {
-    console.log({ row });
-    console.log({ children: row.children });
-  } */
-
   const dataUpdateCogs = [];
   for (const item of result) {
     const { children, ...rest } = item;
@@ -1105,11 +1116,6 @@ const recalculateManual = async (
     dataIndex1++;
     result.push(mergedItem);
   }
-
-  /* for (const row of result) {
-    console.log({ row });
-    console.log({ children: row.children });
-  } */
 
   const dataUpdateCogs = [];
   for (const item of result) {

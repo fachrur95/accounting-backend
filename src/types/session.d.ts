@@ -31,6 +31,6 @@ export interface SessionData extends User {
   session?: {
     institute?: Institute,
     unit?: Prisma.UnitGetPayload,
-    cashRegister?: ICashRegister,
+    cashRegister?: ICashRegister | null,
   }
 }

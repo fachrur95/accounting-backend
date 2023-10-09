@@ -190,11 +190,11 @@ const updateUnitById = async <Key extends keyof Unit>(
     throw new ApiError(httpStatus.NOT_FOUND, 'Unit not found');
   }
   const checkName = await getUnitByName(updateBody.instituteId as string, updateBody.name as string);
-  console.log({
+  /* console.log({
     checkName: checkName?.name,
     updateBody: unit.name,
     result: checkName?.name !== unit.name
-  })
+  }); */
   if (updateBody.name && checkName && checkName.name !== unit.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Unit name already taken');
   }

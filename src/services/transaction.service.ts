@@ -13,6 +13,13 @@ interface ICreateTransactionData extends Prisma.TransactionUncheckedCreateInput 
   transactionDetail: Prisma.TransactionDetailCreateManyTransactionInput[],
 }
 
+interface ICreateJournalEntryData extends Prisma.TransactionUncheckedCreateInput {
+  transactionDetail: (Prisma.TransactionDetailCreateManyTransactionInput & {
+    debit: number;
+    credit: number;
+  })[],
+}
+
 interface IUpdateTransactionData extends Prisma.TransactionUncheckedCreateInput {
   transactionDetail: Prisma.TransactionDetailCreateManyTransactionInput[],
 }
@@ -22,6 +29,12 @@ interface ReduceAmount {
   beforeTax: number,
   taxValue: number,
   total: number
+}
+
+interface ReduceAmountJournalEntry {
+  dataLine: Prisma.TransactionDetailCreateManyTransactionInput[],
+  totalDebit: number,
+  totalCredit: number,
 }
 
 const generateDueDate = async (entryDate: Date, termId?: string): Promise<Date> => {
@@ -109,14 +122,15 @@ const getAllCashRegisterByUnitId = async (unitId: string, id?: string): Promise<
 const openCashRegister = async (
   data: ICashRegisterDataOpen
 ): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
   const cashRegister = await getCashRegisterById(data.cashRegisterId, data.unitId);
   if (!cashRegister) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Cash Register not found');
   }
   const checkOpen = await getAllCashRegisterByUnitId(data.unitId, data.cashRegisterId);
   // const getAll = await getAllCashRegisterByUnitId(data.unitId);
-
-  // console.log({ checkOpen });
 
   if (checkOpen.length === 0) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Cash Register not exists yet');
@@ -130,17 +144,23 @@ const openCashRegister = async (
 
   await prefixService.updatePrefixByTransactionType(data.unitId, "OPEN_REGISTER", data.transactionNumber);
 
-  return prisma.transaction.create({
+  const transactionType = 'OPEN_REGISTER';
+
+  const transaction = await prisma.transaction.create({
     data: {
       transactionNumber: data.transactionNumber,
       cashRegisterId: data.cashRegisterId,
-      transactionType: "OPEN_REGISTER",
+      transactionType,
       total: data.amount,
       createdBy: data.createdBy,
       unitId: data.unitId,
       note: data.note,
     }
-  })
+  });
+
+  await prefixService.updatePrefixByTransactionType(data.unitId, transactionType, data.transactionNumber);
+
+  return transaction;
 };
 
 /**
@@ -151,32 +171,41 @@ const openCashRegister = async (
 const closeCashRegister = async (
   data: ICashRegisterDataClose
 ): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
   const transactionOpen = await prisma.transaction.findFirst({
     where: {
       id: data.transactionOpenId,
       unitId: data.unitId,
-      transactionType: "OPEN_REGISTER",
+      transactionType: 'OPEN_REGISTER',
       createdBy: data.createdBy,
     },
   });
   if (!transactionOpen) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Transaction Open Register not found. Maybe you weren't the one who opened this cash register before");
+    throw new ApiError(httpStatus.NOT_FOUND, "Transaction Open Register not found to this cash register or maybe you weren't the one who opened this cash register before");
   }
 
   await prefixService.updatePrefixByTransactionType(data.unitId, "CLOSE_REGISTER", data.transactionNumber);
 
-  return prisma.transaction.create({
+  const transactionType = 'CLOSE_REGISTER';
+
+  const transaction = await prisma.transaction.create({
     data: {
       transactionParentId: transactionOpen.id,
       transactionNumber: data.transactionNumber,
       cashRegisterId: transactionOpen.cashRegisterId,
-      transactionType: "CLOSE_REGISTER",
+      transactionType,
       total: data.amount,
       createdBy: transactionOpen.createdBy,
       unitId: transactionOpen.unitId,
       note: data.note,
     }
-  })
+  });
+
+  await prefixService.updatePrefixByTransactionType(data.unitId, transactionType, data.transactionNumber);
+
+  return transaction;
 };
 
 /**
@@ -233,6 +262,7 @@ const createSell = async (
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          entryDate,
           dueDate,
           beforeTax,
           taxValue,
@@ -240,7 +270,6 @@ const createSell = async (
           change,
           totalPayment,
           underPayment: total - totalPayment,
-          entryDate,
         }
       });
 
@@ -320,6 +349,7 @@ const createPurchase = async (
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          entryDate,
           dueDate,
           beforeTax,
           taxValue,
@@ -350,7 +380,7 @@ const createPurchase = async (
         }
 
         const itemId = getItem.itemId;
-        const cogs = checkNaN(detail.total / detail.qty);
+        const cogs = checkNaN(detail.qty ? (detail.total ?? 0 / detail.qty) : 0);
 
         const createDetail = await tx.transactionDetail.create({
           data: {
@@ -362,8 +392,8 @@ const createPurchase = async (
         const dataCreateItemCogs = tx.itemCogs.create({
           data: {
             itemId,
-            qty: detail.qty,
-            qtyStatic: detail.qty,
+            qty: detail.qty ?? 0,
+            qtyStatic: detail.qty ?? 0,
             cogs,
             date: entryDate,
             createdBy: rest.createdBy,
@@ -372,31 +402,359 @@ const createPurchase = async (
           }
         });
 
-        /* const dataCreateStockCard = tx.stockCard.upsert({
-          where: {
-            itemId_warehouseId_unitId: {
-              itemId,
-              warehouseId: rest.warehouseId as string,
-              unitId: rest.unitId,
-            },
-          },
-          create: {
-            qty: detail.qty,
-            itemId,
-            warehouseId: rest.warehouseId as string,
-            unitId: rest.unitId,
-            createdBy: rest.createdBy,
-          },
-          update: {
-            qty: {
-              increment: detail.qty
-            },
-            updatedBy: rest.createdBy,
-          }
-        }); */
-
         await Promise.all([dataCreateItemCogs]);
       }
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Create a payment transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createReceivablePayment = async (
+  data: ICreateTransactionData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetail, ...rest } = data;
+
+  const details = transactionDetail.reduce((obj, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = (detail.priceInput ?? 0);
+    const amount = beforeDiscount;
+    const taxValue = 0;
+    const total = amount + taxValue;
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      beforeDiscount,
+      amount,
+      taxValue,
+      total,
+      vector: "POSITIVE",
+      createdBy: rest.createdBy
+    });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, beforeTax, taxValue, total } = details;
+
+  const totalPayment = total;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          beforeTax,
+          taxValue,
+          total,
+          totalPayment,
+          TransactionDetail: {
+            createMany: {
+              data: dataLine.map((detail) => detail)
+            }
+          },
+        }
+      });
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      // Jika semua operasi berjalan lancar, transaksi akan di-commit
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Create a payment transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createDebtPayment = async (
+  data: ICreateTransactionData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetail, ...rest } = data;
+
+  const details = transactionDetail.reduce((obj, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = (detail.priceInput ?? 0);
+    const amount = beforeDiscount;
+    const taxValue = 0;
+    const total = amount + taxValue;
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      beforeDiscount,
+      amount,
+      taxValue,
+      total,
+      vector: "NEGATIVE",
+      createdBy: rest.createdBy
+    });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, beforeTax, taxValue, total } = details;
+
+  const totalPayment = total;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          beforeTax,
+          taxValue,
+          total,
+          totalPayment,
+          TransactionDetail: {
+            createMany: {
+              data: dataLine.map((detail) => detail)
+            }
+          },
+        }
+      });
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      // Jika semua operasi berjalan lancar, transaksi akan di-commit
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Create a Revenue transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createRevenue = async (
+  data: ICreateTransactionData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetail, ...rest } = data;
+
+  const details = transactionDetail.reduce((obj, detail) => {
+    // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = (detail.priceInput ?? 0);
+    const discount = (detail.discountInput ?? 0);
+    const afterDiscount = beforeDiscount - discount;
+    const amount = (afterDiscount);
+    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
+    const total = amount + taxValue;
+
+    obj.dataLine.push({
+      ...detail,
+      beforeDiscount,
+      discount,
+      amount,
+      taxValue,
+      total,
+      vector: "POSITIVE",
+      createdBy: rest.createdBy
+    });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, beforeTax, taxValue, total } = details;
+
+  const totalPayment = total;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          beforeTax,
+          taxValue,
+          total,
+          totalPayment,
+          TransactionDetail: {
+            createMany: {
+              data: dataLine.map((detail) => detail)
+            }
+          },
+        }
+      });
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Create a Expense transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createExpense = async (
+  data: ICreateTransactionData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetail, ...rest } = data;
+
+  const details = transactionDetail.reduce((obj, detail) => {
+    // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = (detail.priceInput ?? 0);
+    const discount = (detail.discountInput ?? 0);
+    const afterDiscount = beforeDiscount - discount;
+    const amount = (afterDiscount);
+    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
+    const total = amount + taxValue;
+
+    obj.dataLine.push({
+      ...detail,
+      beforeDiscount,
+      discount,
+      amount,
+      taxValue,
+      total,
+      vector: "NEGATIVE",
+      createdBy: rest.createdBy
+    });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, beforeTax, taxValue, total } = details;
+
+  const totalPayment = total;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          beforeTax,
+          taxValue,
+          total,
+          totalPayment,
+          TransactionDetail: {
+            createMany: {
+              data: dataLine.map((detail) => detail)
+            }
+          },
+        }
+      });
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Create a Expense transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createJournalEntry = async (
+  data: ICreateJournalEntryData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetail, ...rest } = data;
+
+  const details = transactionDetail.reduce((obj, detail) => {
+    // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = detail.debit > 0
+      ? (detail.debit ?? 0)
+      : (detail.credit ?? 0);
+    const afterDiscount = beforeDiscount;
+    const amount = (afterDiscount);
+    const total = amount;
+
+    const totalDebit = detail.debit ?? 0;
+    const totalCredit = detail.credit ?? 0;
+
+    obj.dataLine.push({
+      ...detail,
+      beforeDiscount,
+      amount,
+      total,
+      vector: "NEGATIVE",
+      createdBy: rest.createdBy
+    });
+    obj.totalDebit += totalDebit;
+    obj.totalCredit += totalCredit;
+    return obj;
+  }, { dataLine: [], totalDebit: 0, totalCredit: 0 } as ReduceAmountJournalEntry);
+
+  const { dataLine, totalDebit, totalCredit } = details;
+
+  const total = totalDebit - totalCredit;
+
+  if (total !== 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Debit and Credit are not balanced');
+  }
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          total,
+          totalPayment: total,
+          underPayment: total,
+          TransactionDetail: {
+            createMany: {
+              data: dataLine.map((detail) => detail)
+            }
+          },
+        }
+      });
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
@@ -633,7 +991,7 @@ const updateSellById = async <Key extends keyof Transaction>(
       if (getItem) {
         dataLineBecome.push({
           itemId: getItem.itemId,
-          qty: line.qty,
+          qty: line.qty ?? 0,
           price: line.priceInput as number,
           disc: line.discountInput as number,
         })
@@ -802,7 +1160,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
       if (getItem) {
         dataLineBecome.push({
           itemId: getItem.itemId,
-          qty: line.qty,
+          qty: line.qty ?? 0,
           price: line.priceInput as number,
           disc: line.discountInput as number,
         })
@@ -857,7 +1215,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
         }
 
         const itemId = getItem.itemId;
-        const cogs = checkNaN(detail.total / detail.qty);
+        const cogs = checkNaN(detail.qty ? (detail.total ?? 0 / detail.qty) : 0);
 
         const upsertDetail = await tx.transactionDetail.upsert({
           where: {
@@ -873,16 +1231,15 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
             updatedBy: rest.updatedBy as string,
           }
         });
-        // console.log({ updatedBy: rest.updatedBy });
-        // console.log({ detailId: detail.id });
+
         const dataUpsertItemCogs = tx.itemCogs.upsert({
           where: {
             transactionDetailId: detail.id ?? "0",
           },
           create: {
             itemId,
-            qty: detail.qty,
-            qtyStatic: detail.qty,
+            qty: detail.qty ?? 0,
+            qtyStatic: detail.qty ?? 0,
             cogs,
             date: entryDate as Date,
             unitId: rest.unitId,
@@ -897,32 +1254,8 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
           }
         });
 
-        /* const dataUpsertStockCard = tx.stockCard.upsert({
-          where: {
-            itemId_warehouseId_unitId: {
-              itemId,
-              warehouseId: rest.warehouseId as string,
-              unitId: rest.unitId,
-            },
-          },
-          create: {
-            qty: detail.qty,
-            itemId,
-            warehouseId: rest.warehouseId as string,
-            unitId: rest.unitId,
-            createdBy: rest.updatedBy as string,
-          },
-          update: {
-            qty: {
-              increment: detail.qty
-            },
-            updatedBy: rest.updatedBy,
-          }
-        }); */
-
         await Promise.all([dataUpsertItemCogs]);
       }
-      console.log({ dataItemIds });
       const recalculateCogsItem = [];
       for (const itemId of dataItemIds) {
         recalculateCogsItem.push(itemCogsService.recalculateCogs(tx, itemId, rest.unitId));
@@ -1009,7 +1342,6 @@ const deleteTransactionById = async (transactionId: string): Promise<Transaction
 
   // Menghapus nilai duplikat dengan bantuan Set
   const dataItemIds = [...new Set(filteredData)];
-  console.log({ dataItemIds })
   try {
     return await prisma.$transaction(async (tx) => {
       await tx.transaction.delete({ where: { id: transaction.id } });
@@ -1064,6 +1396,11 @@ export default {
   closeCashRegister,
   createSell,
   createPurchase,
+  createReceivablePayment,
+  createDebtPayment,
+  createRevenue,
+  createExpense,
+  createJournalEntry,
   queryTransactions,
   getTransactionById,
   getTransactionByNumber,
