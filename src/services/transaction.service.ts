@@ -20,6 +20,12 @@ interface ICreateJournalEntryData extends Prisma.TransactionUncheckedCreateInput
   })[],
 }
 
+interface ICreateBeginBalanceStockData extends Prisma.TransactionUncheckedCreateInput {
+  transactionDetail: (Prisma.TransactionDetailCreateManyTransactionInput & {
+    cogsInput: number;
+  })[],
+}
+
 interface IUpdateTransactionData extends Prisma.TransactionUncheckedCreateInput {
   transactionDetail: Prisma.TransactionDetailCreateManyTransactionInput[],
 }
@@ -768,6 +774,104 @@ const createJournalEntry = async (
 };
 
 /**
+ * Create a beginning balance stock transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createBeginBalanceStock = async (
+  data: ICreateBeginBalanceStockData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetail, ...rest } = data;
+  const entryDate = new Date();
+
+  const details = transactionDetail.reduce((obj, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const total = qty * (detail.cogsInput ?? 0);
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      total,
+      vector: "POSITIVE",
+      createdBy: rest.createdBy
+    });
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, total } = details;
+
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          entryDate,
+          total,
+        }
+      });
+
+      for (const detail of dataLine) {
+        const getItem = await tx.multipleUom.findUnique({
+          where: {
+            id: detail.multipleUomId ?? "",
+          },
+          select: {
+            itemId: true,
+            item: {
+              select: {
+                name: true,
+              }
+            }
+          }
+        });
+
+        if (!getItem) {
+          throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
+        }
+
+        const itemId = getItem.itemId;
+        const cogs = checkNaN(detail.qty ? (detail.total ?? 0 / detail.qty) : 0);
+
+        const createDetail = await tx.transactionDetail.create({
+          data: {
+            ...detail,
+            transactionId: resTransaction.id
+          }
+        });
+
+        const dataCreateItemCogs = tx.itemCogs.create({
+          data: {
+            itemId,
+            qty: detail.qty ?? 0,
+            qtyStatic: detail.qty ?? 0,
+            cogs,
+            date: entryDate,
+            createdBy: rest.createdBy,
+            unitId: rest.unitId,
+            transactionDetailId: createDetail.id
+          }
+        });
+
+        await Promise.all([dataCreateItemCogs]);
+      }
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
  * Query for transactions
  * @param {Object} filter - Mongo filter
  * @param {Object} options - Query options
@@ -1401,6 +1505,7 @@ export default {
   createRevenue,
   createExpense,
   createJournalEntry,
+  createBeginBalanceStock,
   queryTransactions,
   getTransactionById,
   getTransactionByNumber,
