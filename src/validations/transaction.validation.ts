@@ -122,8 +122,8 @@ const createJournalEntry = {
     transactionDetail: Joi.array().items(
       Joi.object().keys({
         chartOfAccountId: Joi.string().required(),
-        debit: Joi.number(),
-        credit: Joi.number(),
+        debit: Joi.number().min(0).required(),
+        credit: Joi.number().min(0).required(),
         note: Joi.string(),
       }).xor('debit', 'credit')
     ).min(2).custom(balance),
@@ -320,8 +320,8 @@ const updateJournalEntry = {
       transactionDetail: Joi.array().items(
         Joi.object().keys({
           chartOfAccountId: Joi.string().required(),
-          debit: Joi.number(),
-          credit: Joi.number(),
+          debit: Joi.number().min(0).required(),
+          credit: Joi.number().min(0).required(),
           note: Joi.string(),
         }).xor('debit', 'credit')
       ).min(2).custom(balance),

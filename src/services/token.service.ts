@@ -88,7 +88,20 @@ const verifyToken = async (token: string, type: TokenType): Promise<Token> => {
  * @returns {Promise<AuthTokensResponse>}
  */
 const generateAuthTokens = async (user: { id: string }, session?: Session): Promise<AuthTokensResponse> => {
-  const payload = { userId: user.id, session };
+  const dataUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { name: true, email: true },
+  });
+  if (!dataUser) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'No users found');
+  }
+  const payload = {
+    userId: user.id,
+    name: dataUser.name,
+    email: dataUser.email,
+    image: null,
+    session
+  };
 
   const accessTokenExpires = moment().add(config.jwt.accessExpirationMinutes, 'minutes');
   const accessToken = generateToken(payload, accessTokenExpires, TokenType.ACCESS);

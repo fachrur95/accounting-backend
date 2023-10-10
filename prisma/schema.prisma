@@ -19,9 +19,9 @@ model User {
   isEmailVerified Boolean       @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  Token           Token[]
-  LogActivity     LogActivity[]
-  UserUnit        UserUnit[]
+  tokens          Token[]
+  logActivities   LogActivity[]
+  userUnits       UserUnit[]
 }
 
 model Token {
@@ -42,55 +42,55 @@ model Institute {
   createdBy String
   updatedAt DateTime @updatedAt
   updatedBy String?
-  Unit      Unit[]
+  units     Unit[]
 }
 
 model Unit {
-  id               String             @id @default(cuid())
-  name             String
-  createdAt        DateTime           @default(now())
-  createdBy        String
-  updatedAt        DateTime           @updatedAt
-  updatedBy        String?
-  institute        Institute          @relation(fields: [instituteId], references: [id])
-  instituteId      String
-  Warehouse        Warehouse[]
-  ChartOfAccount   ChartOfAccount[]
-  PeopleCategory   PeopleCategory[]
-  ItemType         ItemType[]
-  PriceBook        PriceBook[]
-  MultipleUom      MultipleUom[]
-  Prefix           Prefix[]
-  Transaction      Transaction[]
-  GeneralSetting   GeneralSetting?
-  UnitOfMeasure    UnitOfMeasure[]
-  UserUnit         UserUnit[]
-  People           People[]
-  ItemCategory     ItemCategory[]
-  Item             Item[]
-  LogActivity      LogActivity[]
-  Tax              Tax[]
+  id                String             @id @default(cuid())
+  name              String
+  createdAt         DateTime           @default(now())
+  createdBy         String
+  updatedAt         DateTime           @updatedAt
+  updatedBy         String?
+  institute         Institute          @relation(fields: [instituteId], references: [id])
+  instituteId       String
+  warehouses        Warehouse[]
+  chartOfAccounts   ChartOfAccount[]
+  peopleCategories  PeopleCategory[]
+  itemTypes         ItemType[]
+  priceBooks        PriceBook[]
+  multipleUoms      MultipleUom[]
+  prefixes          Prefix[]
+  transactions      Transaction[]
+  generalSetting    GeneralSetting?
+  unitOfMeasures    UnitOfMeasure[]
+  userUnits         UserUnit[]
+  peoples           People[]
+  itemCategories    ItemCategory[]
+  items             Item[]
+  logActivities     LogActivity[]
+  taxes             Tax[]
   // StockCard        StockCard[]
-  ItemCogs         ItemCogs[]
-  Term             Term[]
-  ItemCogsDetail   ItemCogsDetail[]
-  FinancialClosing FinancialClosing[]
-  CashRegister     CashRegister[]
+  itemCogs          ItemCogs[]
+  terms             Term[]
+  itemCogsDetails   ItemCogsDetail[]
+  financialClosings FinancialClosing[]
+  cashRegisters     CashRegister[]
 
   @@unique([instituteId, name])
 }
 
 model Warehouse {
-  id                     String        @id @default(cuid())
-  name                   String
-  createdAt              DateTime      @default(now())
-  createdBy              String
-  updatedAt              DateTime      @updatedAt
-  updatedBy              String?
-  unit                   Unit          @relation(fields: [unitId], references: [id])
-  unitId                 String
-  Transaction            Transaction[] @relation("warehouse")
-  TransactionDestination Transaction[] @relation("warehouseDestination")
+  id                      String        @id @default(cuid())
+  name                    String
+  createdAt               DateTime      @default(now())
+  createdBy               String
+  updatedAt               DateTime      @updatedAt
+  updatedBy               String?
+  unit                    Unit          @relation(fields: [unitId], references: [id])
+  unitId                  String
+  transactions            Transaction[] @relation("warehouse")
+  transactionDestinations Transaction[] @relation("warehouseDestination")
   // StockCard              StockCard[]
 }
 
@@ -117,7 +117,7 @@ model AccountClass {
   createdBy            String
   updatedAt            DateTime          @updatedAt
   updatedBy            String?
-  AccountSubClass      AccountSubClass[]
+  accountSubClasses    AccountSubClass[]
 }
 
 model AccountSubClass {
@@ -132,27 +132,27 @@ model AccountSubClass {
   updatedBy            String?
   accountClass         AccountClass     @relation(fields: [accountClassId], references: [id])
   accountClassId       String
-  ChartOfAccount       ChartOfAccount[]
+  chartOfAccounts      ChartOfAccount[]
 }
 
 model ChartOfAccount {
-  id                       String              @id @default(cuid())
-  code                     String
-  group                    String?
-  name                     String
-  isActive                 Boolean             @default(true)
-  createdAt                DateTime            @default(now())
-  createdBy                String
-  updatedAt                DateTime            @updatedAt
-  updatedBy                String?
-  accountSubClass          AccountSubClass     @relation(fields: [accountSubClassId], references: [id])
-  accountSubClassId        String
-  unit                     Unit                @relation(fields: [unitId], references: [id])
-  unitId                   String
-  TransactionDetail        TransactionDetail[]
-  Transaction              Transaction[]
-  CashRegisterDeposit      CashRegister[]      @relation("deposit")
-  CashRegisterBeginBalance CashRegister[]      @relation("beginBalance")
+  id                        String              @id @default(cuid())
+  code                      String
+  group                     String?
+  name                      String
+  isActive                  Boolean             @default(true)
+  createdAt                 DateTime            @default(now())
+  createdBy                 String
+  updatedAt                 DateTime            @updatedAt
+  updatedBy                 String?
+  accountSubClass           AccountSubClass     @relation(fields: [accountSubClassId], references: [id])
+  accountSubClassId         String
+  unit                      Unit                @relation(fields: [unitId], references: [id])
+  unitId                    String
+  transactionDetails        TransactionDetail[]
+  transactions              Transaction[]
+  cashRegisterDeposits      CashRegister[]      @relation("deposit")
+  cashRegisterBeginBalances CashRegister[]      @relation("beginBalance")
 
   @@unique([code, unitId])
   @@unique([group, unitId])
@@ -173,7 +173,7 @@ model CashRegister {
   beginBalanceAccountId String
   unit                  Unit           @relation(fields: [unitId], references: [id])
   unitId                String
-  Transaction           Transaction[]
+  transactions          Transaction[]
 }
 
 model GeneralSetting {
@@ -201,93 +201,93 @@ model PeopleCategory {
   createdBy  String
   updatedAt  DateTime    @updatedAt
   updatedBy  String?
-  People     People[]
+  peoples    People[]
   unit       Unit        @relation(fields: [unitId], references: [id])
   unitId     String
-  PriceBook  PriceBook[]
+  priceBooks PriceBook[]
 }
 
 model People {
-  id                 String         @id @default(cuid())
-  code               String?
-  name               String
-  note               String?
-  isActive           Boolean        @default(true)
-  createdAt          DateTime       @default(now())
-  createdBy          String
-  updatedAt          DateTime       @updatedAt
-  updatedBy          String?
-  peopleCategory     PeopleCategory @relation(fields: [peopleCategoryId], references: [id])
-  peopleCategoryId   String
-  unit               Unit           @relation(fields: [unitId], references: [id])
-  unitId             String
-  TransactionPeople  Transaction[]  @relation("people")
-  TransactionCashier Transaction[]  @relation("cashier")
+  id                  String         @id @default(cuid())
+  code                String?
+  name                String
+  note                String?
+  isActive            Boolean        @default(true)
+  createdAt           DateTime       @default(now())
+  createdBy           String
+  updatedAt           DateTime       @updatedAt
+  updatedBy           String?
+  peopleCategory      PeopleCategory @relation(fields: [peopleCategoryId], references: [id])
+  peopleCategoryId    String
+  unit                Unit           @relation(fields: [unitId], references: [id])
+  unitId              String
+  transactionPeoples  Transaction[]  @relation("people")
+  transactionCashiers Transaction[]  @relation("cashier")
 }
 
 model UnitOfMeasure {
-  id          String        @id @default(cuid())
-  code        String?
-  name        String
-  note        String?
-  isActive    Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  createdBy   String
-  updatedAt   DateTime      @updatedAt
-  updatedBy   String?
-  unit        Unit          @relation(fields: [unitId], references: [id])
-  unitId      String
-  MultipleUom MultipleUom[]
+  id           String        @id @default(cuid())
+  code         String?
+  name         String
+  note         String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  createdBy    String
+  updatedAt    DateTime      @updatedAt
+  updatedBy    String?
+  unit         Unit          @relation(fields: [unitId], references: [id])
+  unitId       String
+  multipleUoms MultipleUom[]
 }
 
 model Term {
-  id          String        @id @default(cuid())
-  name        String
-  period      Float         @default(0)
-  note        String?
-  isActive    Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  createdBy   String
-  updatedAt   DateTime      @updatedAt
-  updatedBy   String?
-  unit        Unit          @relation(fields: [unitId], references: [id])
-  unitId      String
-  Transaction Transaction[]
+  id           String        @id @default(cuid())
+  name         String
+  period       Float         @default(0)
+  note         String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  createdBy    String
+  updatedAt    DateTime      @updatedAt
+  updatedBy    String?
+  unit         Unit          @relation(fields: [unitId], references: [id])
+  unitId       String
+  transactions Transaction[]
 }
 
 model Tax {
-  id                String              @id @default(cuid())
-  name              String
-  rate              Float               @default(0)
-  note              String?
-  isActive          Boolean             @default(true)
-  createdAt         DateTime            @default(now())
-  createdBy         String
-  updatedAt         DateTime            @updatedAt
-  updatedBy         String?
-  unit              Unit                @relation(fields: [unitId], references: [id])
-  unitId            String
-  Item              Item[]
-  TransactionDetail TransactionDetail[]
+  id                 String              @id @default(cuid())
+  name               String
+  rate               Float               @default(0)
+  note               String?
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  createdBy          String
+  updatedAt          DateTime            @updatedAt
+  updatedBy          String?
+  unit               Unit                @relation(fields: [unitId], references: [id])
+  unitId             String
+  items              Item[]
+  transactionDetails TransactionDetail[]
 }
 
 model ItemType {
-  id           String         @id @default(cuid())
-  name         String
-  isStock      Boolean
-  isSale       Boolean
-  isPurchase   Boolean
-  isAdjustment Boolean
-  isTransfer   Boolean
-  note         String?
-  isActive     Boolean        @default(true)
-  createdAt    DateTime       @default(now())
-  createdBy    String
-  updatedAt    DateTime       @updatedAt
-  updatedBy    String?
-  ItemCategory ItemCategory[]
-  unit         Unit           @relation(fields: [unitId], references: [id])
-  unitId       String
+  id             String         @id @default(cuid())
+  name           String
+  isStock        Boolean
+  isSale         Boolean
+  isPurchase     Boolean
+  isAdjustment   Boolean
+  isTransfer     Boolean
+  note           String?
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  createdBy      String
+  updatedAt      DateTime       @updatedAt
+  updatedBy      String?
+  itemCategories ItemCategory[]
+  unit           Unit           @relation(fields: [unitId], references: [id])
+  unitId         String
 }
 
 model ItemCategory {
@@ -301,7 +301,7 @@ model ItemCategory {
   updatedBy  String?
   itemType   ItemType @relation(fields: [itemTypeId], references: [id])
   itemTypeId String
-  Item       Item[]
+  items      Item[]
   unit       Unit     @relation(fields: [unitId], references: [id])
   unitId     String
 }
@@ -324,12 +324,12 @@ model Item {
   taxId          String?
   itemCategory   ItemCategory  @relation(fields: [itemCategoryId], references: [id])
   itemCategoryId String
-  MultipleUom    MultipleUom[]
-  Images         Image[]
+  multipleUoms   MultipleUom[]
+  images         Image[]
   unit           Unit          @relation(fields: [unitId], references: [id])
   unitId         String
   // StockCard      StockCard[]
-  ItemCogs       ItemCogs[]
+  itemCogs       ItemCogs[]
 }
 
 model Image {
@@ -343,21 +343,21 @@ model Image {
 }
 
 model MultipleUom {
-  id                String              @id @default(cuid())
-  conversionQty     Float               @default(1.0)
-  barcode           String?
-  createdAt         DateTime            @default(now())
-  createdBy         String
-  updatedAt         DateTime            @updatedAt
-  updatedBy         String?
-  unit              Unit                @relation(fields: [unitId], references: [id])
-  unitId            String
-  unitOfMeasure     UnitOfMeasure       @relation(fields: [unitOfMeasureId], references: [id], onDelete: Cascade)
-  unitOfMeasureId   String
-  item              Item                @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  itemId            String
-  PriceBookDetail   PriceBookDetail[]
-  TransactionDetail TransactionDetail[]
+  id                 String              @id @default(cuid())
+  conversionQty      Float               @default(1.0)
+  barcode            String?
+  createdAt          DateTime            @default(now())
+  createdBy          String
+  updatedAt          DateTime            @updatedAt
+  updatedBy          String?
+  unit               Unit                @relation(fields: [unitId], references: [id])
+  unitId             String
+  unitOfMeasure      UnitOfMeasure       @relation(fields: [unitOfMeasureId], references: [id], onDelete: Cascade)
+  unitOfMeasureId    String
+  item               Item                @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId             String
+  priceBookDetails   PriceBookDetail[]
+  transactionDetails TransactionDetail[]
 
   @@unique([unitId, barcode])
   @@unique([unitOfMeasureId, itemId, unitId])
@@ -378,7 +378,7 @@ model PriceBook {
   peopleCategoryId String?
   unit             Unit              @relation(fields: [unitId], references: [id])
   unitId           String
-  PriceBookDetail  PriceBookDetail[]
+  priceBookDetails PriceBookDetail[]
 
   @@unique([name, unitId])
 }
@@ -418,46 +418,46 @@ model Prefix {
 }
 
 model Transaction {
-  id                       String              @id @default(cuid())
-  transactionType          TransactionType
-  transactionNumber        String
-  paymentInput             Float               @default(0)
-  change                   Float               @default(0)
-  beforeTax                Float               @default(0)
-  taxValue                 Float               @default(0)
-  total                    Float               @default(0)
-  totalPayment             Float               @default(0)
-  underPayment             Float               @default(0)
-  entryDate                DateTime            @default(now())
-  dueDate                  DateTime            @default(now())
-  note                     String?
-  createdAt                DateTime            @default(now())
-  createdBy                String
-  updatedAt                DateTime            @updatedAt
-  updatedBy                String?
-  deletedAt                DateTime?
-  deletedBy                String?
-  people                   People?             @relation("people", fields: [peopleId], references: [id])
-  peopleId                 String?
-  cashier                  People?             @relation("cashier", fields: [cashierId], references: [id])
-  cashierId                String?
-  unit                     Unit                @relation(fields: [unitId], references: [id])
-  unitId                   String
-  term                     Term?               @relation(fields: [termId], references: [id])
-  termId                   String?
-  warehouse                Warehouse?          @relation("warehouse", fields: [warehouseId], references: [id])
-  warehouseId              String?
-  warehouseDestination     Warehouse?          @relation("warehouseDestination", fields: [warehouseDestinationId], references: [id])
-  warehouseDestinationId   String?
-  chartOfAccount           ChartOfAccount?     @relation(fields: [chartOfAccountId], references: [id])
-  chartOfAccountId         String?
-  cashRegister             CashRegister?       @relation(fields: [cashRegisterId], references: [id])
-  cashRegisterId           String?
-  transactionParent        Transaction?        @relation("transactionSelf", fields: [transactionParentId], references: [id])
-  transactionParentId      String?
-  transactionChildren      Transaction[]       @relation("transactionSelf")
-  TransactionDetail        TransactionDetail[] @relation("transaction")
-  TransactionDetailPayment TransactionDetail[] @relation("transactionPayment")
+  id                        String              @id @default(cuid())
+  transactionType           TransactionType
+  transactionNumber         String
+  paymentInput              Float               @default(0)
+  change                    Float               @default(0)
+  beforeTax                 Float               @default(0)
+  taxValue                  Float               @default(0)
+  total                     Float               @default(0)
+  totalPayment              Float               @default(0)
+  underPayment              Float               @default(0)
+  entryDate                 DateTime            @default(now())
+  dueDate                   DateTime            @default(now())
+  note                      String?
+  createdAt                 DateTime            @default(now())
+  createdBy                 String
+  updatedAt                 DateTime            @updatedAt
+  updatedBy                 String?
+  deletedAt                 DateTime?
+  deletedBy                 String?
+  people                    People?             @relation("people", fields: [peopleId], references: [id])
+  peopleId                  String?
+  cashier                   People?             @relation("cashier", fields: [cashierId], references: [id])
+  cashierId                 String?
+  unit                      Unit                @relation(fields: [unitId], references: [id])
+  unitId                    String
+  term                      Term?               @relation(fields: [termId], references: [id])
+  termId                    String?
+  warehouse                 Warehouse?          @relation("warehouse", fields: [warehouseId], references: [id])
+  warehouseId               String?
+  warehouseDestination      Warehouse?          @relation("warehouseDestination", fields: [warehouseDestinationId], references: [id])
+  warehouseDestinationId    String?
+  chartOfAccount            ChartOfAccount?     @relation(fields: [chartOfAccountId], references: [id])
+  chartOfAccountId          String?
+  cashRegister              CashRegister?       @relation(fields: [cashRegisterId], references: [id])
+  cashRegisterId            String?
+  transactionParent         Transaction?        @relation("transactionSelf", fields: [transactionParentId], references: [id])
+  transactionParentId       String?
+  transactionChildren       Transaction[]       @relation("transactionSelf")
+  transactionDetails        TransactionDetail[] @relation("transaction")
+  transactionDetailPayments TransactionDetail[] @relation("transactionPayment")
 
   @@unique([transactionNumber, unitId])
 }
@@ -491,8 +491,8 @@ model TransactionDetail {
   taxId                String?
   chartOfAccount       ChartOfAccount?  @relation(fields: [chartOfAccountId], references: [id])
   chartOfAccountId     String?
-  ItemCogsDetail       ItemCogsDetail[]
-  ItemCogs             ItemCogs?
+  itemCogsDetails      ItemCogsDetail[]
+  itemCogs             ItemCogs?
 }
 
 model FinancialClosing {
@@ -520,7 +520,7 @@ model ItemCogs {
   transactionDetailId String            @unique
   unit                Unit              @relation(fields: [unitId], references: [id])
   unitId              String
-  ItemCogsDetail      ItemCogsDetail[]
+  itemCogsDetails     ItemCogsDetail[]
 }
 
 model ItemCogsDetail {

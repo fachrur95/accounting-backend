@@ -30,7 +30,7 @@ const createPriceBook = async (
   return prisma.priceBook.create({
     data: {
       ...rest,
-      PriceBookDetail: {
+      priceBookDetails: {
         createMany: {
           data: priceBookDetail.map((detail) => ({
             ...detail,
@@ -174,7 +174,7 @@ const updatePriceBookById = async <Key extends keyof PriceBook>(
     where: { id: priceBook.id },
     data: {
       ...rest,
-      PriceBookDetail: {
+      priceBookDetails: {
         deleteMany: {
           priceBookId,
           NOT: priceBookDetail.map(({ id }) => ({

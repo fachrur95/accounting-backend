@@ -11,12 +11,12 @@ import { UploadApiResponse } from 'cloudinary';
 
 interface ICreateItemData extends Prisma.ItemUncheckedCreateInput {
   multipleUom: Prisma.MultipleUomCreateManyItemInput[],
-  images: File[],
+  fileImages: File[],
 }
 
 interface IUpdateItemData extends Prisma.ItemUncheckedCreateInput {
   multipleUom: Prisma.MultipleUomCreateManyItemInput[],
-  images: File[],
+  fileImages: File[],
 }
 
 /**
@@ -30,17 +30,17 @@ const createItem = async (
   if (await getItemByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item already taken');
   }
-  const { multipleUom, images, ...rest } = data;
+  const { multipleUom, fileImages, ...rest } = data;
 
   let dataUploaded: UploadApiResponse[] = [];
-  if (images) {
-    dataUploaded = await uploadService.upload(images);
+  if (fileImages) {
+    dataUploaded = await uploadService.upload(fileImages);
   }
 
   return prisma.item.create({
     data: {
       ...rest,
-      MultipleUom: {
+      multipleUoms: {
         createMany: {
           data: multipleUom.map((uom) => ({
             ...uom,
@@ -49,7 +49,7 @@ const createItem = async (
           }))
         },
       },
-      Images: {
+      images: {
         createMany: {
           data: dataUploaded.map((uploaded) => ({
             imageUrl: uploaded.secure_url,
@@ -191,13 +191,13 @@ const updateItemById = async <Key extends keyof Item>(
   if (updateBody.name && checkName && checkName.name !== item.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item name already taken');
   }
-  const { multipleUom, images, ...rest } = updateBody;
-  const dataUploaded = await uploadService.upload(images);
+  const { multipleUom, fileImages, ...rest } = updateBody;
+  const dataUploaded = await uploadService.upload(fileImages);
   const updatedItem = await prisma.item.update({
     where: { id: item.id },
     data: {
       ...rest,
-      MultipleUom: {
+      multipleUoms: {
         deleteMany: {
           itemId,
           NOT: multipleUom.map(({ id }) => ({
@@ -220,7 +220,7 @@ const updateItemById = async <Key extends keyof Item>(
           }
         }))
       },
-      Images: {
+      images: {
         deleteMany: {
           itemId,
         },

@@ -35,7 +35,7 @@ const createItem = catchAsync(async (req, res) => {
     note,
     isActive,
     multipleUom,
-    images,
+    fileImages: images,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -89,7 +89,7 @@ const updateItem = catchAsync(async (req, res) => {
     {
       ...rest,
       multipleUom,
-      images,
+      fileImages: images,
       updatedBy: user.email,
       unitId: user.session.unit?.id ?? ""
     }

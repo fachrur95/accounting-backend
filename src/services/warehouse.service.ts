@@ -107,7 +107,8 @@ const getWarehouseById = async <Key extends keyof Warehouse>(
 
 /**
  * Get warehouse by email
- * @param {string} email
+ * @param {string} name
+ * @param {string} unitId
  * @param {Array<Key>} keys
  * @returns {Promise<Pick<Warehouse, Key> | null>}
  */

@@ -113,7 +113,7 @@ const calculateCogs = async (
       id: transactionId,
     },
     select: {
-      TransactionDetail: {
+      transactionDetails: {
         select: {
           id: true,
         }
@@ -126,7 +126,7 @@ const calculateCogs = async (
   }
   const method = await getMethodCogs(transaction.unitId);
 
-  const transactionDetails = transaction.TransactionDetail;
+  const transactionDetails = transaction.transactionDetails;
   for (const detail of transactionDetails) {
     if (method === "FIFO") {
       await calculateFIFOByTransDetailId(tx, detail.id);
@@ -691,7 +691,7 @@ const recalculateFIFO = async (
         { itemId },
         {
           itemId,
-          ItemCogsDetail: {
+          itemCogsDetails: {
             some: {
               date: { gte: date }
             }
@@ -704,7 +704,7 @@ const recalculateFIFO = async (
       ],
     },
     include: {
-      ItemCogsDetail: true,
+      itemCogsDetails: true,
     },
     orderBy: {
       date: "asc",
@@ -853,7 +853,7 @@ const recalculateAVG = async (
         { itemId },
         {
           itemId,
-          ItemCogsDetail: {
+          itemCogsDetails: {
             some: {
               date: { gte: date }
             }
@@ -866,7 +866,7 @@ const recalculateAVG = async (
       ],
     },
     include: {
-      ItemCogsDetail: true,
+      itemCogsDetails: true,
     },
     orderBy: {
       date: "asc",
@@ -1022,7 +1022,7 @@ const recalculateManual = async (
         { itemId },
         {
           itemId,
-          ItemCogsDetail: {
+          itemCogsDetails: {
             some: {
               date: { gte: date }
             }
@@ -1035,7 +1035,7 @@ const recalculateManual = async (
       ],
     },
     include: {
-      ItemCogsDetail: true,
+      itemCogsDetails: true,
     },
     orderBy: {
       date: "asc",
@@ -1147,6 +1147,7 @@ const recalculateManual = async (
 
 export default {
   getCogs,
+  getMethodCogs,
   calculateCogs,
   recalculateCogs,
 };
