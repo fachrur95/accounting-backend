@@ -77,6 +77,7 @@ const queryItems = async <Key extends keyof Item>(
     page?: number;
     sortBy?: string;
     sortType?: 'asc' | 'desc';
+    search?: string;
   },
   conditions?: NestedObject,
   keys: Key[] = [
@@ -94,8 +95,25 @@ const queryItems = async <Key extends keyof Item>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const search = options.search;
 
-  const where = { ...filter, ...conditions };
+  let globalSearch: Prisma.ItemWhereInput = {};
+
+  if (search && search !== "") {
+    globalSearch = {
+      OR: [
+        { code: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { note: { contains: search, mode: 'insensitive' } },
+        { createdBy: { contains: search, mode: 'insensitive' } },
+        { updatedBy: { contains: search, mode: 'insensitive' } },
+        { tax: { name: { contains: search, mode: 'insensitive' } } },
+        { itemCategory: { name: { contains: search, mode: 'insensitive' } } },
+      ]
+    }
+  }
+
+  const where = { ...filter, ...conditions, ...globalSearch };
   try {
     const getCountAll = prisma.item.count({ where });
     const getItems = prisma.item.findMany({

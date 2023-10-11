@@ -12,6 +12,7 @@ const createChartOfAccount = {
 
 const getChartOfAccounts = {
   query: Joi.object().keys({
+    search: Joi.string(),
     name: Joi.string(),
     accountSubClassId: Joi.string(),
     sortBy: Joi.string(),

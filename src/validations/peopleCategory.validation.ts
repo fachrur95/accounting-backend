@@ -14,6 +14,7 @@ const createPeopleCategory = {
 
 const getPeopleCategories = {
   query: Joi.object().keys({
+    search: Joi.string(),
     code: Joi.string(),
     name: Joi.string(),
     isCustomer: Joi.boolean(),

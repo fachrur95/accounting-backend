@@ -116,6 +116,7 @@ const createTransferItem = {
 
 const createJournalEntry = {
   body: Joi.object().keys({
+    search: Joi.string(),
     transactionNumber: Joi.string().required(),
     entryDate: Joi.date(),
     note: Joi.string(),

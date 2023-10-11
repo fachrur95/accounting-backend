@@ -47,6 +47,7 @@ const queryUsers = async <Key extends keyof User>(
     page?: number;
     sortBy?: string;
     sortType?: 'asc' | 'desc';
+    search?: string;
   },
   conditions?: NestedObject,
   keys: Key[] = [
@@ -64,8 +65,20 @@ const queryUsers = async <Key extends keyof User>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const search = options.search;
 
-  const where = { ...filter, ...conditions };
+  let globalSearch: Prisma.UserWhereInput = {};
+
+  if (search && search !== "") {
+    globalSearch = {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+  }
+
+  const where = { ...filter, ...conditions, ...globalSearch };
   try {
     const getCountAll = prisma.user.count({ where });
     const getUsers = prisma.user.findMany({

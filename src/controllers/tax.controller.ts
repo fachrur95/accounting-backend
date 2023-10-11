@@ -24,7 +24,7 @@ const createTax = catchAsync(async (req, res) => {
 const getTaxes = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const filter = pick(req.query, ['name', 'unitId']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await taxService.queryTaxes(filter, options, conditions);
   await logActivityService.createLogActivity({

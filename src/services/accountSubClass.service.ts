@@ -38,6 +38,7 @@ const queryAccountSubClasses = async <Key extends keyof AccountSubClass>(
     page?: number;
     sortBy?: string;
     sortType?: 'asc' | 'desc';
+    search?: string;
   },
   conditions?: NestedObject,
   keys: Key[] = [
@@ -55,8 +56,24 @@ const queryAccountSubClasses = async <Key extends keyof AccountSubClass>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const search = options.search;
 
-  const where = { ...filter, ...conditions };
+  let globalSearch: Prisma.AccountSubClassWhereInput = {};
+
+  if (search && search !== "") {
+    globalSearch = {
+      OR: [
+        { code: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { group: { contains: search, mode: 'insensitive' } },
+        { createdBy: { contains: search, mode: 'insensitive' } },
+        { updatedBy: { contains: search, mode: 'insensitive' } },
+        { accountClass: { name: { contains: search, mode: 'insensitive' } } },
+      ]
+    }
+  }
+
+  const where = { ...filter, ...conditions, ...globalSearch };
   try {
     const getCountAll = prisma.accountSubClass.count({ where });
     const getAccountSubClasses = prisma.accountSubClass.findMany({

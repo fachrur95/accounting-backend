@@ -24,7 +24,7 @@ const createUnit = catchAsync(async (req, res) => {
 const getUnits = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const filter = pick(req.query, ['name', 'instituteId']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await unitService.queryUnits(filter, options, user, conditions);
   await logActivityService.createLogActivity({

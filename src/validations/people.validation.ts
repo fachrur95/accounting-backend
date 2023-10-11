@@ -12,6 +12,7 @@ const createPeople = {
 
 const getPeoples = {
   query: Joi.object().keys({
+    search: Joi.string(),
     peopleCategoryId: Joi.string(),
     code: Joi.string(),
     name: Joi.string(),

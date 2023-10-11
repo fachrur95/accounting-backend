@@ -24,7 +24,7 @@ const createUnitOfMeasure = catchAsync(async (req, res) => {
 const getUnitOfMeasures = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const filter = pick(req.query, ['code', 'name', 'unitId']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await unitOfMeasureService.queryUnitOfMeasures(filter, options, conditions);
   await logActivityService.createLogActivity({

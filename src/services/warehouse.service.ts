@@ -38,6 +38,7 @@ const queryWarehouses = async <Key extends keyof Warehouse>(
     page?: number;
     sortBy?: string;
     sortType?: 'asc' | 'desc';
+    search?: string;
   },
   conditions?: NestedObject,
   keys: Key[] = [
@@ -53,8 +54,21 @@ const queryWarehouses = async <Key extends keyof Warehouse>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const search = options.search;
 
-  const where = { ...filter, ...conditions };
+  let globalSearch: Prisma.WarehouseWhereInput = {};
+
+  if (search && search !== "") {
+    globalSearch = {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { createdBy: { contains: search, mode: 'insensitive' } },
+        { updatedBy: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+  }
+
+  const where = { ...filter, ...conditions, ...globalSearch };
   try {
     const getCountAll = prisma.warehouse.count({ where });
     const getWarehouses = prisma.warehouse.findMany({

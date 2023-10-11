@@ -38,6 +38,7 @@ const queryCashRegisters = async <Key extends keyof CashRegister>(
     page?: number;
     sortBy?: string;
     sortType?: 'asc' | 'desc';
+    search?: string;
   },
   conditions?: NestedObject,
   keys: Key[] = [
@@ -53,8 +54,21 @@ const queryCashRegisters = async <Key extends keyof CashRegister>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const search = options.search;
 
-  const where = { ...filter, ...conditions };
+  let globalSearch: Prisma.CashRegisterWhereInput = {};
+
+  if (search && search !== "") {
+    globalSearch = {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { createdBy: { contains: search, mode: 'insensitive' } },
+        { updatedBy: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+  }
+
+  const where = { ...filter, ...conditions, ...globalSearch };
   try {
     const getCountAll = prisma.cashRegister.count({ where });
     const getCashRegisters = prisma.cashRegister.findMany({

@@ -38,6 +38,7 @@ const queryChartOfAccounts = async <Key extends keyof ChartOfAccount>(
     page?: number;
     sortBy?: string;
     sortType?: 'asc' | 'desc';
+    search?: string;
   },
   conditions?: NestedObject,
   keys: Key[] = [
@@ -51,8 +52,24 @@ const queryChartOfAccounts = async <Key extends keyof ChartOfAccount>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const search = options.search;
 
-  const where = { ...filter, ...conditions };
+  let globalSearch: Prisma.ChartOfAccountWhereInput = {};
+
+  if (search && search !== "") {
+    globalSearch = {
+      OR: [
+        { code: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { createdBy: { contains: search, mode: 'insensitive' } },
+        { updatedBy: { contains: search, mode: 'insensitive' } },
+        { accountSubClass: { name: { contains: search, mode: 'insensitive' } } },
+        { accountSubClass: { accountClass: { name: { contains: search, mode: 'insensitive' } } } },
+      ]
+    }
+  }
+
+  const where = { ...filter, ...conditions, ...globalSearch };
   try {
     const getCountAll = prisma.chartOfAccount.count({ where });
     const getChartOfAccounts = prisma.chartOfAccount.findMany({

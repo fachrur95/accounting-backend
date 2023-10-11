@@ -13,6 +13,7 @@ const createAccountClass = {
 
 const getAccountClasses = {
   query: Joi.object().keys({
+    search: Joi.string(),
     name: Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),

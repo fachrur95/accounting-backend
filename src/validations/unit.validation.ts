@@ -9,6 +9,7 @@ const createUnit = {
 
 const getUnits = {
   query: Joi.object().keys({
+    search: Joi.string(),
     name: Joi.string(),
     instituteId: Joi.string(),
     // institute: Joi.object().keys({

@@ -33,7 +33,7 @@ const createPriceBook = catchAsync(async (req, res) => {
 const getPriceBooks = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const filter = pick(req.query, ['name', 'unitId']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await priceBookService.queryPriceBooks(filter, options, conditions);
   await logActivityService.createLogActivity({

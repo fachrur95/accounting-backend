@@ -76,6 +76,7 @@ const queryUnits = async <Key extends keyof Unit>(
     page?: number;
     sortBy?: string;
     sortType?: 'asc' | 'desc';
+    search?: string;
   },
   user: SessionData,
   conditions?: NestedObject,
@@ -92,8 +93,22 @@ const queryUnits = async <Key extends keyof Unit>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const search = options.search;
 
-  const where = { ...filter, ...conditions };
+  let globalSearch: Prisma.UnitWhereInput = {};
+
+  if (search && search !== "") {
+    globalSearch = {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { createdBy: { contains: search, mode: 'insensitive' } },
+        { updatedBy: { contains: search, mode: 'insensitive' } },
+        { institute: { name: { contains: search, mode: 'insensitive' } } },
+      ]
+    }
+  }
+
+  const where = { ...filter, ...conditions, ...globalSearch };
 
   if (user.role !== "SUPERADMIN" && user.role !== "AUDITOR") {
     const { units: allowedUnits } = await userUnitService.queryUserUnits(user.id);

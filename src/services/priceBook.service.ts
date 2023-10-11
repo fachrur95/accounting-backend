@@ -58,6 +58,7 @@ const queryPriceBooks = async <Key extends keyof PriceBook>(
     page?: number;
     sortBy?: string;
     sortType?: 'asc' | 'desc';
+    search?: string;
   },
   conditions?: NestedObject,
   keys: Key[] = [
@@ -74,8 +75,22 @@ const queryPriceBooks = async <Key extends keyof PriceBook>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const search = options.search;
 
-  const where = { ...filter, ...conditions };
+  let globalSearch: Prisma.PriceBookWhereInput = {};
+
+  if (search && search !== "") {
+    globalSearch = {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { note: { contains: search, mode: 'insensitive' } },
+        { createdBy: { contains: search, mode: 'insensitive' } },
+        { updatedBy: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+  }
+
+  const where = { ...filter, ...conditions, ...globalSearch };
   try {
     const getCountAll = prisma.priceBook.count({ where });
     const getPriceBooks = prisma.priceBook.findMany({

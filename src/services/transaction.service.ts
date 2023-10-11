@@ -907,6 +907,7 @@ const queryTransactions = async <Key extends keyof Transaction>(
     page?: number;
     sortBy?: string;
     sortType?: 'asc' | 'desc';
+    search?: string;
   },
   conditions?: NestedObject,
   keys: Key[] = [
@@ -926,8 +927,24 @@ const queryTransactions = async <Key extends keyof Transaction>(
   const limit = options.limit ?? 10;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? 'asc';
+  const search = options.search;
 
-  const where = { ...filter, ...conditions };
+  let globalSearch: Prisma.TransactionWhereInput = {};
+
+  if (search && search !== "") {
+    globalSearch = {
+      OR: [
+        { transactionNumber: { contains: search, mode: 'insensitive' } },
+        { createdBy: { contains: search, mode: 'insensitive' } },
+        { updatedBy: { contains: search, mode: 'insensitive' } },
+        { people: { name: { contains: search, mode: 'insensitive' } } },
+        { chartOfAccount: { name: { contains: search, mode: 'insensitive' } } },
+        { chartOfAccount: { code: { contains: search, mode: 'insensitive' } } },
+      ]
+    }
+  }
+
+  const where = { ...filter, ...conditions, ...globalSearch };
   try {
     const getCountAll = prisma.transaction.count({ where });
     const getTransactions = prisma.transaction.findMany({

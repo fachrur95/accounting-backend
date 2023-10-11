@@ -12,6 +12,7 @@ const createCashRegister = {
 
 const getCashRegisters = {
   query: Joi.object().keys({
+    search: Joi.string(),
     name: Joi.string(),
     unitId: Joi.string(),
     sortBy: Joi.string(),

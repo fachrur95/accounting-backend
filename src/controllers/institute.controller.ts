@@ -24,7 +24,7 @@ const createInstitute = catchAsync(async (req, res) => {
 const getInstitutes = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const filter = pick(req.query, ['name']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await instituteService.queryInstitutes(filter, options, user, conditions);
   await logActivityService.createLogActivity({

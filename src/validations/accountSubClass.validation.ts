@@ -13,6 +13,7 @@ const createAccountSubClass = {
 
 const getAccountSubClasses = {
   query: Joi.object().keys({
+    search: Joi.string(),
     name: Joi.string(),
     accountClassId: Joi.string(),
     sortBy: Joi.string(),

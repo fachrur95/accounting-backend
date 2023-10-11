@@ -9,6 +9,7 @@ import accountSubClassRoute from './accountSubClass.route';
 import chartOfAccountRoute from './chartOfAccount.route';
 import cashRegisterRoute from './cashRegister.route';
 import taxRoute from './tax.route';
+import termRoute from './term.route';
 import peopleRoute from './people.route';
 import peopleCategoryRoute from './peopleCategory.route';
 import unitOfMeasureRoute from './unitOfMeasure.route';
@@ -63,6 +64,10 @@ const defaultRoutes = [
   {
     path: '/taxes',
     route: taxRoute
+  },
+  {
+    path: '/terms',
+    route: termRoute
   },
   {
     path: '/peoples',

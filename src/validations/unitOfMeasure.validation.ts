@@ -11,6 +11,7 @@ const createUnitOfMeasure = {
 
 const getUnitOfMeasures = {
   query: Joi.object().keys({
+    search: Joi.string(),
     code: Joi.string(),
     name: Joi.string(),
     unitId: Joi.string(),

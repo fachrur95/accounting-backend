@@ -15,6 +15,7 @@ const createItemType = {
 
 const getItemTypes = {
   query: Joi.object().keys({
+    search: Joi.string(),
     name: Joi.string(),
     unitId: Joi.string(),
     isStock: Joi.boolean(),

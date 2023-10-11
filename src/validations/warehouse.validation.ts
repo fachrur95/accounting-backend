@@ -9,6 +9,7 @@ const createWarehouse = {
 
 const getWarehouses = {
   query: Joi.object().keys({
+    search: Joi.string(),
     name: Joi.string(),
     unitId: Joi.string(),
     // unit: Joi.object().keys({

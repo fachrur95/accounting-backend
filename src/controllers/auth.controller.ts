@@ -126,7 +126,7 @@ const setUnit = catchAsync(async (req, res) => {
 const allowedInstitutes = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const filter = pick(req.query, ['name']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await instituteService.queryInstitutes(filter, options, user, conditions);
   await logActivityService.createLogActivity({
@@ -155,7 +155,7 @@ const allowedUnits = catchAsync(async (req, res) => {
     activityType: "READ",
     createdBy: user.email,
   });
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
   const result = await unitService.queryUnits({ ...filterInstitute }, options, user, conditions);
   res.send(result);

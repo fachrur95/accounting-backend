@@ -24,6 +24,7 @@ const createItem = {
 
 const getItems = {
   query: Joi.object().keys({
+    search: Joi.string(),
     name: Joi.string(),
     unitId: Joi.string(),
     itemCategoryId: Joi.string(),
