@@ -1,13 +1,13 @@
 import { FieldType, FiltersType } from "../types/filtering";
 
 export type NestedObject = {
-  [key: string]: NestedObject | unknown;
+  [key: string]: NestedObject | string | unknown;
 };
 
 const pickNested = (obj?: FiltersType): NestedObject | undefined => {
   if (!obj?.fields) return undefined;
   const filters: FieldType[] = obj?.fields as unknown as FieldType[];
-  const fields = filters?.reduce<{ [field: string]: NestedObject }>((finalObj, filter) => {
+  const fields = filters?.reduce<{ [field: string]: NestedObject | string }>((finalObj, filter) => {
     const field = filter.field;
     const value = filter.value;
 
@@ -20,7 +20,11 @@ const pickNested = (obj?: FiltersType): NestedObject | undefined => {
         const key = keys[i];
         if (i === keys.length - 1) {
           // Ini adalah elemen terakhir, tambahkan properti "value"
-          temp[key] = { [filter.type]: value };
+          if (filter.type) {
+            temp[key] = { [filter.type]: value };
+          } else {
+            temp[key] = value
+          }
         } else {
           // Ini bukan elemen terakhir, tambahkan objek kosong
           temp[key] = {};
@@ -30,11 +34,15 @@ const pickNested = (obj?: FiltersType): NestedObject | undefined => {
       return finalObj[nowKey] = result;
     }
 
-    finalObj[field] = {
-      [filter.type]: value,
+    if (filter.type) {
+      finalObj[field] = {
+        [filter.type]: value,
+      }
+    } else {
+      finalObj[field] = value
     }
     if (filter.type === "contains" || filter.type === "endsWith" || filter.type === "startsWith") {
-      finalObj[field].mode = "insensitive"
+      (finalObj[field] as NestedObject).mode = "insensitive"
     }
     return finalObj
   }, {});

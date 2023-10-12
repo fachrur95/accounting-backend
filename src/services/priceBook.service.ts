@@ -6,12 +6,12 @@ import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
 
-interface ICreatePriceBookData extends Prisma.PriceBookUncheckedCreateInput {
-  priceBookDetail: Prisma.PriceBookDetailCreateManyPriceBookInput[],
+interface ICreatePriceBookData extends Omit<Prisma.PriceBookUncheckedCreateInput, "priceBookDetails"> {
+  priceBookDetails: Prisma.PriceBookDetailCreateManyPriceBookInput[],
 }
 
-interface IUpdatePriceBookData extends Prisma.PriceBookUncheckedUpdateInput {
-  priceBookDetail: Prisma.PriceBookDetailCreateManyPriceBookInput[],
+interface IUpdatePriceBookData extends Omit<Prisma.PriceBookUncheckedUpdateInput, "priceBookDetails"> {
+  priceBookDetails: Prisma.PriceBookDetailCreateManyPriceBookInput[],
 }
 
 /**
@@ -25,14 +25,14 @@ const createPriceBook = async (
   if (await getPriceBookByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Price Book already taken');
   }
-  const { priceBookDetail, ...rest } = data;
+  const { priceBookDetails, ...rest } = data;
 
   return prisma.priceBook.create({
     data: {
       ...rest,
       priceBookDetails: {
         createMany: {
-          data: priceBookDetail.map((detail) => ({
+          data: priceBookDetails.map((detail) => ({
             ...detail,
             createdBy: rest.createdBy,
           }))
@@ -184,7 +184,7 @@ const updatePriceBookById = async <Key extends keyof PriceBook>(
   if (updateBody.name && checkName && checkName.name !== priceBook.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Price Book name already taken');
   }
-  const { priceBookDetail, ...rest } = updateBody;
+  const { priceBookDetails, ...rest } = updateBody;
   const updatedPriceBook = await prisma.priceBook.update({
     where: { id: priceBook.id },
     data: {
@@ -192,11 +192,11 @@ const updatePriceBookById = async <Key extends keyof PriceBook>(
       priceBookDetails: {
         deleteMany: {
           priceBookId,
-          NOT: priceBookDetail.map(({ id }) => ({
+          NOT: priceBookDetails.map(({ id }) => ({
             id,
           }))
         },
-        upsert: priceBookDetail.map((detail) => ({
+        upsert: priceBookDetails.map((detail) => ({
           where: {
             id: detail.id
           },

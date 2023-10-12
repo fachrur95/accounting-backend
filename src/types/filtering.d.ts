@@ -3,7 +3,7 @@ export type FilterOptionType = "contains" | "endsWith" | "equals" | "gt" | "gte"
 
 export type FieldType = {
   field: string;
-  type: FilterOptionType;
+  type?: FilterOptionType;
   value: string;
 }
 

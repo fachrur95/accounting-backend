@@ -9,9 +9,10 @@ const createItem = {
     description: Joi.string(),
     minQty: Joi.number(),
     maxQty: Joi.number(),
+    manualCogs: Joi.number(),
     note: Joi.string(),
     isActive: Joi.boolean(),
-    multipleUom: Joi.array().items(
+    multipleUoms: Joi.array().items(
       Joi.object().keys({
         unitOfMeasureId: Joi.string().required(),
         conversionQty: Joi.number().min(1).required(),
@@ -36,7 +37,7 @@ const getItems = {
       fields: Joi.array().items(
         Joi.object().keys({
           field: Joi.string().required(),
-          type: Joi.string().valid("contains", "endsWith", "equals", "gt", "gte", "in", "lt", "lte", "not", "notIn", "startsWith").required(),
+          type: Joi.string().valid("contains", "endsWith", "equals", "gt", "gte", "in", "lt", "lte", "not", "notIn", "startsWith"),
           value: Joi.any().required(),
         })
       )
@@ -63,9 +64,10 @@ const updateItem = {
       description: Joi.string(),
       minQty: Joi.number(),
       maxQty: Joi.number(),
+      manualCogs: Joi.number(),
       note: Joi.string(),
       isActive: Joi.boolean(),
-      multipleUom: Joi.array().items(
+      multipleUoms: Joi.array().items(
         Joi.object().keys({
           unitOfMeasureId: Joi.string().required(),
           conversionQty: Joi.number().min(1).required(),

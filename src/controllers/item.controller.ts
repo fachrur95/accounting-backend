@@ -20,7 +20,7 @@ const createItem = catchAsync(async (req, res) => {
     maxQty,
     note,
     isActive,
-    multipleUom,
+    multipleUoms,
   } = req.body;
 
   const images = req.files as File[];
@@ -34,7 +34,7 @@ const createItem = catchAsync(async (req, res) => {
     maxQty,
     note,
     isActive,
-    multipleUom,
+    multipleUoms,
     fileImages: images,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
@@ -82,13 +82,13 @@ const getItem = catchAsync(async (req, res) => {
 
 const updateItem = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { multipleUom, ...rest } = req.body;
+  const { multipleUoms, ...rest } = req.body;
   const images = req.files as File[];
   const item = await itemService.updateItemById(
     req.params.itemId,
     {
       ...rest,
-      multipleUom,
+      multipleUoms,
       fileImages: images,
       updatedBy: user.email,
       unitId: user.session.unit?.id ?? ""

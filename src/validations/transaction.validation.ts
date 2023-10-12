@@ -29,7 +29,7 @@ const createSalesPurchase = {
     entryDate: Joi.date(),
     paymentInput: Joi.number().required(),
     note: Joi.string(),
-    transactionDetail: Joi.array().items(
+    transactionDetails: Joi.array().items(
       Joi.object().keys({
         multipleUomId: Joi.string(),
         chartOfAccountId: Joi.string(),
@@ -51,7 +51,7 @@ const createPayment = {
     peopleId: Joi.string().required(),
     entryDate: Joi.date(),
     note: Joi.string(),
-    transactionDetail: Joi.array().items(
+    transactionDetails: Joi.array().items(
       Joi.object().keys({
         transactionPaymentId: Joi.string().required(),
         priceInput: Joi.number().min(0).required(),
@@ -68,7 +68,7 @@ const createLiability = {
     peopleId: Joi.string(),
     entryDate: Joi.date(),
     note: Joi.string(),
-    transactionDetail: Joi.array().items(
+    transactionDetails: Joi.array().items(
       Joi.object().keys({
         chartOfAccountId: Joi.string().required(),
         taxId: Joi.string(),
@@ -86,7 +86,7 @@ const createTransferFund = {
     chartOfAccountId: Joi.string().required(),
     entryDate: Joi.date(),
     note: Joi.string(),
-    transactionDetail: Joi.array().items(
+    transactionDetails: Joi.array().items(
       Joi.object().keys({
         chartOfAccountId: Joi.string().required(),
         priceInput: Joi.number().min(1).required(),
@@ -103,7 +103,7 @@ const createTransferItem = {
     warehouseDestinationId: Joi.string().required(),
     entryDate: Joi.date(),
     note: Joi.string(),
-    transactionDetail: Joi.array().items(
+    transactionDetails: Joi.array().items(
       Joi.object().keys({
         multipleUomId: Joi.string().required(),
         qtyInput: Joi.number().min(1).required(),
@@ -120,7 +120,7 @@ const createJournalEntry = {
     transactionNumber: Joi.string().required(),
     entryDate: Joi.date(),
     note: Joi.string(),
-    transactionDetail: Joi.array().items(
+    transactionDetails: Joi.array().items(
       Joi.object().keys({
         chartOfAccountId: Joi.string().required(),
         debit: Joi.number().min(0).required(),
@@ -134,7 +134,7 @@ const createJournalEntry = {
 const createBeginBalancePayment = {
   body: Joi.object().keys({
     chartOfAccountId: Joi.string().required(),
-    transactionDetail: Joi.array().items(
+    transactionDetails: Joi.array().items(
       Joi.object().keys({
         peopleId: Joi.string().required(),
         dueDate: Joi.date().required(),
@@ -151,7 +151,7 @@ const createBeginBalanceStock = {
     chartOfAccountId: Joi.string().required(),
     entryDate: Joi.date(),
     note: Joi.string(),
-    transactionDetail: Joi.array().items(
+    transactionDetails: Joi.array().items(
       Joi.object().keys({
         multipleUomId: Joi.string().required(),
         qtyInput: Joi.number().required(),
@@ -202,7 +202,7 @@ const updateSalesPurchase = {
       entryDate: Joi.date(),
       paymentInput: Joi.number(),
       note: Joi.string(),
-      transactionDetail: Joi.array().items(
+      transactionDetails: Joi.array().items(
         Joi.object().keys({
           id: Joi.string(),
           multipleUomId: Joi.string(),
@@ -230,7 +230,7 @@ const updatePayment = {
       peopleId: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
-      transactionDetail: Joi.array().items(
+      transactionDetails: Joi.array().items(
         Joi.object().keys({
           transactionPaymentId: Joi.string().required(),
           priceInput: Joi.number().min(0).required(),
@@ -252,7 +252,7 @@ const updateLiability = {
       peopleId: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
-      transactionDetail: Joi.array().items(
+      transactionDetails: Joi.array().items(
         Joi.object().keys({
           chartOfAccountId: Joi.string().required(),
           taxId: Joi.string(),
@@ -275,7 +275,7 @@ const updateTransferFund = {
       chartOfAccountId: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
-      transactionDetail: Joi.array().items(
+      transactionDetails: Joi.array().items(
         Joi.object().keys({
           chartOfAccountId: Joi.string().required(),
           priceInput: Joi.number().min(1).required(),
@@ -297,7 +297,7 @@ const updateTransferItem = {
       warehouseDestinationId: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
-      transactionDetail: Joi.array().items(
+      transactionDetails: Joi.array().items(
         Joi.object().keys({
           multipleUomId: Joi.string().required(),
           qtyInput: Joi.number().min(1).required(),
@@ -318,7 +318,7 @@ const updateJournalEntry = {
       transactionNumber: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
-      transactionDetail: Joi.array().items(
+      transactionDetails: Joi.array().items(
         Joi.object().keys({
           chartOfAccountId: Joi.string().required(),
           debit: Joi.number().min(0).required(),
@@ -338,7 +338,7 @@ const updateBeginBalancePayment = {
     .keys({
       transactionNumber: Joi.string(),
       chartOfAccountId: Joi.string(),
-      transactionDetail: Joi.array().items(
+      transactionDetails: Joi.array().items(
         Joi.object().keys({
           peopleId: Joi.string().required(),
           dueDate: Joi.date().required(),
@@ -360,7 +360,7 @@ const updateBeginBalanceStock = {
       chartOfAccountId: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
-      transactionDetail: Joi.array().items(
+      transactionDetails: Joi.array().items(
         Joi.object().keys({
           multipleUomId: Joi.string().required(),
           qtyInput: Joi.number().required(),

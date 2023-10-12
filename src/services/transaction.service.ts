@@ -9,29 +9,29 @@ import itemCogsService from './itemCogs.service';
 import prefixService from './prefix.service';
 import { DetailCompare, checkNaN, getItemChanges } from '../utils/helper';
 
-interface ICreateTransactionData extends Prisma.TransactionUncheckedCreateInput {
-  transactionDetail: Prisma.TransactionDetailCreateManyTransactionInput[],
+interface ICreateTransactionData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
+  transactionDetails: Prisma.TransactionDetailCreateManyTransactionInput[],
 }
 
-interface ICreateJournalEntryData extends Prisma.TransactionUncheckedCreateInput {
-  transactionDetail: (Prisma.TransactionDetailCreateManyTransactionInput & {
+interface ICreateJournalEntryData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
+  transactionDetails: (Prisma.TransactionDetailCreateManyTransactionInput & {
     debit: number;
     credit: number;
   })[],
 }
 
-interface ICreateBeginBalanceStockData extends Prisma.TransactionUncheckedCreateInput {
-  transactionDetail: (Prisma.TransactionDetailCreateManyTransactionInput & {
+interface ICreateBeginBalanceStockData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
+  transactionDetails: (Prisma.TransactionDetailCreateManyTransactionInput & {
     cogsInput: number;
   })[],
 }
 
-interface IUpdateTransactionData extends Prisma.TransactionUncheckedCreateInput {
-  transactionDetail: Prisma.TransactionDetailCreateManyTransactionInput[],
+interface IUpdateTransactionData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
+  transactionDetails: Prisma.TransactionDetailCreateManyTransactionInput[],
 }
 
-interface IUpdateJournalEntryData extends Prisma.TransactionUncheckedCreateInput {
-  transactionDetail: (Prisma.TransactionDetailCreateManyTransactionInput & {
+interface IUpdateJournalEntryData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
+  transactionDetails: (Prisma.TransactionDetailCreateManyTransactionInput & {
     debit: number;
     credit: number;
   })[],
@@ -232,12 +232,12 @@ const createSell = async (
   if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const { transactionDetail, ...rest } = data;
+  const { transactionDetails, ...rest } = data;
   const entryDate = new Date();
 
   const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
@@ -319,12 +319,12 @@ const createPurchase = async (
   if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const { transactionDetail, ...rest } = data;
+  const { transactionDetails, ...rest } = data;
   const entryDate = new Date();
 
   const dueDate = await generateDueDate(entryDate, rest.termId ?? undefined);
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
@@ -440,9 +440,9 @@ const createReceivablePayment = async (
   if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const { transactionDetail, ...rest } = data;
+  const { transactionDetails, ...rest } = data;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = (detail.priceInput ?? 0);
     const amount = beforeDiscount;
@@ -509,9 +509,9 @@ const createDebtPayment = async (
   if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const { transactionDetail, ...rest } = data;
+  const { transactionDetails, ...rest } = data;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = (detail.priceInput ?? 0);
     const amount = beforeDiscount;
@@ -578,9 +578,9 @@ const createRevenue = async (
   if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const { transactionDetail, ...rest } = data;
+  const { transactionDetails, ...rest } = data;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = (detail.priceInput ?? 0);
     const discount = (detail.discountInput ?? 0);
@@ -648,9 +648,9 @@ const createExpense = async (
   if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const { transactionDetail, ...rest } = data;
+  const { transactionDetails, ...rest } = data;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = (detail.priceInput ?? 0);
     const discount = (detail.discountInput ?? 0);
@@ -718,9 +718,9 @@ const createJournalEntry = async (
   if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const { transactionDetail, ...rest } = data;
+  const { transactionDetails, ...rest } = data;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const { debit, credit, ...restDetail } = detail;
     const beforeDiscount = debit > 0
       ? (debit ?? 0)
@@ -792,10 +792,10 @@ const createBeginBalanceStock = async (
   if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const { transactionDetail, ...rest } = data;
+  const { transactionDetails, ...rest } = data;
   const entryDate = new Date();
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const total = qty * (detail.cogsInput ?? 0);
 
@@ -1074,9 +1074,9 @@ const updateSellById = async <Key extends keyof Transaction>(
     );
   }
 
-  const { transactionDetails } = transaction;
+  const { transactionDetails: transactionDetailsBefore } = transaction;
 
-  const dataLineBefore = transactionDetails.reduce((arr, detail) => {
+  const dataLineBefore = transactionDetailsBefore.reduce((arr, detail) => {
     if (detail.multipleUom) {
       arr.push({
         id: detail.id,
@@ -1089,11 +1089,11 @@ const updateSellById = async <Key extends keyof Transaction>(
     return arr
   }, [] as unknown as DetailCompare[]);
 
-  const { transactionDetail, ...rest } = updateBody;
+  const { transactionDetails, ...rest } = updateBody;
 
   const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
@@ -1243,9 +1243,9 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
     );
   }
 
-  const { transactionDetails } = transaction;
+  const { transactionDetails: transactionDetailsBefore } = transaction;
 
-  const dataLineBefore = transactionDetails.reduce((arr, detail) => {
+  const dataLineBefore = transactionDetailsBefore.reduce((arr, detail) => {
     if (detail.multipleUom) {
       arr.push({
         id: detail.id,
@@ -1258,11 +1258,11 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
     return arr
   }, [] as unknown as DetailCompare[]);
 
-  const { transactionDetail, ...rest } = updateBody;
+  const { transactionDetails, ...rest } = updateBody;
 
   const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
@@ -1433,9 +1433,9 @@ const updateReceivablePaymentById = async <Key extends keyof Transaction>(
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const entryDate = transaction.entryDate;
-  const { transactionDetail, ...rest } = updateBody;
+  const { transactionDetails, ...rest } = updateBody;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = (detail.priceInput ?? 0);
     const amount = beforeDiscount;
@@ -1531,9 +1531,9 @@ const updateDebtPaymentById = async <Key extends keyof Transaction>(
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const entryDate = transaction.entryDate;
-  const { transactionDetail, ...rest } = updateBody;
+  const { transactionDetails, ...rest } = updateBody;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = (detail.priceInput ?? 0);
     const amount = beforeDiscount;
@@ -1629,9 +1629,9 @@ const updateRevenueById = async <Key extends keyof Transaction>(
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const entryDate = transaction.entryDate;
-  const { transactionDetail, ...rest } = updateBody;
+  const { transactionDetails, ...rest } = updateBody;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = (detail.priceInput ?? 0);
     const discount = (detail.discountInput ?? 0);
@@ -1728,9 +1728,9 @@ const updateExpenseById = async <Key extends keyof Transaction>(
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const entryDate = transaction.entryDate;
-  const { transactionDetail, ...rest } = updateBody;
+  const { transactionDetails, ...rest } = updateBody;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = (detail.priceInput ?? 0);
     const discount = (detail.discountInput ?? 0);
@@ -1827,9 +1827,9 @@ const updateJournalEntryById = async <Key extends keyof Transaction>(
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const entryDate = transaction.entryDate;
-  const { transactionDetail, ...rest } = updateBody;
+  const { transactionDetails, ...rest } = updateBody;
 
-  const details = transactionDetail.reduce((obj, detail) => {
+  const details = transactionDetails.reduce((obj, detail) => {
     const { debit, credit, ...restDetail } = detail;
     const beforeDiscount = debit > 0
       ? (debit ?? 0)
@@ -1930,7 +1930,7 @@ const updateTransactionById = async <Key extends keyof Transaction>(
   if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const { transactionDetail, ...rest } = updateBody;
+  const { transactionDetails, ...rest } = updateBody;
   const updatedTransaction = await prisma.transaction.update({
     where: { id: transaction.id },
     data: {
@@ -1938,11 +1938,11 @@ const updateTransactionById = async <Key extends keyof Transaction>(
       transactionDetails: {
         deleteMany: {
           transactionId,
-          NOT: transactionDetail.map(({ id }) => ({
+          NOT: transactionDetails.map(({ id }) => ({
             id,
           }))
         },
-        upsert: transactionDetail.map((detail) => ({
+        upsert: transactionDetails.map((detail) => ({
           where: {
             id: detail.id
           },

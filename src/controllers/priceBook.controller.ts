@@ -9,14 +9,14 @@ import { SessionData } from '../types/session';
 
 const createPriceBook = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { name, startDate, endDate, note, isActive, priceBookDetail } = req.body;
+  const { name, startDate, endDate, note, isActive, priceBookDetails } = req.body;
   const priceBook = await priceBookService.createPriceBook({
     name,
     startDate,
     endDate,
     note,
     isActive,
-    priceBookDetail,
+    priceBookDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });

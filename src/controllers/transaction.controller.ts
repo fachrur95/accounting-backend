@@ -78,7 +78,7 @@ const createSell = catchAsync(async (req, res) => {
     note,
     peopleId,
     warehouseId,
-    transactionDetail,
+    transactionDetails,
   } = req.body;
   const transaction = await transactionService.createSell({
     transactionType: "SALE_INVOICE",
@@ -89,7 +89,7 @@ const createSell = catchAsync(async (req, res) => {
     note,
     peopleId,
     warehouseId,
-    transactionDetail,
+    transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -112,7 +112,7 @@ const createBuy = catchAsync(async (req, res) => {
     note,
     peopleId,
     warehouseId,
-    transactionDetail,
+    transactionDetails,
   } = req.body;
   const transaction = await transactionService.createPurchase({
     transactionType: "PURCHASE_INVOICE",
@@ -122,7 +122,7 @@ const createBuy = catchAsync(async (req, res) => {
     note,
     peopleId,
     warehouseId,
-    transactionDetail,
+    transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });

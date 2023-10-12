@@ -9,13 +9,13 @@ import uploadService from './upload.service';
 import { File } from '../types/file';
 import { UploadApiResponse } from 'cloudinary';
 
-interface ICreateItemData extends Prisma.ItemUncheckedCreateInput {
-  multipleUom: Prisma.MultipleUomCreateManyItemInput[],
+interface ICreateItemData extends Omit<Prisma.ItemUncheckedCreateInput, "multipleUoms"> {
+  multipleUoms: Prisma.MultipleUomCreateManyItemInput[],
   fileImages: File[],
 }
 
-interface IUpdateItemData extends Prisma.ItemUncheckedCreateInput {
-  multipleUom: Prisma.MultipleUomCreateManyItemInput[],
+interface IUpdateItemData extends Omit<Prisma.ItemUncheckedCreateInput, "multipleUoms"> {
+  multipleUoms: Prisma.MultipleUomCreateManyItemInput[],
   fileImages: File[],
 }
 
@@ -30,7 +30,7 @@ const createItem = async (
   if (await getItemByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item already taken');
   }
-  const { multipleUom, fileImages, ...rest } = data;
+  const { multipleUoms, fileImages, ...rest } = data;
 
   let dataUploaded: UploadApiResponse[] = [];
   if (fileImages) {
@@ -42,7 +42,7 @@ const createItem = async (
       ...rest,
       multipleUoms: {
         createMany: {
-          data: multipleUom.map((uom) => ({
+          data: multipleUoms?.map((uom) => ({
             ...uom,
             createdBy: rest.createdBy,
             unitId: rest.unitId,
@@ -85,8 +85,11 @@ const queryItems = async <Key extends keyof Item>(
     'code',
     'name',
     'itemCategory',
-    'MultipleUom',
-    'Images',
+    'tax',
+    'multipleUoms',
+    'images',
+    'isActive',
+    'note',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -135,6 +138,7 @@ const queryItems = async <Key extends keyof Item>(
     };
   } catch (error) {
     // Tangani kesalahan jika ada
+    console.log({ error })
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
   }
 };
@@ -152,10 +156,12 @@ const getItemById = async <Key extends keyof Item>(
     'code',
     'name',
     'itemCategory',
-    'MultipleUom',
-    'Images',
+    'tax',
+    'multipleUoms',
+    'images',
     'minQty',
     'maxQty',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',
@@ -164,7 +170,14 @@ const getItemById = async <Key extends keyof Item>(
 ): Promise<Pick<Item, Key> | null> => {
   return prisma.item.findUnique({
     where: { id },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+    select: {
+      ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      multipleUoms: {
+        include: {
+          unitOfMeasure: true,
+        }
+      }
+    }
   }) as Promise<Pick<Item, Key> | null>;
 };
 
@@ -209,7 +222,7 @@ const updateItemById = async <Key extends keyof Item>(
   if (updateBody.name && checkName && checkName.name !== item.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item name already taken');
   }
-  const { multipleUom, fileImages, ...rest } = updateBody;
+  const { multipleUoms, fileImages, ...rest } = updateBody;
   const dataUploaded = await uploadService.upload(fileImages);
   const updatedItem = await prisma.item.update({
     where: { id: item.id },
@@ -218,11 +231,11 @@ const updateItemById = async <Key extends keyof Item>(
       multipleUoms: {
         deleteMany: {
           itemId,
-          NOT: multipleUom.map(({ id }) => ({
+          NOT: multipleUoms.map(({ id }) => ({
             id
           }))
         },
-        upsert: multipleUom.map((uom) => ({
+        upsert: multipleUoms.map((uom) => ({
           where: {
             id: uom.id
           },
