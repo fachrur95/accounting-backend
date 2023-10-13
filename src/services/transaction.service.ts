@@ -1184,7 +1184,7 @@ const updateSellById = async <Key extends keyof Transaction>(
             upsert: dataLine.map((detail) => {
               return ({
                 where: {
-                  id: detail.id
+                  id: detail.id ?? ""
                 },
                 create: {
                   ...detail,
@@ -1495,7 +1495,7 @@ const updateReceivablePaymentById = async <Key extends keyof Transaction>(
             },
             upsert: dataLine.map((detail) => ({
               where: {
-                id: detail.id
+                id: detail.id ?? ""
               },
               create: {
                 ...detail,
@@ -1593,7 +1593,7 @@ const updateDebtPaymentById = async <Key extends keyof Transaction>(
             },
             upsert: dataLine.map((detail) => ({
               where: {
-                id: detail.id
+                id: detail.id ?? ""
               },
               create: {
                 ...detail,
@@ -1693,7 +1693,7 @@ const updateRevenueById = async <Key extends keyof Transaction>(
             },
             upsert: dataLine.map((detail) => ({
               where: {
-                id: detail.id
+                id: detail.id ?? ""
               },
               create: {
                 ...detail,
@@ -1792,7 +1792,7 @@ const updateExpenseById = async <Key extends keyof Transaction>(
             },
             upsert: dataLine.map((detail) => ({
               where: {
-                id: detail.id
+                id: detail.id ?? ""
               },
               create: {
                 ...detail,
@@ -1895,7 +1895,7 @@ const updateJournalEntryById = async <Key extends keyof Transaction>(
             },
             upsert: dataLine.map((detail) => ({
               where: {
-                id: detail.id
+                id: detail.id ?? ""
               },
               create: {
                 ...detail,
@@ -1955,7 +1955,7 @@ const updateTransactionById = async <Key extends keyof Transaction>(
         },
         upsert: transactionDetails.map((detail) => ({
           where: {
-            id: detail.id
+            id: detail.id ?? ""
           },
           create: {
             ...detail,

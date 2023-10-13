@@ -213,7 +213,7 @@ const updatePriceBookById = async <Key extends keyof PriceBook>(
         },
         upsert: priceBookDetails.map((detail) => ({
           where: {
-            id: detail.id
+            id: detail.id ?? ""
           },
           create: {
             ...detail,

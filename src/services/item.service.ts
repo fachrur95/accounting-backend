@@ -86,6 +86,7 @@ const queryItems = async <Key extends keyof Item>(
     'id',
     'code',
     'name',
+    'description',
     'itemCategory',
     'tax',
     'multipleUoms',
@@ -172,6 +173,7 @@ const getItemById = async <Key extends keyof Item>(
     'id',
     'code',
     'name',
+    'description',
     'itemCategoryId',
     'taxId',
     'itemCategory',
@@ -260,7 +262,7 @@ const updateItemById = async <Key extends keyof Item>(
         },
         upsert: multipleUoms.map((uom) => ({
           where: {
-            id: uom.id
+            id: uom.id ?? "",
           },
           create: {
             ...uom,
