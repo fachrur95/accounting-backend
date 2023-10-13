@@ -7,6 +7,7 @@ import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
 import { SessionData } from '../types/session';
 import userUnitService from './userUnit.service';
+import { NestedSort } from '../utils/pickNestedSort';
 
 /**
  * Create a institute
@@ -44,6 +45,7 @@ const queryInstitutes = async <Key extends keyof Institute>(
   },
   user: SessionData,
   conditions?: NestedObject,
+  multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
     'name',
@@ -70,6 +72,14 @@ const queryInstitutes = async <Key extends keyof Institute>(
   }
 
   const where = { ...filter, ...conditions, ...globalSearch };
+  const singleSort = sortBy ? { [sortBy]: sortType } : undefined
+  const orderBy: NestedSort[] = [];
+  if (multipleSort) {
+    orderBy.push(...multipleSort);
+  }
+  if (singleSort) {
+    orderBy.push(singleSort);
+  }
 
   if (user.role !== "SUPERADMIN" && user.role !== "AUDITOR") {
     const { institutes: allowedInstitutes } = await userUnitService.queryUserUnits(user.id);
@@ -84,7 +94,7 @@ const queryInstitutes = async <Key extends keyof Institute>(
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       skip: page * limit,
       take: limit,
-      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+      orderBy: orderBy.length > 0 ? orderBy : undefined,
     });
     const [countAll, institutes] = await Promise.all([getCountAll, getInstitutes]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });

@@ -8,6 +8,7 @@ import { NestedObject } from '../utils/pickNested';
 import itemCogsService from './itemCogs.service';
 import prefixService from './prefix.service';
 import { DetailCompare, checkNaN, getItemChanges } from '../utils/helper';
+import { NestedSort } from '../utils/pickNestedSort';
 
 interface ICreateTransactionData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
   transactionDetails: Prisma.TransactionDetailCreateManyTransactionInput[],
@@ -910,6 +911,7 @@ const queryTransactions = async <Key extends keyof Transaction>(
     search?: string;
   },
   conditions?: NestedObject,
+  multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
     'transactionNumber',
@@ -945,6 +947,14 @@ const queryTransactions = async <Key extends keyof Transaction>(
   }
 
   const where = { ...filter, ...conditions, ...globalSearch };
+  const singleSort = sortBy ? { [sortBy]: sortType } : undefined
+  const orderBy: NestedSort[] = [];
+  if (multipleSort) {
+    orderBy.push(...multipleSort);
+  }
+  if (singleSort) {
+    orderBy.push(singleSort);
+  }
   try {
     const getCountAll = prisma.transaction.count({ where });
     const getTransactions = prisma.transaction.findMany({
@@ -952,7 +962,8 @@ const queryTransactions = async <Key extends keyof Transaction>(
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       skip: page * limit,
       take: limit,
-      orderBy: sortBy ? { [sortBy]: sortType } : { entryDate: "desc" }
+      orderBy: orderBy.length > 0 ? orderBy : undefined,
+      // orderBy: sortBy ? { [sortBy]: sortType } : { entryDate: "desc" }
     });
     const [countAll, transactions] = await Promise.all([getCountAll, getTransactions]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });

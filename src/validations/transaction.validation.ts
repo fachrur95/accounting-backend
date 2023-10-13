@@ -116,7 +116,6 @@ const createTransferItem = {
 
 const createJournalEntry = {
   body: Joi.object().keys({
-    search: Joi.string(),
     transactionNumber: Joi.string().required(),
     entryDate: Joi.date(),
     note: Joi.string(),
@@ -164,6 +163,7 @@ const createBeginBalanceStock = {
 
 const getTransactions = {
   query: Joi.object().keys({
+    search: Joi.string(),
     name: Joi.string(),
     unitId: Joi.string(),
     peopleId: Joi.string(),
@@ -180,6 +180,12 @@ const getTransactions = {
         })
       )
     }),
+    sorts: Joi.array().items(
+      Joi.object().keys({
+        field: Joi.string().required(),
+        sort: Joi.string().valid("asc", "desc"),
+      })
+    ),
   })
 };
 

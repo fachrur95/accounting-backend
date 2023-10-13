@@ -30,6 +30,12 @@ const getWarehouses = {
         })
       )
     }),
+    sorts: Joi.array().items(
+      Joi.object().keys({
+        field: Joi.string().required(),
+        sort: Joi.string().valid("asc", "desc"),
+      })
+    ),
   })
 };
 

@@ -8,6 +8,7 @@ import getPagination from '../utils/pagination';
 import { SessionData } from '../types/session';
 import userUnitService from './userUnit.service';
 import defaultPrefix from '../utils/templates/prefix-default';
+import { NestedSort } from '../utils/pickNestedSort';
 
 const defaultWarehouseName = (unitName: string): string => `${unitName} Utama`;
 
@@ -80,6 +81,7 @@ const queryUnits = async <Key extends keyof Unit>(
   },
   user: SessionData,
   conditions?: NestedObject,
+  multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
     'institute',
@@ -109,6 +111,14 @@ const queryUnits = async <Key extends keyof Unit>(
   }
 
   const where = { ...filter, ...conditions, ...globalSearch };
+  const singleSort = sortBy ? { [sortBy]: sortType } : undefined
+  const orderBy: NestedSort[] = [];
+  if (multipleSort) {
+    orderBy.push(...multipleSort);
+  }
+  if (singleSort) {
+    orderBy.push(singleSort);
+  }
 
   if (user.role !== "SUPERADMIN" && user.role !== "AUDITOR") {
     const { units: allowedUnits } = await userUnitService.queryUserUnits(user.id);
@@ -123,7 +133,7 @@ const queryUnits = async <Key extends keyof Unit>(
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       skip: page * limit,
       take: limit,
-      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+      orderBy: orderBy.length > 0 ? orderBy : undefined,
     });
     const [countAll, units] = await Promise.all([getCountAll, getUnits]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });

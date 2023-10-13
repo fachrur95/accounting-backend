@@ -4,9 +4,10 @@ import ApiError from '../utils/ApiError';
 import catchAsync from '../utils/catchAsync';
 import { itemService, logActivityService } from '../services';
 import pickNested from '../utils/pickNested';
-import { FiltersType } from '../types/filtering';
+import { FiltersType, SortType } from '../types/filtering';
 import { SessionData } from '../types/session';
 import { File } from '../types/file';
+import pickNestedSort from '../utils/pickNestedSort';
 
 const createItem = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
@@ -55,7 +56,8 @@ const getItems = catchAsync(async (req,
   const filter = pick(req.query, ['name', 'itemCategoryId', 'unitId']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
-  const result = await itemService.queryItems(filter, options, conditions);
+  const multipleSort = pickNestedSort(req.query?.sorts as SortType[]);
+  const result = await itemService.queryItems(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Read All Item",

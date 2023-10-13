@@ -4,8 +4,9 @@ import ApiError from '../utils/ApiError';
 import catchAsync from '../utils/catchAsync';
 import { instituteService, logActivityService } from '../services';
 import pickNested from '../utils/pickNested';
-import { FiltersType } from '../types/filtering';
+import { FiltersType, SortType } from '../types/filtering';
 import { SessionData } from '../types/session';
+import pickNestedSort from '../utils/pickNestedSort';
 
 const createInstitute = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
@@ -26,7 +27,8 @@ const getInstitutes = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['name']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
-  const result = await instituteService.queryInstitutes(filter, options, user, conditions);
+  const multipleSort = pickNestedSort(req.query?.sorts as SortType[]);
+  const result = await instituteService.queryInstitutes(filter, options, user, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Read All Institute",

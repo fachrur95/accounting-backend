@@ -5,6 +5,7 @@ import ApiError from '../utils/ApiError';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
+import { NestedSort } from '../utils/pickNestedSort';
 
 /**
  * Create a itemCategory
@@ -41,6 +42,7 @@ const queryItemCategories = async <Key extends keyof ItemCategory>(
     search?: string;
   },
   conditions?: NestedObject,
+  multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
     'name',
@@ -72,6 +74,14 @@ const queryItemCategories = async <Key extends keyof ItemCategory>(
   }
 
   const where = { ...filter, ...conditions, ...globalSearch };
+  const singleSort = sortBy ? { [sortBy]: sortType } : undefined
+  const orderBy: NestedSort[] = [];
+  if (multipleSort) {
+    orderBy.push(...multipleSort);
+  }
+  if (singleSort) {
+    orderBy.push(singleSort);
+  }
   try {
     const getCountAll = prisma.itemCategory.count({ where });
     const getItemCategories = prisma.itemCategory.findMany({
@@ -79,7 +89,7 @@ const queryItemCategories = async <Key extends keyof ItemCategory>(
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       skip: page * limit,
       take: limit,
-      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+      orderBy: orderBy.length > 0 ? orderBy : undefined,
     });
     const [countAll, itemCategories] = await Promise.all([getCountAll, getItemCategories]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });

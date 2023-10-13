@@ -8,6 +8,7 @@ import { NestedObject } from '../utils/pickNested';
 import uploadService from './upload.service';
 import { File } from '../types/file';
 import { UploadApiResponse } from 'cloudinary';
+import { NestedSort } from '../utils/pickNestedSort';
 
 interface ICreateItemData extends Omit<Prisma.ItemUncheckedCreateInput, "multipleUoms"> {
   multipleUoms: Prisma.MultipleUomCreateManyItemInput[],
@@ -80,6 +81,7 @@ const queryItems = async <Key extends keyof Item>(
     search?: string;
   },
   conditions?: NestedObject,
+  multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
     'code',
@@ -117,6 +119,14 @@ const queryItems = async <Key extends keyof Item>(
   }
 
   const where = { ...filter, ...conditions, ...globalSearch };
+  const singleSort = sortBy ? { [sortBy]: sortType } : undefined
+  const orderBy: NestedSort[] = [];
+  if (multipleSort) {
+    orderBy.push(...multipleSort);
+  }
+  if (singleSort) {
+    orderBy.push(singleSort);
+  }
   try {
     const getCountAll = prisma.item.count({ where });
     const getItems = prisma.item.findMany({
@@ -131,7 +141,7 @@ const queryItems = async <Key extends keyof Item>(
       },
       skip: page * limit,
       take: limit,
-      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+      orderBy: orderBy.length > 0 ? orderBy : undefined,
     });
     const [countAll, items] = await Promise.all([getCountAll, getItems]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });
@@ -232,7 +242,11 @@ const updateItemById = async <Key extends keyof Item>(
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item name already taken');
   }
   const { multipleUoms, fileImages, ...rest } = updateBody;
-  const dataUploaded = await uploadService.upload(fileImages);
+  console.log({ multipleUoms });
+  let dataUploaded: UploadApiResponse[] = [];
+  if (fileImages) {
+    dataUploaded = await uploadService.upload(fileImages);
+  }
   const updatedItem = await prisma.item.update({
     where: { id: item.id },
     data: {

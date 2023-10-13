@@ -483,9 +483,9 @@ model TransactionDetail {
   updatedBy            String?
   transaction          Transaction      @relation("transaction", fields: [transactionId], references: [id], onDelete: Cascade)
   transactionId        String
-  transactionPayment   Transaction?     @relation("transactionPayment", fields: [transactionPaymentId], references: [id], onDelete: Cascade)
+  transactionPayment   Transaction?     @relation("transactionPayment", fields: [transactionPaymentId], references: [id])
   transactionPaymentId String?
-  multipleUom          MultipleUom?     @relation(fields: [multipleUomId], references: [id], onDelete: Cascade)
+  multipleUom          MultipleUom?     @relation(fields: [multipleUomId], references: [id])
   multipleUomId        String?
   tax                  Tax?             @relation(fields: [taxId], references: [id])
   taxId                String?

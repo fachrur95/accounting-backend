@@ -5,6 +5,7 @@ import ApiError from '../utils/ApiError';
 import { NestedObject } from '../utils/pickNested';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
+import { NestedSort } from '../utils/pickNestedSort';
 
 /**
  * Create a term
@@ -41,6 +42,7 @@ const queryTerms = async <Key extends keyof Term>(
     search?: string;
   },
   conditions?: NestedObject,
+  multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
     'name',
@@ -71,6 +73,14 @@ const queryTerms = async <Key extends keyof Term>(
   }
 
   const where = { ...filter, ...conditions, ...globalSearch };
+  const singleSort = sortBy ? { [sortBy]: sortType } : undefined
+  const orderBy: NestedSort[] = [];
+  if (multipleSort) {
+    orderBy.push(...multipleSort);
+  }
+  if (singleSort) {
+    orderBy.push(singleSort);
+  }
   try {
     const getCountAll = prisma.term.count({ where });
     const getTerms = prisma.term.findMany({
@@ -78,7 +88,7 @@ const queryTerms = async <Key extends keyof Term>(
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       skip: page * limit,
       take: limit,
-      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+      orderBy: orderBy.length > 0 ? orderBy : undefined,
     });
     const [countAll, terms] = await Promise.all([getCountAll, getTerms]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });

@@ -5,6 +5,7 @@ import ApiError from '../utils/ApiError';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
+import { NestedSort } from '../utils/pickNestedSort';
 
 /**
  * Create a cashRegister
@@ -41,6 +42,7 @@ const queryCashRegisters = async <Key extends keyof CashRegister>(
     search?: string;
   },
   conditions?: NestedObject,
+  multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
     'name',
@@ -69,6 +71,14 @@ const queryCashRegisters = async <Key extends keyof CashRegister>(
   }
 
   const where = { ...filter, ...conditions, ...globalSearch };
+  const singleSort = sortBy ? { [sortBy]: sortType } : undefined
+  const orderBy: NestedSort[] = [];
+  if (multipleSort) {
+    orderBy.push(...multipleSort);
+  }
+  if (singleSort) {
+    orderBy.push(singleSort);
+  }
   try {
     const getCountAll = prisma.cashRegister.count({ where });
     const getCashRegisters = prisma.cashRegister.findMany({
@@ -76,7 +86,7 @@ const queryCashRegisters = async <Key extends keyof CashRegister>(
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       skip: page * limit,
       take: limit,
-      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+      orderBy: orderBy.length > 0 ? orderBy : undefined,
     });
     const [countAll, cashRegisters] = await Promise.all([getCountAll, getCashRegisters]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });

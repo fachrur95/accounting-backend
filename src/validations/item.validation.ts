@@ -42,6 +42,12 @@ const getItems = {
         })
       )
     }),
+    sorts: Joi.array().items(
+      Joi.object().keys({
+        field: Joi.string().required(),
+        sort: Joi.string().valid("asc", "desc"),
+      })
+    ),
   })
 };
 
@@ -69,6 +75,7 @@ const updateItem = {
       isActive: Joi.boolean(),
       multipleUoms: Joi.array().items(
         Joi.object().keys({
+          id: Joi.string(),
           unitOfMeasureId: Joi.string().required(),
           conversionQty: Joi.number().min(1).required(),
           barcode: Joi.string(),

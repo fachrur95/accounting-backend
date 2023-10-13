@@ -3,8 +3,9 @@ import pick from '../utils/pick';
 import ApiError from '../utils/ApiError';
 import catchAsync from '../utils/catchAsync';
 import { userService } from '../services';
-import { FiltersType } from '../types/filtering';
+import { FiltersType, SortType } from '../types/filtering';
 import pickNested from '../utils/pickNested';
+import pickNestedSort from '../utils/pickNestedSort';
 
 const createUser = catchAsync(async (req, res) => {
   const { email, password, name, role } = req.body;
@@ -16,7 +17,8 @@ const getUsers = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['name', 'role']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   const conditions = pickNested(req.query?.filters as FiltersType);
-  const result = await userService.queryUsers(filter, options, conditions);
+  const multipleSort = pickNestedSort(req.query?.sorts as SortType[]);
+  const result = await userService.queryUsers(filter, options, conditions, multipleSort);
   res.send(result);
 });
 
