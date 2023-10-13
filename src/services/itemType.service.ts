@@ -44,6 +44,8 @@ const queryItemTypes = async <Key extends keyof ItemType>(
   keys: Key[] = [
     'id',
     'name',
+    'note',
+    'isActive',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -109,6 +111,8 @@ const getItemTypeById = async <Key extends keyof ItemType>(
     'isPurchase',
     'isAdjustment',
     'isTransfer',
+    'note',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',

@@ -127,7 +127,7 @@ const getAccountClassById = async <Key extends keyof AccountClass>(
 
 /**
  * Get accountClass by email
- * @param {string} email
+ * @param {string} name
  * @param {Array<Key>} keys
  * @returns {Promise<Pick<AccountClass, Key> | null>}
  */

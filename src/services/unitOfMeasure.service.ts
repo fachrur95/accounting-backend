@@ -43,7 +43,10 @@ const queryUnitOfMeasures = async <Key extends keyof UnitOfMeasure>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
+    'code',
     'name',
+    'note',
+    'isActive',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -102,7 +105,10 @@ const getUnitOfMeasureById = async <Key extends keyof UnitOfMeasure>(
   id: string,
   keys: Key[] = [
     'id',
+    'code',
     'name',
+    'note',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',

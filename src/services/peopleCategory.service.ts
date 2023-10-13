@@ -43,7 +43,10 @@ const queryPeopleCategories = async <Key extends keyof PeopleCategory>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
+    'code',
     'name',
+    'note',
+    'isActive',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -103,7 +106,13 @@ const getPeopleCategoryById = async <Key extends keyof PeopleCategory>(
   id: string,
   keys: Key[] = [
     'id',
+    'code',
     'name',
+    'isCustomer',
+    'isSupplier',
+    'isEmployee',
+    'note',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',

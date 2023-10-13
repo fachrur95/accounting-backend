@@ -105,7 +105,12 @@ const getChartOfAccountById = async <Key extends keyof ChartOfAccount>(
   id: string,
   keys: Key[] = [
     'id',
+    'code',
     'name',
+    'group',
+    'accountSubClassId',
+    'accountSubClass',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',

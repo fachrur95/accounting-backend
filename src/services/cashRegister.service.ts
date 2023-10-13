@@ -105,8 +105,12 @@ const getCashRegisterById = async <Key extends keyof CashRegister>(
   keys: Key[] = [
     'id',
     'name',
+    'depositAccountId',
+    'beginBalanceAccountId',
     'depositAccount',
     'beginBalanceAccount',
+    'note',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',
@@ -121,7 +125,7 @@ const getCashRegisterById = async <Key extends keyof CashRegister>(
 
 /**
  * Get cashRegister by email
- * @param {string} email
+ * @param {string} name
  * @param {Array<Key>} keys
  * @returns {Promise<Pick<CashRegister, Key> | null>}
  */

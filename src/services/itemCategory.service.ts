@@ -44,6 +44,9 @@ const queryItemCategories = async <Key extends keyof ItemCategory>(
   keys: Key[] = [
     'id',
     'name',
+    'itemType',
+    'note',
+    'isActive',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -105,6 +108,10 @@ const getItemCategoryById = async <Key extends keyof ItemCategory>(
   keys: Key[] = [
     'id',
     'name',
+    'note',
+    'isActive',
+    'itemType',
+    'itemTypeId',
     'createdBy',
     'createdAt',
     'updatedBy',
@@ -119,7 +126,7 @@ const getItemCategoryById = async <Key extends keyof ItemCategory>(
 
 /**
  * Get itemCategory by email
- * @param {string} email
+ * @param {string} name
  * @param {Array<Key>} keys
  * @returns {Promise<Pick<ItemCategory, Key> | null>}
  */

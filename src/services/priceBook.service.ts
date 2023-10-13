@@ -67,6 +67,8 @@ const queryPriceBooks = async <Key extends keyof PriceBook>(
     'peopleCategory',
     'startDate',
     'endDate',
+    'note',
+    'isActive',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -127,10 +129,13 @@ const getPriceBookById = async <Key extends keyof PriceBook>(
   keys: Key[] = [
     'id',
     'name',
+    'peopleCategoryId',
     'peopleCategory',
     'startDate',
     'endDate',
-    'PriceBookDetail',
+    'priceBookDetails',
+    'note',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',
@@ -144,8 +149,8 @@ const getPriceBookById = async <Key extends keyof PriceBook>(
 };
 
 /**
- * Get priceBook by email
- * @param {string} email
+ * Get priceBook by name
+ * @param {string} name
  * @param {Array<Key>} keys
  * @returns {Promise<Pick<PriceBook, Key> | null>}
  */

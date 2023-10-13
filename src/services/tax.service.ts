@@ -43,10 +43,10 @@ const queryTaxes = async <Key extends keyof Tax>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
-    'unit',
-    'unitId',
     'name',
     'rate',
+    'note',
+    'isActive',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -106,10 +106,10 @@ const getTaxById = async <Key extends keyof Tax>(
   id: string,
   keys: Key[] = [
     'id',
-    'unit',
-    'unitId',
     'name',
     'rate',
+    'note',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',

@@ -43,9 +43,11 @@ const queryPeoples = async <Key extends keyof People>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
-    'peopleCategory',
     'code',
     'name',
+    'note',
+    'isActive',
+    'peopleCategory',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -106,7 +108,12 @@ const getPeopleById = async <Key extends keyof People>(
   id: string,
   keys: Key[] = [
     'id',
+    'code',
     'name',
+    'note',
+    'isActive',
+    'peopleCategory',
+    'peopleCategoryId',
     'createdBy',
     'createdAt',
     'updatedBy',

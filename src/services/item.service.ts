@@ -121,7 +121,14 @@ const queryItems = async <Key extends keyof Item>(
     const getCountAll = prisma.item.count({ where });
     const getItems = prisma.item.findMany({
       where,
-      select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      select: {
+        ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+        multipleUoms: {
+          include: {
+            unitOfMeasure: true,
+          }
+        }
+      },
       skip: page * limit,
       take: limit,
       orderBy: sortBy ? { [sortBy]: sortType } : undefined
@@ -134,7 +141,7 @@ const queryItems = async <Key extends keyof Item>(
       nextPage,
       countRows: items.length,
       countAll,
-      rows: items as Pick<Item, Key>[],
+      rows: items as unknown as Pick<Item, Key>[],
     };
   } catch (error) {
     // Tangani kesalahan jika ada
@@ -155,6 +162,8 @@ const getItemById = async <Key extends keyof Item>(
     'id',
     'code',
     'name',
+    'itemCategoryId',
+    'taxId',
     'itemCategory',
     'tax',
     'multipleUoms',

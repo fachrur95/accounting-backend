@@ -43,10 +43,10 @@ const queryTerms = async <Key extends keyof Term>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
-    'unit',
-    'unitId',
     'name',
     'period',
+    'note',
+    'isActive',
     'createdAt',
     'updatedAt'
   ] as Key[]
@@ -106,10 +106,10 @@ const getTermById = async <Key extends keyof Term>(
   id: string,
   keys: Key[] = [
     'id',
-    'unit',
-    'unitId',
     'name',
     'period',
+    'note',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',

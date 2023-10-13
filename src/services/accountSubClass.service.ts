@@ -109,10 +109,12 @@ const getAccountSubClassById = async <Key extends keyof AccountSubClass>(
   id: string,
   keys: Key[] = [
     'id',
+    'accountClassId',
     'accountClass',
     'code',
     'group',
     'name',
+    'balanceSheetPosition',
     'createdBy',
     'createdAt',
     'updatedBy',

@@ -43,8 +43,6 @@ const queryWarehouses = async <Key extends keyof Warehouse>(
   conditions?: NestedObject,
   keys: Key[] = [
     'id',
-    'unit',
-    'unitId',
     'name',
     'createdAt',
     'updatedAt'
