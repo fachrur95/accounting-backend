@@ -25,7 +25,7 @@ const getWarehouses = {
         Joi.object().keys({
           // field: Joi.object().pattern(Joi.string(), Joi.string()),
           field: Joi.string().required(),
-          type: Joi.string().valid("contains", "endsWith", "equals", "gt", "gte", "in", "lt", "lte", "not", "notIn", "startsWith").required(),
+          type: Joi.string().valid("contains", "endsWith", "equals", "gt", "gte", "in", "lt", "lte", "not", "notIn", "startsWith"),
           value: Joi.string().required(),
         })
       )

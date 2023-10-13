@@ -9,9 +9,9 @@ import { SessionData } from '../types/session';
 import pickNestedSort from '../utils/pickNestedSort';
 
 const createTax = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
-  const { unitId, name, rate, note, isActive } = req.body;
-  const tax = await taxService.createTax({ unitId, name, rate, note, isActive, createdBy: user.email });
+  const user = req.user as Required<SessionData>;
+  const { name, rate, note, isActive } = req.body;
+  const tax = await taxService.createTax({ name, rate, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Tax",
@@ -23,9 +23,10 @@ const createTax = catchAsync(async (req, res) => {
 });
 
 const getTaxes = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
+  const user = req.user as Required<SessionData>;
   const filter = pick(req.query, ['name', 'unitId']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
+  filter.unitId = user.session?.unit?.id;
   const conditions = pickNested(req.query?.filters as FiltersType);
   const multipleSort = pickNestedSort(req.query?.sorts as SortType[]);
   const result = await taxService.queryTaxes(filter, options, conditions, multipleSort);
@@ -39,7 +40,7 @@ const getTaxes = catchAsync(async (req, res) => {
 });
 
 const getTax = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
+  const user = req.user as Required<SessionData>;
   const tax = await taxService.getTaxById(req.params.taxId);
   if (!tax) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Tax not found');
@@ -54,7 +55,7 @@ const getTax = catchAsync(async (req, res) => {
 });
 
 const updateTax = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
+  const user = req.user as Required<SessionData>;
   const tax = await taxService.updateTaxById(req.params.taxId, {
     ...req.body,
     updatedBy: user.email,
@@ -70,7 +71,7 @@ const updateTax = catchAsync(async (req, res) => {
 });
 
 const deleteTax = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
+  const user = req.user as Required<SessionData>;
   await taxService.deleteTaxById(req.params.taxId);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,

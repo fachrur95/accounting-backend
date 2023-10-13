@@ -101,6 +101,7 @@ const queryPeopleCategories = async <Key extends keyof PeopleCategory>(
       rows: peopleCategories as Pick<PeopleCategory, Key>[],
     };
   } catch (error) {
+    console.log({ error })
     // Tangani kesalahan jika ada
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
   }

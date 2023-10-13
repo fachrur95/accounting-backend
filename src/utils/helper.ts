@@ -13,6 +13,17 @@ export const jsonParse = <T>(str: string): T | undefined => {
   return JSON.parse(str) as T;
 }
 
+export const checkAndConvertVariable = (input: string | number): string | number | boolean => {
+  if (typeof input === 'string') {
+    if (input.toLowerCase() === 'true' || input.toLowerCase() === 'false') {
+      return input.toLowerCase() === 'true';
+    } else if (!isNaN(parseFloat(input))) {
+      return parseFloat(input);
+    }
+  }
+  return input;
+}
+
 
 export const getLastNumberFromString = (inputString: string): number | null => {
   const regex = /(\d+)$/; // Ekspresi reguler untuk mencari angka di akhir string

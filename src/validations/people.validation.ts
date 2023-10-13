@@ -14,6 +14,9 @@ const getPeoples = {
   query: Joi.object().keys({
     search: Joi.string(),
     peopleCategoryId: Joi.string(),
+    "peopleCategory.isCustomer": Joi.boolean(),
+    "peopleCategory.isSupplier": Joi.boolean(),
+    "peopleCategory.isEmployee": Joi.boolean(),
     code: Joi.string(),
     name: Joi.string(),
     sortBy: Joi.string(),
@@ -24,7 +27,7 @@ const getPeoples = {
       fields: Joi.array().items(
         Joi.object().keys({
           field: Joi.string().required(),
-          type: Joi.string().valid("contains", "endsWith", "equals", "gt", "gte", "in", "lt", "lte", "not", "notIn", "startsWith").required(),
+          type: Joi.string().valid("contains", "endsWith", "equals", "gt", "gte", "in", "lt", "lte", "not", "notIn", "startsWith"),
           value: Joi.any().required(),
         })
       )

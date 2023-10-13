@@ -1,4 +1,5 @@
 import { FieldType, FiltersType } from "../types/filtering";
+import { checkAndConvertVariable } from "./helper";
 
 export type NestedObject = {
   [key: string]: NestedObject | string | unknown;
@@ -7,9 +8,9 @@ export type NestedObject = {
 const pickNested = (obj?: FiltersType): NestedObject | undefined => {
   if (!obj?.fields) return undefined;
   const filters: FieldType[] = obj?.fields as unknown as FieldType[];
-  const fields = filters?.reduce<{ [field: string]: NestedObject | string }>((finalObj, filter) => {
+  const fields = filters?.reduce<{ [field: string]: NestedObject | any }>((finalObj, filter) => {
     const field = filter.field;
-    const value = filter.value;
+    const value = checkAndConvertVariable(filter.value);
 
     const keys = field.split("."); // Membagi string menjadi array keys
     if (keys.length > 1) {

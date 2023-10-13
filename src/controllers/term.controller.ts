@@ -9,9 +9,9 @@ import { SessionData } from '../types/session';
 import pickNestedSort from '../utils/pickNestedSort';
 
 const createTerm = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
-  const { unitId, name, period, note, isActive } = req.body;
-  const term = await termService.createTerm({ unitId, name, period, note, isActive, createdBy: user.email });
+  const user = req.user as Required<SessionData>;
+  const { name, period, note, isActive } = req.body;
+  const term = await termService.createTerm({ name, period, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Term",
@@ -23,9 +23,10 @@ const createTerm = catchAsync(async (req, res) => {
 });
 
 const getTerms = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
+  const user = req.user as Required<SessionData>;
   const filter = pick(req.query, ['name', 'unitId']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
+  filter.unitId = user.session?.unit?.id;
   const conditions = pickNested(req.query?.filters as FiltersType);
   const multipleSort = pickNestedSort(req.query?.sorts as SortType[]);
   const result = await termService.queryTerms(filter, options, conditions, multipleSort);
