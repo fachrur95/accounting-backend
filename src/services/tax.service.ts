@@ -49,7 +49,9 @@ const queryTaxes = async <Key extends keyof Tax>(
     'rate',
     'note',
     'isActive',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<Tax, Key>>> => {
@@ -145,7 +147,9 @@ const getTaxByName = async <Key extends keyof Tax>(
     'id',
     'unitId',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Tax, Key> | null> => {

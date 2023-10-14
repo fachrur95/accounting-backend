@@ -49,7 +49,9 @@ const queryInstitutes = async <Key extends keyof Institute>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<Institute, Key>>> => {
@@ -146,7 +148,9 @@ const getInstituteByName = async <Key extends keyof Institute>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Institute, Key> | null> => {

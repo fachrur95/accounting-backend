@@ -50,7 +50,9 @@ const queryPeoples = async <Key extends keyof People>(
     'note',
     'isActive',
     'peopleCategory',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<People, Key>>> => {
@@ -103,6 +105,7 @@ const queryPeoples = async <Key extends keyof People>(
       rows: peoples as Pick<People, Key>[],
     };
   } catch (error) {
+    console.log({ error })
     // Tangani kesalahan jika ada
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
   }
@@ -148,7 +151,9 @@ const getPeopleByName = async <Key extends keyof People>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<People, Key> | null> => {

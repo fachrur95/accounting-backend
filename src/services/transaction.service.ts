@@ -921,7 +921,9 @@ const queryTransactions = async <Key extends keyof Transaction>(
     'note',
     'total',
     'totalPayment',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<Transaction, Key>>> => {
@@ -1029,7 +1031,9 @@ const getTransactionByNumber = async <Key extends keyof Transaction>(
   keys: Key[] = [
     'id',
     'transactionNumber',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Transaction, Key> | null> => {

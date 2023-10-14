@@ -45,8 +45,14 @@ const queryChartOfAccounts = async <Key extends keyof ChartOfAccount>(
   multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
+    'code',
     'name',
+    'group',
+    'accountSubClass',
+    'isActive',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<ChartOfAccount, Key>>> => {
@@ -84,7 +90,14 @@ const queryChartOfAccounts = async <Key extends keyof ChartOfAccount>(
     const getCountAll = prisma.chartOfAccount.count({ where });
     const getChartOfAccounts = prisma.chartOfAccount.findMany({
       where,
-      select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      select: {
+        ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+        accountSubClass: {
+          include: {
+            accountClass: true,
+          }
+        }
+      },
       skip: page * limit,
       take: limit,
       orderBy: orderBy.length > 0 ? orderBy : undefined,
@@ -97,7 +110,7 @@ const queryChartOfAccounts = async <Key extends keyof ChartOfAccount>(
       nextPage,
       countRows: chartOfAccounts.length,
       countAll,
-      rows: chartOfAccounts as Pick<ChartOfAccount, Key>[],
+      rows: chartOfAccounts as unknown as Pick<ChartOfAccount, Key>[],
     };
   } catch (error) {
     // Tangani kesalahan jika ada
@@ -145,7 +158,9 @@ const getChartOfAccountByName = async <Key extends keyof ChartOfAccount>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<ChartOfAccount, Key> | null> => {

@@ -71,7 +71,9 @@ const queryPriceBooks = async <Key extends keyof PriceBook>(
     'endDate',
     'note',
     'isActive',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<PriceBook, Key>>> => {
@@ -170,7 +172,9 @@ const getPriceBookByName = async <Key extends keyof PriceBook>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<PriceBook, Key> | null> => {

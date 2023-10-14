@@ -49,7 +49,9 @@ const queryTerms = async <Key extends keyof Term>(
     'period',
     'note',
     'isActive',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<Term, Key>>> => {
@@ -145,7 +147,9 @@ const getTermByName = async <Key extends keyof Term>(
     'id',
     'unitId',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Term, Key> | null> => {

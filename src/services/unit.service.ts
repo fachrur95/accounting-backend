@@ -87,7 +87,9 @@ const queryUnits = async <Key extends keyof Unit>(
     'institute',
     'instituteId',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<Unit, Key>>> => {
@@ -189,7 +191,9 @@ const getUnitByName = async <Key extends keyof Unit>(
     'id',
     'instituteId',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Unit, Key> | null> => {

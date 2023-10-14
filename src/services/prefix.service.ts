@@ -47,7 +47,9 @@ const queryPrefixes = async <Key extends keyof Prefix>(
     'unit',
     'unitId',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<Prefix, Key>>> => {
@@ -121,7 +123,9 @@ const getPrefixByPrefix = async <Key extends keyof Prefix>(
     'unitId',
     'name',
     'prefix',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Prefix, Key> | null> => {

@@ -49,7 +49,9 @@ const queryItemCategories = async <Key extends keyof ItemCategory>(
     'itemType',
     'note',
     'isActive',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<ItemCategory, Key>>> => {
@@ -146,7 +148,9 @@ const getItemCategoryByName = async <Key extends keyof ItemCategory>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<ItemCategory, Key> | null> => {

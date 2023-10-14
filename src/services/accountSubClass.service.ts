@@ -50,7 +50,9 @@ const queryAccountSubClasses = async <Key extends keyof AccountSubClass>(
     'group',
     'name',
     'balanceSheetPosition',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<AccountSubClass, Key>>> => {
@@ -104,6 +106,7 @@ const queryAccountSubClasses = async <Key extends keyof AccountSubClass>(
       rows: accountSubClasses as Pick<AccountSubClass, Key>[],
     };
   } catch (error) {
+    console.log({ error })
     // Tangani kesalahan jika ada
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
   }
@@ -148,7 +151,9 @@ const getAccountSubClassByName = async <Key extends keyof AccountSubClass>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<AccountSubClass, Key> | null> => {

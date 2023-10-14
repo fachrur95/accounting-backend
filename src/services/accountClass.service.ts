@@ -50,7 +50,9 @@ const queryAccountClasses = async <Key extends keyof AccountClass>(
     'group',
     'name',
     'balanceSheetPosition',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<AccountClass, Key>>> => {
@@ -146,7 +148,9 @@ const getAccountClassByName = async <Key extends keyof AccountClass>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<AccountClass, Key> | null> => {

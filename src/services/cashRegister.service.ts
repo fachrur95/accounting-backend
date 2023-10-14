@@ -48,7 +48,9 @@ const queryCashRegisters = async <Key extends keyof CashRegister>(
     'name',
     'depositAccount',
     'beginBalanceAccount',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<CashRegister, Key>>> => {
@@ -145,7 +147,9 @@ const getCashRegisterByName = async <Key extends keyof CashRegister>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<CashRegister, Key> | null> => {

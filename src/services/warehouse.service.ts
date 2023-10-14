@@ -46,7 +46,9 @@ const queryWarehouses = async <Key extends keyof Warehouse>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<Warehouse, Key>>> => {
@@ -141,7 +143,9 @@ const getWarehouseByName = async <Key extends keyof Warehouse>(
     'id',
     'unitId',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Warehouse, Key> | null> => {

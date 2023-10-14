@@ -93,7 +93,9 @@ const queryItems = async <Key extends keyof Item>(
     'images',
     'isActive',
     'note',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<Item, Key>>> => {
@@ -214,7 +216,9 @@ const getItemByName = async <Key extends keyof Item>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<Item, Key> | null> => {

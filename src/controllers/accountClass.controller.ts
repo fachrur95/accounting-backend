@@ -26,7 +26,6 @@ const getAccountClasses = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const filter = pick(req.query, ['code', 'name', 'unitId']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
-  filter.unitId = user.session?.unit?.id;
   const conditions = pickNested(req.query?.filters as FiltersType);
   const multipleSort = pickNestedSort(req.query?.sorts as SortType[]);
   const result = await accountClassService.queryAccountClasses(filter, options, conditions, multipleSort);

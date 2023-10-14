@@ -49,7 +49,9 @@ const queryUnitOfMeasures = async <Key extends keyof UnitOfMeasure>(
     'name',
     'note',
     'isActive',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<UnitOfMeasure, Key>>> => {
@@ -143,7 +145,9 @@ const getUnitOfMeasureByName = async <Key extends keyof UnitOfMeasure>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<UnitOfMeasure, Key> | null> => {

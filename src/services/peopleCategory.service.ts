@@ -49,7 +49,9 @@ const queryPeopleCategories = async <Key extends keyof PeopleCategory>(
     'name',
     'note',
     'isActive',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<PeopleCategory, Key>>> => {
@@ -148,7 +150,9 @@ const getPeopleCategoryByName = async <Key extends keyof PeopleCategory>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<PeopleCategory, Key> | null> => {

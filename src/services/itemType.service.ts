@@ -48,7 +48,9 @@ const queryItemTypes = async <Key extends keyof ItemType>(
     'name',
     'note',
     'isActive',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<ItemType, Key>>> => {
@@ -147,7 +149,9 @@ const getItemTypeByName = async <Key extends keyof ItemType>(
   keys: Key[] = [
     'id',
     'name',
+    'createdBy',
     'createdAt',
+    'updatedBy',
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<ItemType, Key> | null> => {
