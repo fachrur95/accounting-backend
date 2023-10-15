@@ -650,7 +650,7 @@ const defaultChartOfAccountNewUnit = [
   {
     subClassCode: "690",
     code: "69000",
-    name: "Beban Merchant Discount Rate ((NULL)DR)",
+    name: "Beban Merchant Discount Rate (IDR)",
     createdBy: "system",
   },
   {
@@ -674,7 +674,7 @@ const defaultChartOfAccountNewUnit = [
   {
     subClassCode: "720",
     code: "72000",
-    name: "Laba ((NULL)ugi) Penjualan Aktiva Tetap",
+    name: "Laba Rugi Penjualan Aktiva Tetap",
     createdBy: "system",
   },
   {
