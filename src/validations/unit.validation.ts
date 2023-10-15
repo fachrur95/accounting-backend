@@ -2,7 +2,6 @@ import Joi from 'joi';
 
 const createUnit = {
   body: Joi.object().keys({
-    instituteId: Joi.string().required(),
     name: Joi.string().required(),
   })
 };
@@ -51,7 +50,6 @@ const updateUnit = {
   }),
   body: Joi.object()
     .keys({
-      instituteId: Joi.string(),
       name: Joi.string()
     })
     .min(1)

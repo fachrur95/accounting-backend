@@ -10,8 +10,8 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createItemCategory = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { itemTypeId, name, note, isActive } = req.body;
-  const itemCategory = await itemCategoryService.createItemCategory({ itemTypeId, name, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
+  const { itemTypeId, stockAccountId, cogsAccountId, name, note, isActive } = req.body;
+  const itemCategory = await itemCategoryService.createItemCategory({ itemTypeId, stockAccountId, cogsAccountId, name, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Item Category",

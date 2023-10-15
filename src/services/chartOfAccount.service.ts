@@ -100,7 +100,7 @@ const queryChartOfAccounts = async <Key extends keyof ChartOfAccount>(
       },
       skip: page * limit,
       take: limit,
-      orderBy: orderBy.length > 0 ? orderBy : undefined,
+      orderBy: orderBy.length > 0 ? orderBy : { code: 'asc' },
     });
     const [countAll, chartOfAccounts] = await Promise.all([getCountAll, getChartOfAccounts]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });
@@ -142,7 +142,11 @@ const getChartOfAccountById = async <Key extends keyof ChartOfAccount>(
 ): Promise<Pick<ChartOfAccount, Key> | null> => {
   return prisma.chartOfAccount.findUnique({
     where: { id },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+    select: {
+      ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}), accountSubClass: {
+        include: { accountClass: true }
+      }
+    }
   }) as Promise<Pick<ChartOfAccount, Key> | null>;
 };
 

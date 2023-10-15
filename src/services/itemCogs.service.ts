@@ -161,7 +161,7 @@ const calculateFIFOByTransDetailId = async (
         select: {
           entryDate: true,
           transactionType: true,
-          warehouseId: true,
+          // warehouseId: true,
           unitId: true,
         }
       },
@@ -311,7 +311,7 @@ const calculateAVGByTransDetailId = async (
         select: {
           entryDate: true,
           transactionType: true,
-          warehouseId: true,
+          // warehouseId: true,
           unitId: true,
         }
       },
@@ -473,7 +473,7 @@ const calculateManualByTransDetailId = async (
         select: {
           entryDate: true,
           transactionType: true,
-          warehouseId: true,
+          // warehouseId: true,
           unitId: true,
         }
       },

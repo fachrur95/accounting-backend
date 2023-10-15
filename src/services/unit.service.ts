@@ -9,8 +9,9 @@ import { SessionData } from '../types/session';
 import userUnitService from './userUnit.service';
 import defaultPrefix from '../utils/templates/prefix-default';
 import { NestedSort } from '../utils/pickNestedSort';
+import defaultChartOfAccountNewUnit from '../utils/templates/default-coa';
 
-const defaultWarehouseName = (unitName: string): string => `${unitName} Utama`;
+// const defaultWarehouseName = (unitName: string): string => `${unitName} Utama`;
 
 /**
  * Create a unit
@@ -34,13 +35,13 @@ const createUnit = async (
           unitId: unit.id,
         }
       });
-      const createWarehouse = tx.warehouse.create({
+      /* const createWarehouse = tx.warehouse.create({
         data: {
           unitId: unit.id,
           name: defaultWarehouseName(data.name),
           createdBy: data.createdBy,
         }
-      });
+      }); */
       const prefixes = defaultPrefix.map((prefix) => tx.prefix.create({
         data: {
           ...prefix,
@@ -49,7 +50,30 @@ const createUnit = async (
         }
       }));
 
-      await Promise.all([createGeneralSetting, createWarehouse, ...prefixes]);
+      const defaultCoa = [];
+      for (const coa of defaultChartOfAccountNewUnit) {
+        const { subClassCode, ...restDataCoa } = coa;
+        const subClass = await tx.accountSubClass.findUnique({
+          where: {
+            code: subClassCode,
+          },
+          select: {
+            id: true,
+          }
+        });
+        if (!subClass) {
+          throw new ApiError(httpStatus.NOT_FOUND, 'Account Sub Class not found');
+        }
+        defaultCoa.push(tx.chartOfAccount.create({
+          data: {
+            ...restDataCoa,
+            accountSubClassId: subClass.id,
+            unitId: unit.id,
+          },
+        }))
+      }
+
+      await Promise.all([createGeneralSetting, ...prefixes, ...defaultCoa]);
 
       return unit;
     }, {
@@ -234,9 +258,9 @@ const updateUnitById = async <Key extends keyof Unit>(
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
     });
     const getCountGeneralSetting = tx.generalSetting.count({ where: { unitId: unit.id } });
-    const getCountWarehouse = tx.warehouse.count({ where: { unitId: unit.id } });
+    // const getCountWarehouse = tx.warehouse.count({ where: { unitId: unit.id } });
     const getCountPrefixes = tx.prefix.count({ where: { unitId: unit.id } });
-    const [countGeneralSetting, countWarehouse, countPrefixes] = await Promise.all([getCountGeneralSetting, getCountWarehouse, getCountPrefixes]);
+    const [countGeneralSetting, countPrefixes] = await Promise.all([getCountGeneralSetting, getCountPrefixes]);
 
 
     if (countGeneralSetting === 0) {
@@ -249,7 +273,7 @@ const updateUnitById = async <Key extends keyof Unit>(
       });
     }
 
-    if (countWarehouse === 0) {
+    /* if (countWarehouse === 0) {
       await tx.warehouse.create({
         data: {
           unitId: unit.id,
@@ -257,7 +281,7 @@ const updateUnitById = async <Key extends keyof Unit>(
           createdBy: updateBody.updatedBy as string,
         }
       });
-    }
+    } */
 
     if (countPrefixes === 0) {
       const prefixes = defaultPrefix.map((prefix) => tx.prefix.create({

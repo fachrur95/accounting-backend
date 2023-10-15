@@ -10,8 +10,8 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createPeopleCategory = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { code, name, isCustomer, isSupplier, isEmployee, note, isActive } = req.body;
-  const peopleCategory = await peopleCategoryService.createPeopleCategory({ code, name, isCustomer, isSupplier, isEmployee, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
+  const { code, name, discount, isCustomer, isSupplier, isEmployee, note, isActive } = req.body;
+  const peopleCategory = await peopleCategoryService.createPeopleCategory({ code, name, discount, isCustomer, isSupplier, isEmployee, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create People Category",

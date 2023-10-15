@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
+import defaultAccountClass from "../src/utils/templates/default-account-class";
 
 const prisma = new PrismaClient();
 
@@ -23,6 +24,24 @@ async function main() {
       isEmailVerified: true,
     },
   });
+
+  const createManyAccountClass = [];
+
+  // const createManyAccountClass = defaultAccountClass.map((row) => prisma.accountClass.create({ data: row }));
+
+  // console.log({ createManyAccountClass })
+
+  for (const row of defaultAccountClass) {
+    createManyAccountClass.push(prisma.accountClass.upsert({
+      where: {
+        code: row.code,
+      },
+      create: row,
+      update: row
+    }));
+  }
+
+  await Promise.all(createManyAccountClass);
 
   console.log({ superAdmin });
 }

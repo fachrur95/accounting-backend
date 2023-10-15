@@ -25,7 +25,7 @@ const createSalesPurchase = {
     transactionNumber: Joi.string().required(),
     peopleId: Joi.string().required(),
     termId: Joi.string(),
-    warehouseId: Joi.string().required(),
+    // warehouseId: Joi.string().required(),
     entryDate: Joi.date(),
     paymentInput: Joi.number().required(),
     note: Joi.string(),
@@ -99,8 +99,8 @@ const createTransferFund = {
 const createTransferItem = {
   body: Joi.object().keys({
     transactionNumber: Joi.string().required(),
-    warehouseId: Joi.string().required(),
-    warehouseDestinationId: Joi.string().required(),
+    // warehouseId: Joi.string().required(),
+    // warehouseDestinationId: Joi.string().required(),
     entryDate: Joi.date(),
     note: Joi.string(),
     transactionDetails: Joi.array().items(
@@ -204,7 +204,7 @@ const updateSalesPurchase = {
       transactionNumber: Joi.string(),
       peopleId: Joi.string(),
       termId: Joi.string(),
-      warehouseId: Joi.string(),
+      // warehouseId: Joi.string(),
       entryDate: Joi.date(),
       paymentInput: Joi.number(),
       note: Joi.string(),
@@ -299,8 +299,8 @@ const updateTransferItem = {
   body: Joi.object()
     .keys({
       transactionNumber: Joi.string(),
-      warehouseId: Joi.string(),
-      warehouseDestinationId: Joi.string(),
+      // warehouseId: Joi.string(),
+      // warehouseDestinationId: Joi.string(),
       entryDate: Joi.date(),
       note: Joi.string(),
       transactionDetails: Joi.array().items(

@@ -5,7 +5,7 @@ export { default as emailService } from './email.service';
 export { default as instituteService } from './institute.service';
 export { default as unitService } from './unit.service';
 export { default as userUnitService } from './userUnit.service';
-export { default as warehouseService } from './warehouse.service';
+// export { default as warehouseService } from './warehouse.service';
 export { default as accountClassService } from './accountClass.service';
 export { default as accountSubClassService } from './accountSubClass.service';
 export { default as chartOfAccountService } from './chartOfAccount.service';

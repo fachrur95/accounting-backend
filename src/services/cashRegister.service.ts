@@ -48,6 +48,8 @@ const queryCashRegisters = async <Key extends keyof CashRegister>(
     'name',
     'depositAccount',
     'beginBalanceAccount',
+    'note',
+    'isActive',
     'createdBy',
     'createdAt',
     'updatedBy',

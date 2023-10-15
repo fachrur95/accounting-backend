@@ -222,6 +222,14 @@ const closeCashRegister = async (
   return transaction;
 };
 
+/* const createGeneralLedger = async (transactionId: string): Promise<void> => {
+  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'transactionDetails', 'entryDate']);
+  if (!transaction) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
+  }
+  // const checkExist = await 
+} */
+
 /**
  * Create a sell transaction
  * @param {Object} data

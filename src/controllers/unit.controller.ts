@@ -10,7 +10,11 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createUnit = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
-  const { instituteId, name } = req.body;
+  const { name } = req.body;
+  const instituteId = user.session?.institute?.id;
+  if (!instituteId) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Please set session institute to create unit');
+  }
   const unit = await unitService.createUnit({ instituteId, name, createdBy: user.email });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,

@@ -78,7 +78,7 @@ const createSell = catchAsync(async (req, res) => {
     entryDate,
     note,
     peopleId,
-    warehouseId,
+    // warehouseId,
     transactionDetails,
   } = req.body;
   const transaction = await transactionService.createSell({
@@ -89,7 +89,7 @@ const createSell = catchAsync(async (req, res) => {
     entryDate,
     note,
     peopleId,
-    warehouseId,
+    // warehouseId,
     transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
@@ -112,7 +112,7 @@ const createBuy = catchAsync(async (req, res) => {
     entryDate,
     note,
     peopleId,
-    warehouseId,
+    // warehouseId,
     transactionDetails,
   } = req.body;
   const transaction = await transactionService.createPurchase({
@@ -122,7 +122,7 @@ const createBuy = catchAsync(async (req, res) => {
     entryDate,
     note,
     peopleId,
-    warehouseId,
+    // warehouseId,
     transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""

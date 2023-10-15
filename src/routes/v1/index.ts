@@ -3,7 +3,7 @@ import authRoute from './auth.route';
 import userRoute from './user.route';
 import instituteRoute from './institute.route';
 import unitRoute from './unit.route';
-import warehouseRoute from './warehouse.route';
+// import warehouseRoute from './warehouse.route';
 import accountClassRoute from './accountClass.route';
 import accountSubClassRoute from './accountSubClass.route';
 import chartOfAccountRoute from './chartOfAccount.route';
@@ -41,10 +41,10 @@ const defaultRoutes = [
     path: '/units',
     route: unitRoute
   },
-  {
+  /* {
     path: '/warehouses',
     route: warehouseRoute
-  },
+  }, */
   {
     path: '/account-classes',
     route: accountClassRoute

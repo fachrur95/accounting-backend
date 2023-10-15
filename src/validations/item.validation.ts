@@ -10,6 +10,7 @@ const createItem = {
     minQty: Joi.number(),
     maxQty: Joi.number(),
     manualCogs: Joi.number(),
+    price: Joi.number(),
     note: Joi.string(),
     isActive: Joi.boolean(),
     multipleUoms: Joi.array().items(
@@ -71,6 +72,7 @@ const updateItem = {
       minQty: Joi.number(),
       maxQty: Joi.number(),
       manualCogs: Joi.number(),
+      price: Joi.number(),
       note: Joi.string(),
       isActive: Joi.boolean(),
       multipleUoms: Joi.array().items(

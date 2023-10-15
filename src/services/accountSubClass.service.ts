@@ -93,7 +93,7 @@ const queryAccountSubClasses = async <Key extends keyof AccountSubClass>(
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       skip: page * limit,
       take: limit,
-      orderBy: orderBy.length > 0 ? orderBy : undefined,
+      orderBy: orderBy.length > 0 ? orderBy : { code: 'asc' },
     });
     const [countAll, accountSubClasses] = await Promise.all([getCountAll, getAccountSubClasses]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });
