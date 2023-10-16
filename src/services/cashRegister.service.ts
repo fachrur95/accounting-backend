@@ -46,6 +46,7 @@ const queryCashRegisters = async <Key extends keyof CashRegister>(
   keys: Key[] = [
     'id',
     'name',
+    'mainAccount',
     'depositAccount',
     'beginBalanceAccount',
     'note',
@@ -119,8 +120,10 @@ const getCashRegisterById = async <Key extends keyof CashRegister>(
   keys: Key[] = [
     'id',
     'name',
+    'mainAccountId',
     'depositAccountId',
     'beginBalanceAccountId',
+    'mainAccount',
     'depositAccount',
     'beginBalanceAccount',
     'note',

@@ -80,23 +80,12 @@ const upsertGeneralLedger = async (
         }
       }
       return array;
-    }, [] as ReduceAccountLine[])
-    /* const transactionDetailItem = transaction.transactionDetails.reduce((array, detail) => {
-      if (detail.multipleUom) {
-        const dataObj: ReduceItemLine = {
-          cogsAccountId: detail.multipleUom.item.itemCategory.cogsAccountId,
-          stockAccountId: detail.multipleUom.item.itemCategory.stockAccountId,
-          amount: detail.total,
-          vector: detail.vector,
-        }
-        array.push(dataObj);
-      }
-      return array;
-    }, [] as ReduceItemLine[]) */
-    const checkExist = await tx.generalLedger.count({ where: { transactionId: transaction.id } });
+    }, [] as ReduceAccountLine[]);
 
-    if (checkExist > 0) {
+    const checkExist = await tx.generalLedger.findFirst({ where: { transactionId: transaction.id } });
 
+    if (checkExist) {
+      await tx.generalLedger.delete({ where: { id: checkExist.id } });
     }
 
     const dataGeneralLedgerDetails: Prisma.GeneralLedgerDetailCreateManyGeneralLedgerInput[] = transactionDetail.map((detail) => ({
@@ -120,7 +109,7 @@ const upsertGeneralLedger = async (
     });
 
   } catch (error) {
-
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
   }
 }
 

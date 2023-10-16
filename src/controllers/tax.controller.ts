@@ -58,6 +58,7 @@ const updateTax = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const tax = await taxService.updateTaxById(req.params.taxId, {
     ...req.body,
+    unitId: user.session?.unit?.id,
     updatedBy: user.email,
   });
   await logActivityService.createLogActivity({

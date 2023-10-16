@@ -58,6 +58,7 @@ const updateUnitOfMeasure = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const unitOfMeasure = await unitOfMeasureService.updateUnitOfMeasureById(req.params.unitOfMeasureId, {
     ...req.body,
+    unitId: user.session?.unit?.id,
     updatedBy: user.email,
   });
   await logActivityService.createLogActivity({

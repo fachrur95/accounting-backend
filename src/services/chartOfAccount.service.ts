@@ -189,7 +189,9 @@ const updateChartOfAccountById = async <Key extends keyof ChartOfAccount>(
   if (!chartOfAccount) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Chart Of Account not found');
   }
+  console.log({ unitId: updateBody.unitId });
   const checkName = await getChartOfAccountByName(updateBody.name as string, updateBody.unitId as string);
+  console.log({ checkName });
   if (updateBody.name && checkName && checkName.name !== chartOfAccount.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Chart Of Account name already taken');
   }

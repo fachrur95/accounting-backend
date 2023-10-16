@@ -58,6 +58,7 @@ const updateChartOfAccount = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const chartOfAccount = await chartOfAccountService.updateChartOfAccountById(req.params.chartOfAccountId, {
     ...req.body,
+    unitId: user.session?.unit?.id,
     updatedBy: user.email,
   });
   await logActivityService.createLogActivity({

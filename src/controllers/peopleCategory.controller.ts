@@ -58,6 +58,7 @@ const updatePeopleCategory = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const peopleCategory = await peopleCategoryService.updatePeopleCategoryById(req.params.peopleCategoryId, {
     ...req.body,
+    unitId: user.session?.unit?.id,
     updatedBy: user.email,
   });
   await logActivityService.createLogActivity({

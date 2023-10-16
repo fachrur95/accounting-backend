@@ -2,6 +2,7 @@ import Joi from 'joi';
 
 const createCashRegister = {
   body: Joi.object().keys({
+    mainAccountId: Joi.string().required(),
     depositAccountId: Joi.string().required(),
     beginBalanceAccountId: Joi.string().required(),
     name: Joi.string().required(),
@@ -49,6 +50,7 @@ const updateCashRegister = {
   }),
   body: Joi.object()
     .keys({
+      mainAccountId: Joi.string(),
       depositAccountId: Joi.string(),
       beginBalanceAccountId: Joi.string(),
       name: Joi.string(),

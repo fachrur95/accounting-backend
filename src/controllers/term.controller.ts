@@ -58,6 +58,7 @@ const updateTerm = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
   const term = await termService.updateTermById(req.params.termId, {
     ...req.body,
+    unitId: user.session?.unit?.id,
     updatedBy: user.email,
   });
   await logActivityService.createLogActivity({

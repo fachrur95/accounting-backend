@@ -158,6 +158,7 @@ model ChartOfAccount {
   unitId                    String
   transactionDetails        TransactionDetail[]
   transactions              Transaction[]
+  cashRegisterMains         CashRegister[]        @relation("main")
   cashRegisterDeposits      CashRegister[]        @relation("deposit")
   cashRegisterBeginBalances CashRegister[]        @relation("beginBalance")
   itemCategoryStocks        ItemCategory[]        @relation("stock")
@@ -177,6 +178,8 @@ model CashRegister {
   createdBy             String
   updatedAt             DateTime       @updatedAt
   updatedBy             String?
+  mainAccount           ChartOfAccount @relation("main", fields: [mainAccountId], references: [id])
+  mainAccountId         String
   depositAccount        ChartOfAccount @relation("deposit", fields: [depositAccountId], references: [id])
   depositAccountId      String
   beginBalanceAccount   ChartOfAccount @relation("beginBalance", fields: [beginBalanceAccountId], references: [id])

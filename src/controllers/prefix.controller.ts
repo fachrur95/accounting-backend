@@ -27,6 +27,7 @@ const updatePrefix = catchAsync(async (req, res) => {
   const { prefixes } = req.body;
   const updateBulk = prefixes.map((prefix: Prisma.PrefixUncheckedUpdateInput) => prefixService.updatePrefixById(unitId, prefix.id as string, {
     ...prefix,
+    unitId: user.session?.unit?.id,
     updatedBy: user.email,
   }));
   await Promise.all(updateBulk);
