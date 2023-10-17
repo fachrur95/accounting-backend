@@ -6804,12 +6804,14 @@ BEGIN
 				LEFT OUTER JOIN finance fho ON ho.trans_id=fho.trans_id
 				WHERE h.trans_id=myid AND COALESCE(doo.transline_priceinput,0)<>0;
 				
+				#kondisi tidak dibayar sama sekali
 				IF COALESCE(qqnilaitotal,0)-COALESCE(qqnilaiterbayar,0)-COALESCE(qqnilaiuangmuka,0)-COALESCE(qqnilaiuangmukadirect,0)=COALESCE(qqnilaitotal,0) THEN
 					INSERT INTO glline(glline_id,gl_id,transline_id,masteraccount_id,masterexchange_id,masterbussiness_id,glline_description,glline_exchangevalue,glline_vector,glline_amount,glline_amountvalue)
 					SELECT UUID(),myidgl,d.transline_id,(SELECT generalsettingpurch_hutang_id FROM generalsettingpurch gp,trans h WHERE gp.masterbussiness_id=h.masterbussiness_id AND h.trans_id=myid),h.masterexchange_id,h.masterbussiness_id,h.trans_description,h.trans_exchangevalue,-1,COALESCE(qqnilaitotal,0)/h.trans_exchangevalue,COALESCE(qqnilaitotal,0)
 					FROM trans h,transline d
 					WHERE h.trans_id=d.trans_id AND h.trans_id=myid AND d.transline_ishide=0
 					GROUP BY h.trans_id;
+				#kondisi lunas
 				ELSEIF COALESCE(qqnilaitotal,0)-COALESCE(qqnilaiterbayar,0)-COALESCE(qqnilaiuangmuka,0)=0 THEN
 					IF COALESCE(qqnilaiterbayar,0)<>0 THEN
 						INSERT INTO glline(glline_id,gl_id,transline_id,masteraccount_id,masterexchange_id,masterbussiness_id,glline_description,glline_exchangevalue,glline_vector,glline_amount,glline_amountvalue)
