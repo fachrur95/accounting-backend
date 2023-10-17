@@ -1,0 +1,60 @@
+penyusutan aktiva tetap
+
+PURCHASE
+  tidak bayar: {account: account_hutang, vector: -1}
+  lunas: {account: account_pilih, vector: -1}
+  
+  uangmuka langsung: {account: uangmuka_order_id, vector: ikut transline}
+  bayar sebagian: [
+    {account: account_hutang, vector: -1, amount: "sisa yg belum dibayar"},
+    {account: account_bayar, vector: -1, amount: "terbayar"},
+    {account: account_uangmuka_order, vector: ikut_dp * -1, amount: "uangmuka"},
+  ]
+  jika ada pajak: {account: account_vat_in, vector: 1}
+  tiap baris pembelian: {account: "jika item, diambil dari persediaan, jika account, lgsg account", vector: 1}
+
+RETURN PURCHASE
+  jika ada yg terbayar: {account: header_account, vector: ikutinline * -1}
+  jika tidak ada nilainya total nilai dari baris, jika ada diambil dari nilai bayar
+
+  baris tiap pajak, account: vat_in, vector: ikut line
+  akun persediaan tiap baris
+
+BAYAR HUTANG
+  - jika pembayaran bersisa, maka nilainya dilawankan dengan akun yg dipilih. Kalau giro, maka dilawankan akun bg_purchase, vector -1
+  - tiap baris,
+    vectornya mengikuti tiap baris dan nilainya sesuai nilai baris,
+    sedangkan akunnya jika membayar hutang/ saldo awal hutang/ aktiva tetap beli adalah akun hutang dari general setting
+
+SALDO AWAL HUTANG
+  - {vector: vector baris * -1, account: hutang, amount: total keseluruhan baris}
+  - {vector: ikut baris, account: akun pilihan}
+
+
+SALDO AWAL BARANG
+  - {account: account pilihan kepala, vector: vector_line * -1, nilai: total_jumlah}
+  - {account: "kalau ada pajak, insert", vector: vector_line, nilai: nilai_tax_line}
+  - {account: account persediaan, vector: vector_line, nilai: total}
+
+SALES
+  {account: persediaan_dari_item, vector: 1, nilai: total_hpp}
+  {account: hpp_dari_item, vector: 1, nilai: total_hpp}
+  tidak dibayar: {account: piutang, vector: 1, nilai: total}
+  bayar lunas: {account: account pilihan, vector: 1, nilai: total}
+  bayar sebagian: {account: "piutang sebagian", vector: 1, nilai: total_dibayar}
+  jika ada multiple payment yg ada card charge: {account: account_cardcharge, vector: -1, amount: nilai_charge}
+  jika ada pajak: {account: vat_out, vector: -1, nilai: nilai_pajak}
+  tiap baris dari penjualan: {account: "jika item, diambil dari persediaan, jika account, lgsg account", vector: -1}
+  tiap baris dari penjualan: {account: penjualan, vector: -1, nilai: nilai_line}
+  tiap baris dari penjualan (account): {account: account_line, vector: -1, nilai: nilai_line}
+
+
+BAYAR PIUTANG
+  - jika pembayaran bersisa, maka nilainya dilawankan dengan akun yg dipilih. Kalau giro, maka dilawankan akun bg_purchase, vector 1
+  - tiap baris,
+    vectornya mengikuti tiap baris dan nilainya sesuai nilai baris,
+    sedangkan akunnya jika membayar piutang / saldo awal piutang/ aktiva tetap jual adalah akun piutang dari general setting
+
+JOURNAL UMUM
+semua mengikuti barisnya masing2
+  
