@@ -21,6 +21,7 @@ export { default as unitOfMeasureService } from './unitOfMeasure.service';
 export { default as priceBookService } from './priceBook.service';
 export { default as transactionService } from './transaction.service';
 export { default as itemCogsService } from './itemCogs.service';
+export { default as generalLedgerService } from './generalLedger.service';
 export { default as uploadService } from './upload.service';
 export { default as logActivityService } from './logActivity.service';
 export { default as prefixService } from './prefix.service';

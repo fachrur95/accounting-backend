@@ -3,6 +3,7 @@ import Joi from 'joi';
 const createItemCategory = {
   body: Joi.object().keys({
     itemTypeId: Joi.string().required(),
+    salesAccountId: Joi.string().required(),
     stockAccountId: Joi.string(),
     cogsAccountId: Joi.string(),
     name: Joi.string().required(),
@@ -52,6 +53,7 @@ const updateItemCategory = {
   body: Joi.object()
     .keys({
       itemTypeId: Joi.string(),
+      salesAccountId: Joi.string(),
       stockAccountId: Joi.string(),
       cogsAccountId: Joi.string(),
       name: Joi.string(),

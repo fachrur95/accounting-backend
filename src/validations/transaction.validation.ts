@@ -26,7 +26,7 @@ const createSalesPurchase = {
     peopleId: Joi.string().required(),
     termId: Joi.string(),
     // warehouseId: Joi.string().required(),
-    entryDate: Joi.date(),
+    // entryDate: Joi.date(),
     paymentInput: Joi.number().required(),
     note: Joi.string(),
     transactionDetails: Joi.array().items(
@@ -125,7 +125,8 @@ const createJournalEntry = {
         debit: Joi.number().min(0).required(),
         credit: Joi.number().min(0).required(),
         note: Joi.string(),
-      }).xor('debit', 'credit')
+      })
+      // .xor('debit', 'credit')
     ).min(2).custom(balance),
   })
 };
@@ -166,6 +167,30 @@ const getTransactions = {
     search: Joi.string(),
     name: Joi.string(),
     unitId: Joi.string(),
+    transactionType: Joi.string().valid(
+      TransactionType.SALE_QUOTATION,
+      TransactionType.SALE_ORDER,
+      TransactionType.SALE_INVOICE,
+      TransactionType.SALE_RETURN,
+      TransactionType.PURCHASE_QUOTATION,
+      TransactionType.PURCHASE_ORDER,
+      TransactionType.PURCHASE_INVOICE,
+      TransactionType.PURCHASE_RETURN,
+      TransactionType.RECEIVEABLE_PAYMENT,
+      TransactionType.DEBT_PAYMENT,
+      TransactionType.EXPENSE,
+      TransactionType.REVENUE,
+      TransactionType.TRANSFER_FUND,
+      TransactionType.TRANSFER_ITEM_SEND,
+      TransactionType.TRANSFER_ITEM_RECEIVE,
+      TransactionType.STOCK_OPNAME,
+      TransactionType.JOURNAL_ENTRY,
+      TransactionType.BEGINNING_BALANCE_STOCK,
+      TransactionType.BEGINNING_BALANCE_DEBT,
+      TransactionType.BEGINNING_BALANCE_RECEIVABLE,
+      TransactionType.OPEN_REGISTER,
+      TransactionType.CLOSE_REGISTER,
+    ),
     peopleId: Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
@@ -205,7 +230,7 @@ const updateSalesPurchase = {
       peopleId: Joi.string(),
       termId: Joi.string(),
       // warehouseId: Joi.string(),
-      entryDate: Joi.date(),
+      // entryDate: Joi.date(),
       paymentInput: Joi.number(),
       note: Joi.string(),
       transactionDetails: Joi.array().items(
@@ -330,7 +355,8 @@ const updateJournalEntry = {
           debit: Joi.number().min(0).required(),
           credit: Joi.number().min(0).required(),
           note: Joi.string(),
-        }).xor('debit', 'credit')
+        })
+        // .xor('debit', 'credit')
       ).min(2).custom(balance),
     })
     .min(1)

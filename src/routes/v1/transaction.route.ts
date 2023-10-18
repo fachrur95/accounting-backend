@@ -8,16 +8,19 @@ import authSession from '../../middlewares/authSession';
 const router = express.Router();
 
 router.use(authSession())
+  .route('/')
+  .get(
+    auth('getTransactions'),
+    validate(transactionValidation.getTransactions),
+    transactionController.getTransactions
+  );
+
+router.use(authSession())
   .route('/sell')
   .post(
     auth('manageTransactions'),
     validate(transactionValidation.createSalesPurchase),
     transactionController.createSell
-  )
-  .get(
-    auth('getTransactions'),
-    validate(transactionValidation.getTransactions),
-    transactionController.getTransactions
   );
 
 router.use(authSession())
@@ -26,11 +29,46 @@ router.use(authSession())
     auth('manageTransactions'),
     validate(transactionValidation.createSalesPurchase),
     transactionController.createBuy
-  )
-  .get(
-    auth('getTransactions'),
-    validate(transactionValidation.getTransactions),
-    transactionController.getTransactions
+  );
+
+router.use(authSession())
+  .route('/receivable-payment')
+  .post(
+    auth('manageTransactions'),
+    validate(transactionValidation.createPayment),
+    transactionController.createReceivablePayment
+  );
+
+router.use(authSession())
+  .route('/debt-payment')
+  .post(
+    auth('manageTransactions'),
+    validate(transactionValidation.createPayment),
+    transactionController.createDebtPayment
+  );
+
+router.use(authSession())
+  .route('/revenue')
+  .post(
+    auth('manageTransactions'),
+    validate(transactionValidation.createLiability),
+    transactionController.createRevenue
+  );
+
+router.use(authSession())
+  .route('/expense')
+  .post(
+    auth('manageTransactions'),
+    validate(transactionValidation.createLiability),
+    transactionController.createExpense
+  );
+
+router.use(authSession())
+  .route('/journal-entry')
+  .post(
+    auth('manageTransactions'),
+    validate(transactionValidation.createJournalEntry),
+    transactionController.createJournalEntry
   );
 
 router.use(authSession())
@@ -55,6 +93,46 @@ router.use(authSession())
     auth('manageTransactions'),
     validate(transactionValidation.updateSalesPurchase),
     transactionController.updateBuy
+  );
+
+router.use(authSession())
+  .route('/receivable-payment/:transactionId')
+  .patch(
+    auth('manageTransactions'),
+    validate(transactionValidation.updatePayment),
+    transactionController.updateReceivablePayment
+  );
+
+router.use(authSession())
+  .route('/debt-payment/:transactionId')
+  .patch(
+    auth('manageTransactions'),
+    validate(transactionValidation.updatePayment),
+    transactionController.updateDebtPayment
+  );
+
+router.use(authSession())
+  .route('/revenue/:transactionId')
+  .patch(
+    auth('manageTransactions'),
+    validate(transactionValidation.updateLiability),
+    transactionController.updateRevenue
+  );
+
+router.use(authSession())
+  .route('/expense/:transactionId')
+  .patch(
+    auth('manageTransactions'),
+    validate(transactionValidation.updateLiability),
+    transactionController.updateExpense
+  );
+
+router.use(authSession())
+  .route('/journal-entry/:transactionId')
+  .patch(
+    auth('manageTransactions'),
+    validate(transactionValidation.updateJournalEntry),
+    transactionController.updateJournalEntry
   );
 
 router.use(authSession())

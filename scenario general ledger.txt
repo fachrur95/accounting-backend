@@ -45,7 +45,7 @@ SALES
   jika ada multiple payment yg ada card charge: {account: account_cardcharge, vector: -1, amount: nilai_charge}
   jika ada pajak: {account: vat_out, vector: -1, nilai: nilai_pajak}
   tiap baris dari penjualan: {account: "jika item, diambil dari persediaan, jika account, lgsg account", vector: -1}
-  tiap baris dari penjualan: {account: penjualan, vector: -1, nilai: nilai_line}
+  tiap baris dari penjualan: {account: penjualan_item, vector: -1, nilai: nilai_line}
   tiap baris dari penjualan (account): {account: account_line, vector: -1, nilai: nilai_line}
 
 

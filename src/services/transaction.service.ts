@@ -9,6 +9,7 @@ import itemCogsService from './itemCogs.service';
 import prefixService from './prefix.service';
 import { DetailCompare, checkNaN, getItemChanges } from '../utils/helper';
 import { NestedSort } from '../utils/pickNestedSort';
+import generalLedgerService from './generalLedger.service';
 
 interface ICreateTransactionData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
   transactionDetails: Prisma.TransactionDetailCreateManyTransactionInput[],
@@ -156,25 +157,34 @@ const openCashRegister = async (
     throw new ApiError(httpStatus.FORBIDDEN, `Cash Register "${cashRegister.name}" has been opened`);
   }
 
-  await prefixService.updatePrefixByTransactionType(data.unitId, "OPEN_REGISTER", data.transactionNumber);
-
   const transactionType = 'OPEN_REGISTER';
 
-  const transaction = await prisma.transaction.create({
-    data: {
-      transactionNumber: data.transactionNumber,
-      cashRegisterId: data.cashRegisterId,
-      transactionType,
-      total: data.amount,
-      createdBy: data.createdBy,
-      unitId: data.unitId,
-      note: data.note,
-    }
-  });
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          transactionNumber: data.transactionNumber,
+          cashRegisterId: data.cashRegisterId,
+          transactionType,
+          total: data.amount,
+          createdBy: data.createdBy,
+          unitId: data.unitId,
+          note: data.note,
+        }
+      });
 
-  await prefixService.updatePrefixByTransactionType(data.unitId, transactionType, data.transactionNumber);
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
-  return transaction;
+      await prefixService.updatePrefixByTransactionType(data.unitId, transactionType, data.transactionNumber);
+
+      // Jika semua operasi berjalan lancar, transaksi akan di-commit
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
 };
 
 /**
@@ -200,26 +210,35 @@ const closeCashRegister = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Transaction Open Register not found to this cash register or maybe you weren't the one who opened this cash register before");
   }
 
-  await prefixService.updatePrefixByTransactionType(data.unitId, "CLOSE_REGISTER", data.transactionNumber);
-
   const transactionType = 'CLOSE_REGISTER';
 
-  const transaction = await prisma.transaction.create({
-    data: {
-      transactionParentId: transactionOpen.id,
-      transactionNumber: data.transactionNumber,
-      cashRegisterId: transactionOpen.cashRegisterId,
-      transactionType,
-      total: data.amount,
-      createdBy: transactionOpen.createdBy,
-      unitId: transactionOpen.unitId,
-      note: data.note,
-    }
-  });
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          transactionParentId: transactionOpen.id,
+          transactionNumber: data.transactionNumber,
+          cashRegisterId: transactionOpen.cashRegisterId,
+          transactionType,
+          total: data.amount,
+          createdBy: transactionOpen.createdBy,
+          unitId: transactionOpen.unitId,
+          note: data.note,
+        }
+      });
 
-  await prefixService.updatePrefixByTransactionType(data.unitId, transactionType, data.transactionNumber);
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
-  return transaction;
+      await prefixService.updatePrefixByTransactionType(data.unitId, transactionType, data.transactionNumber);
+
+      // Jika semua operasi berjalan lancar, transaksi akan di-commit
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
 };
 
 /* const createGeneralLedger = async (transactionId: string): Promise<void> => {
@@ -304,6 +323,8 @@ const createSell = async (
       });
 
       await itemCogsService.calculateCogs(tx, resTransaction.id);
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
@@ -427,6 +448,8 @@ const createPurchase = async (
         await Promise.all([dataCreateItemCogs]);
       }
 
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
+
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
       return resTransaction;
@@ -494,6 +517,8 @@ const createReceivablePayment = async (
           },
         }
       });
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
@@ -563,6 +588,8 @@ const createDebtPayment = async (
           },
         }
       });
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
@@ -635,6 +662,8 @@ const createRevenue = async (
         }
       });
 
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
+
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
       return resTransaction;
@@ -704,6 +733,8 @@ const createExpense = async (
           },
         }
       });
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
@@ -778,6 +809,8 @@ const createJournalEntry = async (
           },
         }
       });
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
@@ -888,6 +921,8 @@ const createBeginBalanceStock = async (
       }
 
       await Promise.all(updateItem);
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
@@ -1520,13 +1555,18 @@ const updateReceivablePaymentById = async <Key extends keyof Transaction>(
             }))
           }
         },
-        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+        select: {
+          ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+          id: true,
+        }
       });
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
       // Jika semua operasi berjalan lancar, transaksi akan di-commit
-      return resTransaction as Pick<Transaction, Key> | null;
+      return resTransaction as unknown as Pick<Transaction, Key> | null;
     }, {
       isolationLevel: 'Serializable'
     });
@@ -1618,13 +1658,18 @@ const updateDebtPaymentById = async <Key extends keyof Transaction>(
             }))
           }
         },
-        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+        select: {
+          ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+          id: true,
+        }
       });
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
       // Jika semua operasi berjalan lancar, transaksi akan di-commit
-      return resTransaction as Pick<Transaction, Key> | null;
+      return resTransaction as unknown as Pick<Transaction, Key> | null;
     }, {
       isolationLevel: 'Serializable'
     });
@@ -1718,12 +1763,17 @@ const updateRevenueById = async <Key extends keyof Transaction>(
             }))
           }
         },
-        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+        select: {
+          ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+          id: true,
+        }
       });
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
-      return resTransaction as Pick<Transaction, Key> | null;
+      return resTransaction as unknown as Pick<Transaction, Key> | null;
     }, {
       isolationLevel: 'Serializable'
     });
@@ -1817,12 +1867,17 @@ const updateExpenseById = async <Key extends keyof Transaction>(
             }))
           }
         },
-        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+        select: {
+          ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+          id: true,
+        }
       });
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
-      return resTransaction as Pick<Transaction, Key> | null;
+      return resTransaction as unknown as Pick<Transaction, Key> | null;
     }, {
       isolationLevel: 'Serializable'
     });
@@ -1920,12 +1975,17 @@ const updateJournalEntryById = async <Key extends keyof Transaction>(
             }))
           }
         },
-        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+        select: {
+          ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+          id: true,
+        }
       });
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
 
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
-      return resTransaction as Pick<Transaction, Key> | null;
+      return resTransaction as unknown as Pick<Transaction, Key> | null;
     }, {
       isolationLevel: 'Serializable'
     });

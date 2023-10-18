@@ -163,6 +163,7 @@ model ChartOfAccount {
   cashRegisterBeginBalances CashRegister[]        @relation("beginBalance")
   itemCategoryStocks        ItemCategory[]        @relation("stock")
   itemCategoryCogs          ItemCategory[]        @relation("cogs")
+  itemCategorySales         ItemCategory[]        @relation("sales")
   generalSettingDebits      GeneralSetting[]      @relation("debit")
   generalSettingCredits     GeneralSetting[]      @relation("credit")
   generalLedgerDetails      GeneralLedgerDetail[]
@@ -321,6 +322,8 @@ model ItemCategory {
   updatedBy      String?
   itemType       ItemType        @relation(fields: [itemTypeId], references: [id])
   itemTypeId     String
+  salesAccount   ChartOfAccount  @relation("sales", fields: [salesAccountId], references: [id])
+  salesAccountId String
   stockAccount   ChartOfAccount? @relation("stock", fields: [stockAccountId], references: [id])
   stockAccountId String?
   cogsAccount    ChartOfAccount? @relation("cogs", fields: [cogsAccountId], references: [id])

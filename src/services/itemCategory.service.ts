@@ -124,6 +124,8 @@ const getItemCategoryById = async <Key extends keyof ItemCategory>(
     'isActive',
     'itemType',
     'itemTypeId',
+    'salesAccount',
+    'salesAccountId',
     'stockAccount',
     'stockAccountId',
     'cogsAccount',

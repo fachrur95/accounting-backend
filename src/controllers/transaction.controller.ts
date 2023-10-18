@@ -137,6 +137,171 @@ const createBuy = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send(transaction);
 });
 
+const createReceivablePayment = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const {
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+  } = req.body;
+  const transaction = await transactionService.createPurchase({
+    transactionType: "RECEIVEABLE_PAYMENT",
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Create Transaction Sell",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
+const createDebtPayment = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const {
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+  } = req.body;
+  const transaction = await transactionService.createPurchase({
+    transactionType: "DEBT_PAYMENT",
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Create Transaction Sell",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
+const createRevenue = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const {
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+  } = req.body;
+  const transaction = await transactionService.createPurchase({
+    transactionType: "REVENUE",
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Create Transaction Sell",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
+const createExpense = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const {
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+  } = req.body;
+  const transaction = await transactionService.createPurchase({
+    transactionType: "EXPENSE",
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Create Transaction Sell",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
+const createJournalEntry = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const {
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+  } = req.body;
+  const transaction = await transactionService.createPurchase({
+    transactionType: "JOURNAL_ENTRY",
+    transactionNumber,
+    paymentInput,
+    entryDate,
+    note,
+    peopleId,
+    // warehouseId,
+    transactionDetails,
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Create Transaction Sell",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
 const getTransactions = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const filter = pick(req.query, ['name', 'unitId']);
@@ -203,6 +368,91 @@ const updateBuy = catchAsync(async (req, res) => {
   res.send(transaction);
 });
 
+const updateReceivablePayment = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateReceivablePaymentById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Update Data Transaction",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
+const updateDebtPayment = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateDebtPaymentById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Update Data Transaction",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
+const updateRevenue = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateRevenueById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Update Data Transaction",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
+const updateExpense = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateExpenseById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Update Data Transaction",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
+const updateJournalEntry = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateJournalEntryById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Update Data Transaction",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
 const updateTransaction = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const transaction = await transactionService.updateTransactionById(req.params.transactionId, {
@@ -245,8 +495,18 @@ export default {
   closeCashRegister,
   createSell,
   createBuy,
+  createReceivablePayment,
+  createDebtPayment,
+  createRevenue,
+  createExpense,
+  createJournalEntry,
   updateSell,
   updateBuy,
+  updateReceivablePayment,
+  updateDebtPayment,
+  updateRevenue,
+  updateExpense,
+  updateJournalEntry,
   getTransactions,
   getTransaction,
   updateTransaction,
