@@ -260,7 +260,10 @@ const detailSale = async (
 
     const { transactionDetails, cashRegister, ...data } = transaction;
 
-    const coreAccountId = data.chartOfAccountId;
+    if (cashRegister) {
+      const { mainAccountId } = cashRegister;
+
+    }
 
     const dataDetail = transactionDetails.reduce((array, detail) => {
       if (detail.chartOfAccountId) {

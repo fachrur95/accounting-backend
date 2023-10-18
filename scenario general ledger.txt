@@ -40,7 +40,7 @@ SALES
   {account: persediaan_dari_item, vector: 1, nilai: total_hpp}
   {account: hpp_dari_item, vector: 1, nilai: total_hpp}
   tidak dibayar: {account: piutang, vector: 1, nilai: total}
-  bayar lunas: {account: account pilihan, vector: 1, nilai: total}
+  bayar lunas: {account: "account pilihan/ main account cash register", vector: 1, nilai: total}
   bayar sebagian: {account: "piutang sebagian", vector: 1, nilai: total_dibayar}
   jika ada multiple payment yg ada card charge: {account: account_cardcharge, vector: -1, amount: nilai_charge}
   jika ada pajak: {account: vat_out, vector: -1, nilai: nilai_pajak}
