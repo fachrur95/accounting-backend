@@ -13,17 +13,8 @@ const openCashRegister = catchAsync(async (req, res) => {
   if (user.session.cashRegister) {
     throw new ApiError(httpStatus.FORBIDDEN, `You still have a cash register "${user.session.cashRegister.name}" that has not been closed.`);
   }
-  const {
-    transactionNumber,
-    cashRegisterId,
-    amount,
-    note,
-  } = req.body;
   const transaction = await transactionService.openCashRegister({
-    transactionNumber,
-    cashRegisterId,
-    amount,
-    note,
+    ...req.body,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -43,16 +34,10 @@ const closeCashRegister = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.FORBIDDEN, `You can't close the till because you've never opened it before or if you've opened it maybe you've closed it.`);
   }
   const transactionOpenId = user.session.cashRegister.transactionId;
-  const {
-    transactionNumber,
-    amount,
-    note,
-  } = req.body;
+
   const transaction = await transactionService.closeCashRegister({
+    ...req.body,
     transactionOpenId,
-    transactionNumber,
-    amount,
-    note,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -72,25 +57,12 @@ const createSell = catchAsync(async (req, res) => {
   if (user.role === 'USER' && !cashRegisterId) {
     throw new ApiError(httpStatus.FORBIDDEN, 'You must open the cash register before making a sale.');
   }
-  const {
-    transactionNumber,
-    paymentInput,
-    entryDate,
-    note,
-    peopleId,
-    // warehouseId,
-    transactionDetails,
-  } = req.body;
+
   const transaction = await transactionService.createSell({
+    ...req.body,
     transactionType: "SALE_INVOICE",
-    transactionNumber,
     cashRegisterId,
-    paymentInput,
-    entryDate,
-    note,
-    peopleId,
     // warehouseId,
-    transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -106,24 +78,10 @@ const createSell = catchAsync(async (req, res) => {
 
 const createBuy = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const {
-    transactionNumber,
-    paymentInput,
-    entryDate,
-    note,
-    peopleId,
-    // warehouseId,
-    transactionDetails,
-  } = req.body;
+
   const transaction = await transactionService.createPurchase({
+    ...req.body,
     transactionType: "PURCHASE_INVOICE",
-    transactionNumber,
-    paymentInput,
-    entryDate,
-    note,
-    peopleId,
-    // warehouseId,
-    transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -139,24 +97,10 @@ const createBuy = catchAsync(async (req, res) => {
 
 const createReceivablePayment = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const {
-    transactionNumber,
-    paymentInput,
-    entryDate,
-    note,
-    peopleId,
-    // warehouseId,
-    transactionDetails,
-  } = req.body;
+
   const transaction = await transactionService.createReceivablePayment({
+    ...req.body,
     transactionType: "RECEIVEABLE_PAYMENT",
-    transactionNumber,
-    paymentInput,
-    entryDate,
-    note,
-    peopleId,
-    // warehouseId,
-    transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -172,24 +116,10 @@ const createReceivablePayment = catchAsync(async (req, res) => {
 
 const createDebtPayment = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const {
-    transactionNumber,
-    paymentInput,
-    entryDate,
-    note,
-    peopleId,
-    // warehouseId,
-    transactionDetails,
-  } = req.body;
+
   const transaction = await transactionService.createDebtPayment({
+    ...req.body,
     transactionType: "DEBT_PAYMENT",
-    transactionNumber,
-    paymentInput,
-    entryDate,
-    note,
-    peopleId,
-    // warehouseId,
-    transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -205,24 +135,10 @@ const createDebtPayment = catchAsync(async (req, res) => {
 
 const createRevenue = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const {
-    transactionNumber,
-    chartOfAccountId,
-    peopleId,
-    entryDate,
-    note,
-    // warehouseId,
-    transactionDetails,
-  } = req.body;
+
   const transaction = await transactionService.createRevenue({
+    ...req.body,
     transactionType: "REVENUE",
-    transactionNumber,
-    chartOfAccountId,
-    peopleId,
-    entryDate,
-    note,
-    // warehouseId,
-    transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -238,24 +154,10 @@ const createRevenue = catchAsync(async (req, res) => {
 
 const createExpense = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const {
-    transactionNumber,
-    chartOfAccountId,
-    peopleId,
-    entryDate,
-    note,
-    // warehouseId,
-    transactionDetails,
-  } = req.body;
+
   const transaction = await transactionService.createExpense({
+    ...req.body,
     transactionType: "EXPENSE",
-    transactionNumber,
-    chartOfAccountId,
-    peopleId,
-    entryDate,
-    note,
-    // warehouseId,
-    transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -271,20 +173,10 @@ const createExpense = catchAsync(async (req, res) => {
 
 const createJournalEntry = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const {
-    transactionNumber,
-    entryDate,
-    note,
-    // warehouseId,
-    transactionDetails,
-  } = req.body;
+
   const transaction = await transactionService.createJournalEntry({
+    ...req.body,
     transactionType: "JOURNAL_ENTRY",
-    transactionNumber,
-    entryDate,
-    note,
-    // warehouseId,
-    transactionDetails,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });

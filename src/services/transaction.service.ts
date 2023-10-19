@@ -473,6 +473,7 @@ const createReceivablePayment = async (
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetails, ...rest } = data;
+  const entryDate = rest.entryDate ?? new Date();
 
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -506,6 +507,7 @@ const createReceivablePayment = async (
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          entryDate,
           beforeTax,
           taxValue,
           total,
@@ -544,6 +546,7 @@ const createDebtPayment = async (
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetails, ...rest } = data;
+  const entryDate = rest.entryDate ?? new Date();
 
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -577,6 +580,7 @@ const createDebtPayment = async (
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          entryDate,
           beforeTax,
           taxValue,
           total,
@@ -615,6 +619,7 @@ const createRevenue = async (
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetails, ...rest } = data;
+  const entryDate = rest.entryDate ?? new Date();
 
   const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -650,6 +655,7 @@ const createRevenue = async (
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          entryDate,
           beforeTax,
           taxValue,
           total,
@@ -687,6 +693,7 @@ const createExpense = async (
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetails, ...rest } = data;
+  const entryDate = rest.entryDate ?? new Date();
 
   const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -722,6 +729,7 @@ const createExpense = async (
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          entryDate,
           beforeTax,
           taxValue,
           total,
@@ -759,6 +767,7 @@ const createJournalEntry = async (
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetails, ...rest } = data;
+  const entryDate = rest.entryDate ?? new Date();
 
   const details = transactionDetails.reduce((obj, detail) => {
     const { debit, credit, ...restDetail } = detail;
@@ -799,6 +808,7 @@ const createJournalEntry = async (
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          entryDate,
           total,
           totalPayment: total,
           underPayment: total,
