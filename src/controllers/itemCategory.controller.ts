@@ -32,7 +32,7 @@ const getItemCategories = catchAsync(async (req, res) => {
   const result = await itemCategoryService.queryItemCategories(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Item Category",
+    message: "Melihat Semua Item Category",
     activityType: "READ",
     createdBy: user.email,
   });

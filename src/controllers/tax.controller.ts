@@ -32,7 +32,7 @@ const getTaxes = catchAsync(async (req, res) => {
   const result = await taxService.queryTaxes(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Tax",
+    message: "Melihat Semua Tax",
     activityType: "READ",
     createdBy: user.email,
   });

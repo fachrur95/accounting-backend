@@ -32,7 +32,7 @@ const getPeopleCategories = catchAsync(async (req, res) => {
   const result = await peopleCategoryService.queryPeopleCategories(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All People Category",
+    message: "Melihat Semua People Category",
     activityType: "READ",
     createdBy: user.email,
   });

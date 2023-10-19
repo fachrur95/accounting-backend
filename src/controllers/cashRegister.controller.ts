@@ -48,7 +48,7 @@ const getCashRegisters = catchAsync(async (req, res) => {
   const result = await cashRegisterService.queryCashRegisters(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Cash Register",
+    message: "Melihat Semua Cash Register",
     activityType: "READ",
     createdBy: user.email,
   });

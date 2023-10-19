@@ -32,7 +32,7 @@ const getTerms = catchAsync(async (req, res) => {
   const result = await termService.queryTerms(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Term",
+    message: "Melihat Semua Term",
     activityType: "READ",
     createdBy: user.email,
   });

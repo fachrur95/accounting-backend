@@ -96,7 +96,7 @@ const createSell = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Create Transaction Sell",
+    message: "Buat Transaksi Penjualan",
     activityType: "INSERT",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -129,7 +129,7 @@ const createBuy = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Create Transaction Sell",
+    message: "Buat Transaksi Pembelian",
     activityType: "INSERT",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -148,7 +148,7 @@ const createReceivablePayment = catchAsync(async (req, res) => {
     // warehouseId,
     transactionDetails,
   } = req.body;
-  const transaction = await transactionService.createPurchase({
+  const transaction = await transactionService.createReceivablePayment({
     transactionType: "RECEIVEABLE_PAYMENT",
     transactionNumber,
     paymentInput,
@@ -162,7 +162,7 @@ const createReceivablePayment = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Create Transaction Sell",
+    message: "Buat Transaksi Penerimaan Piutang",
     activityType: "INSERT",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -181,7 +181,7 @@ const createDebtPayment = catchAsync(async (req, res) => {
     // warehouseId,
     transactionDetails,
   } = req.body;
-  const transaction = await transactionService.createPurchase({
+  const transaction = await transactionService.createDebtPayment({
     transactionType: "DEBT_PAYMENT",
     transactionNumber,
     paymentInput,
@@ -195,7 +195,7 @@ const createDebtPayment = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Create Transaction Sell",
+    message: "Buat Transaksi Pembayaran Hutang",
     activityType: "INSERT",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -207,20 +207,20 @@ const createRevenue = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const {
     transactionNumber,
-    paymentInput,
+    chartOfAccountId,
+    peopleId,
     entryDate,
     note,
-    peopleId,
     // warehouseId,
     transactionDetails,
   } = req.body;
-  const transaction = await transactionService.createPurchase({
+  const transaction = await transactionService.createRevenue({
     transactionType: "REVENUE",
     transactionNumber,
-    paymentInput,
+    chartOfAccountId,
+    peopleId,
     entryDate,
     note,
-    peopleId,
     // warehouseId,
     transactionDetails,
     createdBy: user.email,
@@ -228,7 +228,7 @@ const createRevenue = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Create Transaction Sell",
+    message: "Buat Transaksi Pendapatan Lain-lain",
     activityType: "INSERT",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -240,20 +240,20 @@ const createExpense = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const {
     transactionNumber,
-    paymentInput,
+    chartOfAccountId,
+    peopleId,
     entryDate,
     note,
-    peopleId,
     // warehouseId,
     transactionDetails,
   } = req.body;
-  const transaction = await transactionService.createPurchase({
+  const transaction = await transactionService.createExpense({
     transactionType: "EXPENSE",
     transactionNumber,
-    paymentInput,
+    chartOfAccountId,
+    peopleId,
     entryDate,
     note,
-    peopleId,
     // warehouseId,
     transactionDetails,
     createdBy: user.email,
@@ -261,7 +261,7 @@ const createExpense = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Create Transaction Sell",
+    message: "Buat Transaksi Pengeluaran",
     activityType: "INSERT",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -273,20 +273,16 @@ const createJournalEntry = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const {
     transactionNumber,
-    paymentInput,
     entryDate,
     note,
-    peopleId,
     // warehouseId,
     transactionDetails,
   } = req.body;
-  const transaction = await transactionService.createPurchase({
+  const transaction = await transactionService.createJournalEntry({
     transactionType: "JOURNAL_ENTRY",
     transactionNumber,
-    paymentInput,
     entryDate,
     note,
-    peopleId,
     // warehouseId,
     transactionDetails,
     createdBy: user.email,
@@ -294,7 +290,7 @@ const createJournalEntry = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Create Transaction Sell",
+    message: "Buat Transaksi Jurnal Umum",
     activityType: "INSERT",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -304,7 +300,7 @@ const createJournalEntry = catchAsync(async (req, res) => {
 
 const getTransactions = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const filter = pick(req.query, ['name', 'unitId']);
+  const filter = pick(req.query, ['name', 'unitId', 'transactionType']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   filter.unitId = user.session?.unit?.id;
   const conditions = pickNested(req.query?.filters as FiltersType);
@@ -312,7 +308,7 @@ const getTransactions = catchAsync(async (req, res) => {
   const result = await transactionService.queryTransactions(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Transaction",
+    message: "Melihat Semua Transaksi",
     activityType: "READ",
     createdBy: user.email,
   });
@@ -327,7 +323,7 @@ const getTransaction = catchAsync(async (req, res) => {
   }
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: `Read By Id "${req.params.transactionId}" Item`,
+    message: `Melihat Detail "${transaction.transactionNumber}"`,
     activityType: "READ",
     createdBy: user.email,
   });
@@ -343,7 +339,7 @@ const updateSell = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Update Data Transaction",
+    message: "Mengubah Penjualan",
     activityType: "UPDATE",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -360,7 +356,7 @@ const updateBuy = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Update Data Transaction",
+    message: "Mengubah Pembelian",
     activityType: "UPDATE",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -377,7 +373,7 @@ const updateReceivablePayment = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Update Data Transaction",
+    message: "Mengubah Penerimaan Piutang",
     activityType: "UPDATE",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -394,7 +390,7 @@ const updateDebtPayment = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Update Data Transaction",
+    message: "Mengubah Pembayaran Hutang",
     activityType: "UPDATE",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -411,7 +407,7 @@ const updateRevenue = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Update Data Transaction",
+    message: "Mengubah Pendapatan Lain-lain",
     activityType: "UPDATE",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -428,7 +424,7 @@ const updateExpense = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Update Data Transaction",
+    message: "Mengubah Pengeluaran",
     activityType: "UPDATE",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -445,7 +441,7 @@ const updateJournalEntry = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Update Data Transaction",
+    message: "Mengubah Jurnal Umum",
     activityType: "UPDATE",
     createdBy: user.email,
     data: JSON.stringify(transaction),
@@ -461,7 +457,7 @@ const updateTransaction = catchAsync(async (req, res) => {
   });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Update Data Transaction",
+    message: "Mengubah Transaction",
     activityType: "UPDATE",
     createdBy: user.email,
     data: JSON.stringify(transaction),

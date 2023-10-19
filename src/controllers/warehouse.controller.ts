@@ -32,7 +32,7 @@
 //   const result = await warehouseService.queryWarehouses(filter, options, conditions, multipleSort);
 //   await logActivityService.createLogActivity({
 //     unitId: user.session?.unit?.id,
-//     message: "Read All Warehouse",
+//     message: "Melihat Semua Warehouse",
 //     activityType: "READ",
 //     createdBy: user.email,
 //   });

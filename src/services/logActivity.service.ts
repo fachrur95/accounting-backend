@@ -5,6 +5,7 @@ import ApiError from '../utils/ApiError';
 import { NestedObject } from '../utils/pickNested';
 import { PaginationResponse } from '../types/response';
 import getPagination from '../utils/pagination';
+import { NestedSort } from '../utils/pickNestedSort';
 
 /**
  * Create a logActivity
@@ -38,6 +39,7 @@ const queryLogActivities = async <Key extends keyof LogActivity>(
     search?: string;
   },
   conditions?: NestedObject,
+  multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
     'message',
@@ -45,8 +47,6 @@ const queryLogActivities = async <Key extends keyof LogActivity>(
     'activityType',
     'createdBy',
     'createdAt',
-    'updatedBy',
-    'updatedAt'
   ] as Key[]
 ): Promise<PaginationResponse<Pick<LogActivity, Key>>> => {
   const page = options.page ?? 1;
@@ -67,6 +67,14 @@ const queryLogActivities = async <Key extends keyof LogActivity>(
   }
 
   const where = { ...filter, ...conditions, ...globalSearch };
+  const singleSort = sortBy ? { [sortBy]: sortType } : undefined
+  const orderBy: NestedSort[] = [];
+  if (multipleSort) {
+    orderBy.push(...multipleSort);
+  }
+  if (singleSort) {
+    orderBy.push(singleSort);
+  }
   try {
     const getCountAll = prisma.logActivity.count({ where });
     const getLogActivities = prisma.logActivity.findMany({
@@ -74,7 +82,7 @@ const queryLogActivities = async <Key extends keyof LogActivity>(
       select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       skip: page * limit,
       take: limit,
-      orderBy: sortBy ? { [sortBy]: sortType } : undefined
+      orderBy: orderBy.length > 0 ? orderBy : undefined,
     });
     const [countAll, logActivities] = await Promise.all([getCountAll, getLogActivities]);
     const { totalPages, nextPage } = getPagination({ page, countAll, limit });
@@ -87,6 +95,7 @@ const queryLogActivities = async <Key extends keyof LogActivity>(
       rows: logActivities as Pick<LogActivity, Key>[],
     };
   } catch (error) {
+    console.log({ error })
     // Tangani kesalahan jika ada
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
   }
@@ -107,8 +116,6 @@ const getLogActivityById = async <Key extends keyof LogActivity>(
     'activityType',
     'createdBy',
     'createdAt',
-    'updatedBy',
-    'updatedAt'
   ] as Key[]
 ): Promise<Pick<LogActivity, Key> | null> => {
   return prisma.logActivity.findUnique({

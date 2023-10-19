@@ -41,7 +41,7 @@ const getPriceBooks = catchAsync(async (req, res) => {
   const result = await priceBookService.queryPriceBooks(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Price Book",
+    message: "Melihat Semua Price Book",
     activityType: "READ",
     createdBy: user.email,
   });

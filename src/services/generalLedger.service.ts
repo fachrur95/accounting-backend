@@ -16,6 +16,7 @@ interface ReduceAccountLine {
   vector: $Enums.Vector;
   amount: number;
   createdBy: string;
+  transactionDetailId?: string;
 }
 
 type TransactionMethod = Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
@@ -208,6 +209,7 @@ const detailGeneral = async (
           amount: detail.total,
           vector: detail.vector,
           createdBy: data.createdBy,
+          transactionDetailId: detail.id,
         });
       }
       return array;
@@ -314,6 +316,7 @@ const detailPurchase = async (
           amount: detail.total,
           vector: "POSITIVE",
           createdBy: data.createdBy,
+          transactionDetailId: detail.id,
         });
       }
       if (detail.multipleUom) {
@@ -422,6 +425,7 @@ const detailSale = async (
           amount: detail.total,
           vector: "NEGATIVE",
           createdBy: data.createdBy,
+          transactionDetailId: detail.id,
         });
       }
       if (detail.multipleUom) {
@@ -431,6 +435,7 @@ const detailSale = async (
           amount: detail.total,
           vector: "NEGATIVE",
           createdBy: data.createdBy,
+          transactionDetailId: detail.id,
         });
         if (detail.multipleUom.item.itemCategory.stockAccountId) {
           dataDetail.push({
@@ -439,6 +444,7 @@ const detailSale = async (
             amount: detail.total,
             vector: "NEGATIVE",
             createdBy: data.createdBy,
+            transactionDetailId: detail.id,
           });
         }
         const sumCogs = detail.itemCogsDetails.reduce((sum, item) => sum + item.cogs, 0);
@@ -452,6 +458,7 @@ const detailSale = async (
               amount: totalCogs,
               vector: "POSITIVE",
               createdBy: data.createdBy,
+              transactionDetailId: detail.id,
             });
           }
           if (detail.multipleUom.item.itemCategory.stockAccountId) {
@@ -461,6 +468,7 @@ const detailSale = async (
               amount: totalCogs,
               vector: "POSITIVE",
               createdBy: data.createdBy,
+              transactionDetailId: detail.id,
             });
           }
         }

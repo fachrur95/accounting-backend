@@ -32,7 +32,7 @@ const getItemTypes = catchAsync(async (req, res) => {
   const result = await itemTypeService.queryItemTypes(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Item Type",
+    message: "Melihat Semua Item Type",
     activityType: "READ",
     createdBy: user.email,
   });

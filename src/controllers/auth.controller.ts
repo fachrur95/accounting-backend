@@ -131,7 +131,7 @@ const allowedInstitutes = catchAsync(async (req, res) => {
   const result = await instituteService.queryInstitutes(filter, options, user, conditions);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All allowed Institute",
+    message: "Melihat Semua allowed Institute",
     activityType: "READ",
     createdBy: user.email,
   });
@@ -151,7 +151,7 @@ const allowedUnits = catchAsync(async (req, res) => {
   }
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All allowed Unit",
+    message: "Melihat Semua allowed Unit",
     activityType: "READ",
     createdBy: user.email,
   });

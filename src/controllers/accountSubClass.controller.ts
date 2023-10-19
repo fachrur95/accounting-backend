@@ -31,7 +31,7 @@ const getAccountSubClasses = catchAsync(async (req, res) => {
   const result = await accountSubClassService.queryAccountSubClasses(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Account Sub Class",
+    message: "Melihat Semua Account Sub Class",
     activityType: "READ",
     createdBy: user.email,
   });

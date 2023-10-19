@@ -632,7 +632,7 @@ const createRevenue = async (
       amount,
       taxValue,
       total,
-      vector: "POSITIVE",
+      vector: "NEGATIVE",
       createdBy: rest.createdBy
     });
     obj.beforeTax += amount;
@@ -704,7 +704,7 @@ const createExpense = async (
       amount,
       taxValue,
       total,
-      vector: "NEGATIVE",
+      vector: "POSITIVE",
       createdBy: rest.createdBy
     });
     obj.beforeTax += amount;
@@ -958,6 +958,7 @@ const queryTransactions = async <Key extends keyof Transaction>(
   keys: Key[] = [
     'id',
     'transactionNumber',
+    'chartOfAccount',
     'people',
     'entryDate',
     'dueDate',
@@ -1021,6 +1022,7 @@ const queryTransactions = async <Key extends keyof Transaction>(
       rows: transactions as Pick<Transaction, Key>[],
     };
   } catch (error) {
+    console.log({ error })
     // Tangani kesalahan jika ada
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
   }
@@ -1037,6 +1039,7 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
   keys: Key[] = [
     'id',
     'transactionNumber',
+    'chartOfAccount',
     'people',
     'entryDate',
     'dueDate',
@@ -1056,6 +1059,8 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
       transactionDetails: {
         include: {
           multipleUom: true,
+          chartOfAccount: true,
+          tax: true,
         }
       }
     }
@@ -1715,7 +1720,7 @@ const updateRevenueById = async <Key extends keyof Transaction>(
       amount,
       taxValue,
       total,
-      vector: "POSITIVE",
+      vector: "NEGATIVE",
       updatedBy: rest.updatedBy
     });
     obj.beforeTax += amount;

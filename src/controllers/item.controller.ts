@@ -61,7 +61,7 @@ const getItems = catchAsync(async (req,
   const result = await itemService.queryItems(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Item",
+    message: "Melihat Semua Item",
     activityType: "READ",
     createdBy: user.email,
   });

@@ -14,7 +14,7 @@ const getPrefixes = catchAsync(async (req, res) => {
   const result = await prefixService.queryPrefixes(filter, options, conditions);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Prefix",
+    message: "Melihat Semua Prefix",
     activityType: "READ",
     createdBy: user.email,
   });

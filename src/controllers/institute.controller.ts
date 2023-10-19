@@ -31,7 +31,7 @@ const getInstitutes = catchAsync(async (req, res) => {
   const result = await instituteService.queryInstitutes(filter, options, user, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Institute",
+    message: "Melihat Semua Institute",
     activityType: "READ",
     createdBy: user.email,
   });

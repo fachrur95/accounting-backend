@@ -17,4 +17,5 @@ export { default as peopleValidation } from './people.validation';
 export { default as priceBookValidation } from './priceBook.validation';
 export { default as transactionValidation } from './transaction.validation';
 export { default as unitOfMeasureValidation } from './unitOfMeasure.validation';
+export { default as logActivityValidation } from './logActivity.validation';
 export { default as prefixValidation } from './prefix.validation';

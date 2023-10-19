@@ -40,7 +40,7 @@ const getPeoples = catchAsync(async (req, res) => {
   const result = await peopleService.queryPeoples(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All People",
+    message: "Melihat Semua People",
     activityType: "READ",
     createdBy: user.email,
   });

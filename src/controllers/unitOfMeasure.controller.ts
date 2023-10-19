@@ -32,7 +32,7 @@ const getUnitOfMeasures = catchAsync(async (req, res) => {
   const result = await unitOfMeasureService.queryUnitOfMeasures(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Unit of Measure",
+    message: "Melihat Semua Unit of Measure",
     activityType: "READ",
     createdBy: user.email,
   });

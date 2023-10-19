@@ -35,7 +35,7 @@ const getUnits = catchAsync(async (req, res) => {
   const result = await unitService.queryUnits(filter, options, user, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Unit",
+    message: "Melihat Semua Unit",
     activityType: "READ",
     createdBy: user.email,
   });

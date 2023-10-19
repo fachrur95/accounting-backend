@@ -65,6 +65,7 @@ const allRoles = {
     'manageTransactions',
     'getCashRegisters',
     'manageCashRegisters',
+    'getLogActivities',
   ]
 };
 

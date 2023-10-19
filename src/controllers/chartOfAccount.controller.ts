@@ -32,7 +32,7 @@ const getChartOfAccounts = catchAsync(async (req, res) => {
   const result = await chartOfAccountService.queryChartOfAccounts(filter, options, conditions, multipleSort);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
-    message: "Read All Chart Of Account",
+    message: "Melihat Semua Chart Of Account",
     activityType: "READ",
     createdBy: user.email,
   });

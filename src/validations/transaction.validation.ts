@@ -73,7 +73,6 @@ const createLiability = {
         chartOfAccountId: Joi.string().required(),
         taxId: Joi.string(),
         priceInput: Joi.number().min(0).required(),
-        discountInput: Joi.number().min(0).required(),
         note: Joi.string(),
       })
     ).min(1),
@@ -288,7 +287,6 @@ const updateLiability = {
           chartOfAccountId: Joi.string().required(),
           taxId: Joi.string(),
           priceInput: Joi.number().min(0).required(),
-          discountInput: Joi.number().min(0).required(),
           note: Joi.string(),
         })
       ).min(1),
