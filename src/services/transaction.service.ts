@@ -1505,8 +1505,8 @@ const updateReceivablePaymentById = async <Key extends keyof Transaction>(
   if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const entryDate = transaction.entryDate;
   const { transactionDetails, ...rest } = updateBody;
+  const entryDate = rest.entryDate ?? transaction.entryDate;
 
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -1608,8 +1608,8 @@ const updateDebtPaymentById = async <Key extends keyof Transaction>(
   if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const entryDate = transaction.entryDate;
   const { transactionDetails, ...rest } = updateBody;
+  const entryDate = rest.entryDate ?? transaction.entryDate;
 
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -1711,8 +1711,8 @@ const updateRevenueById = async <Key extends keyof Transaction>(
   if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const entryDate = transaction.entryDate;
   const { transactionDetails, ...rest } = updateBody;
+  const entryDate = rest.entryDate ?? transaction.entryDate;
 
   const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -1815,8 +1815,8 @@ const updateExpenseById = async <Key extends keyof Transaction>(
   if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const entryDate = transaction.entryDate;
   const { transactionDetails, ...rest } = updateBody;
+  const entryDate = rest.entryDate ?? transaction.entryDate;
 
   const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -1919,8 +1919,8 @@ const updateJournalEntryById = async <Key extends keyof Transaction>(
   if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const entryDate = transaction.entryDate;
   const { transactionDetails, ...rest } = updateBody;
+  const entryDate = rest.entryDate ?? transaction.entryDate;
 
   const details = transactionDetails.reduce((obj, detail) => {
     const { debit, credit, ...restDetail } = detail;
