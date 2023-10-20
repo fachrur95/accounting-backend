@@ -53,7 +53,14 @@ const createItem = catchAsync(async (req, res) => {
 const getItems = catchAsync(async (req,
   res) => {
   const user = req.user as Required<SessionData>;
-  const filter = pick(req.query, ['name', 'itemCategoryId', 'unitId']);
+  const filter = pick(req.query, ['name',
+    'itemCategoryId',
+    'unitId',
+    'itemCategory.itemType.isSale',
+    'itemCategory.itemType.isPurchase',
+    'itemCategory.itemType.isStock',
+    'itemCategory.itemType.isAdjustment',
+  ]);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   filter.unitId = user.session?.unit?.id;
   const conditions = pickNested(req.query?.filters as FiltersType);

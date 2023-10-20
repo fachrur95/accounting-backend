@@ -12,6 +12,7 @@ export { default as termController } from './term.controller';
 export { default as peopleCategoryController } from './peopleCategory.controller';
 export { default as peopleController } from './people.controller';
 export { default as unitOfMeasureController } from './unitOfMeasure.controller';
+export { default as multipleUomController } from './multipleUom.controller';
 export { default as itemTypeController } from './itemType.controller';
 export { default as itemCategoryController } from './itemCategory.controller';
 export { default as itemController } from './item.controller';

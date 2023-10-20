@@ -5,6 +5,8 @@ const allRoles = {
     'getInstitutes',
     'getUnits',
     'getWarehouses',
+    'getMultipleUoms',
+    'getLogActivities',
   ],
   [Role.ADMIN]: [
     'getUsers',
@@ -15,6 +17,8 @@ const allRoles = {
     'manageWarehouses',
     'getCashRegisters',
     'manageCashRegisters',
+    'getMultipleUoms',
+    'getLogActivities',
   ],
   [Role.AUDITOR]: [
     'getUsers',
@@ -27,6 +31,8 @@ const allRoles = {
     'manageWarehouses',
     'getAccountClasses',
     'manageAccountClasses',
+    'getMultipleUoms',
+    'getLogActivities',
   ],
   [Role.SUPERADMIN]: [
     'getUsers',
@@ -65,6 +71,7 @@ const allRoles = {
     'manageTransactions',
     'getCashRegisters',
     'manageCashRegisters',
+    'getMultipleUoms',
     'getLogActivities',
   ]
 };

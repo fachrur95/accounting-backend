@@ -18,6 +18,7 @@ export { default as itemTypeService } from './itemType.service';
 export { default as itemCategoryService } from './itemCategory.service';
 export { default as itemService } from './item.service';
 export { default as unitOfMeasureService } from './unitOfMeasure.service';
+export { default as multipleUomService } from './multipleUom.service';
 export { default as priceBookService } from './priceBook.service';
 export { default as transactionService } from './transaction.service';
 export { default as itemCogsService } from './itemCogs.service';

@@ -451,6 +451,7 @@ model Transaction {
   transactionType           TransactionType
   transactionNumber         String
   paymentInput              Float               @default(0)
+  discountGroupInput        Float               @default(0)
   change                    Float               @default(0)
   beforeTax                 Float               @default(0)
   taxValue                  Float               @default(0)
@@ -503,6 +504,8 @@ model TransactionDetail {
   qty                  Float                 @default(0)
   beforeDiscount       Float                 @default(0)
   discount             Float                 @default(0)
+  distribute           Float                 @default(0)
+  distributeValue      Float                 @default(0)
   amount               Float                 @default(0)
   taxValue             Float                 @default(0)
   total                Float                 @default(0)

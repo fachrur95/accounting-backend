@@ -24,10 +24,12 @@ const createSalesPurchase = {
   body: Joi.object().keys({
     transactionNumber: Joi.string().required(),
     peopleId: Joi.string().required(),
+    chartOfAccountId: Joi.string(),
     termId: Joi.string(),
     // warehouseId: Joi.string().required(),
     // entryDate: Joi.date(),
     paymentInput: Joi.number().required(),
+    discountGroupInput: Joi.number(),
     note: Joi.string(),
     transactionDetails: Joi.array().items(
       Joi.object().keys({
@@ -231,6 +233,7 @@ const updateSalesPurchase = {
       // warehouseId: Joi.string(),
       // entryDate: Joi.date(),
       paymentInput: Joi.number(),
+      discountGroupInput: Joi.number(),
       note: Joi.string(),
       transactionDetails: Joi.array().items(
         Joi.object().keys({

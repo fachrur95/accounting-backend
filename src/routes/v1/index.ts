@@ -13,6 +13,7 @@ import termRoute from './term.route';
 import peopleRoute from './people.route';
 import peopleCategoryRoute from './peopleCategory.route';
 import unitOfMeasureRoute from './unitOfMeasure.route';
+import multipleUomRoute from './multipleUom.route';
 import itemTypeRoute from './itemType.route';
 import itemCategoryRoute from './itemCategory.route';
 import itemRoute from './item.route';
@@ -81,6 +82,10 @@ const defaultRoutes = [
   {
     path: '/unit-of-measurements',
     route: unitOfMeasureRoute
+  },
+  {
+    path: '/multiple-units',
+    route: multipleUomRoute
   },
   {
     path: '/item-types',

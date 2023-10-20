@@ -262,15 +262,34 @@ const createSell = async (
   }
   const { transactionDetails, ...rest } = data;
   const entryDate = new Date();
+  const cashRegisterId = rest.cashRegisterId;
+  let chartOfAccountId: string | undefined = undefined;
+  if (cashRegisterId) {
+    const cashRegister = await prisma.cashRegister.findUnique({ where: { id: cashRegisterId } });
+
+    if (cashRegister) {
+      chartOfAccountId = cashRegister.mainAccountId;
+    }
+  }
 
   const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
+
+  const totalAll = transactionDetails.reduce((total, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
+    const amount = (qty * afterDiscount);
+    return total + amount;
+  }, 0);
 
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
     const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
-    const amount = (qty * afterDiscount);
+    const amountBefore = (qty * afterDiscount);
+    const distribute = amountBefore / totalAll;
+    const distributeValue = (rest.discountGroupInput ?? 0) * distribute;
+    const amount = amountBefore - distributeValue;
     const taxValue = amount * ((detail.taxRate ?? 0) / 100);
     const total = amount + taxValue;
 
@@ -279,6 +298,8 @@ const createSell = async (
       qty,
       beforeDiscount,
       discount,
+      distribute,
+      distributeValue,
       amount,
       taxValue,
       total,
@@ -293,16 +314,18 @@ const createSell = async (
 
   const { dataLine, beforeTax, taxValue, total } = details;
 
-  const totalPayment = (rest?.paymentInput ?? 0) <= total
+  const totalPayment = (rest.paymentInput ?? 0) <= total
     ? rest.paymentInput ?? 0
     : total;
-  const change = (rest?.paymentInput ?? 0) - total;
+  const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
 
   try {
     return await prisma.$transaction(async (tx) => {
       const resTransaction = await tx.transaction.create({
         data: {
           ...rest,
+          chartOfAccountId,
           entryDate,
           dueDate,
           beforeTax,
@@ -310,7 +333,7 @@ const createSell = async (
           total,
           change,
           totalPayment,
-          underPayment: total - totalPayment,
+          underPayment,
         }
       });
 
@@ -354,12 +377,22 @@ const createPurchase = async (
 
   const dueDate = await generateDueDate(entryDate, rest.termId ?? undefined);
 
+  const totalAll = transactionDetails.reduce((total, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
+    const amount = (qty * afterDiscount);
+    return total + amount;
+  }, 0);
+
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
     const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
-    const amount = (qty * afterDiscount);
+    const amountBefore = (qty * afterDiscount);
+    const distribute = amountBefore / totalAll;
+    const distributeValue = (rest.discountGroupInput ?? 0) * distribute;
+    const amount = amountBefore - distributeValue;
     const taxValue = amount * ((detail.taxRate ?? 0) / 100);
     const total = amount + taxValue;
 
@@ -368,6 +401,8 @@ const createPurchase = async (
       qty,
       beforeDiscount,
       discount,
+      distribute,
+      distributeValue,
       amount,
       taxValue,
       total,
@@ -382,10 +417,11 @@ const createPurchase = async (
 
   const { dataLine, beforeTax, taxValue, total } = details;
 
-  const totalPayment = (rest?.paymentInput ?? 0) <= total
+  const totalPayment = (rest.paymentInput ?? 0) <= total
     ? rest.paymentInput ?? 0
     : total;
-  const change = (rest?.paymentInput ?? 0) - total;
+  const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -399,7 +435,7 @@ const createPurchase = async (
           total,
           change,
           totalPayment,
-          underPayment: total - totalPayment,
+          underPayment,
         }
       });
 
@@ -457,6 +493,7 @@ const createPurchase = async (
       isolationLevel: 'Serializable'
     });
   } catch (error: any) {
+    console.log({ error })
     throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
   }
 };
@@ -1159,19 +1196,29 @@ const updateSellById = async <Key extends keyof Transaction>(
         disc: detail.discountInput,
       });
     }
-    return arr
+    return arr;
   }, [] as unknown as DetailCompare[]);
 
   const { transactionDetails, ...rest } = updateBody;
 
   const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
 
+  const totalAll = transactionDetails.reduce((total, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
+    const amount = (qty * afterDiscount);
+    return total + amount;
+  }, 0);
+
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
     const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
-    const amount = (qty * afterDiscount);
+    const amountBefore = (qty * afterDiscount);
+    const distribute = amountBefore / totalAll;
+    const distributeValue = (rest.discountGroupInput ?? 0) * distribute;
+    const amount = amountBefore - distributeValue;
     const taxValue = amount * ((detail.taxRate ?? 0) / 100);
     const total = amount + taxValue;
 
@@ -1180,6 +1227,8 @@ const updateSellById = async <Key extends keyof Transaction>(
       qty,
       beforeDiscount,
       discount,
+      distribute,
+      distributeValue,
       amount,
       taxValue,
       total,
@@ -1220,6 +1269,7 @@ const updateSellById = async <Key extends keyof Transaction>(
     : total;
 
   const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -1235,7 +1285,7 @@ const updateSellById = async <Key extends keyof Transaction>(
           total,
           change,
           totalPayment,
-          underPayment: total - totalPayment,
+          underPayment,
           transactionDetails: {
             deleteMany: {
               transactionId,
@@ -1328,19 +1378,29 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
         disc: detail.discountInput,
       });
     }
-    return arr
+    return arr;
   }, [] as unknown as DetailCompare[]);
 
   const { transactionDetails, ...rest } = updateBody;
 
   const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
 
+  const totalAll = transactionDetails.reduce((total, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
+    const amount = (qty * afterDiscount);
+    return total + amount;
+  }, 0);
+
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
     const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
-    const amount = (qty * afterDiscount);
+    const amountBefore = (qty * afterDiscount);
+    const distribute = amountBefore / totalAll;
+    const distributeValue = (rest.discountGroupInput ?? 0) * distribute;
+    const amount = amountBefore - distributeValue;
     const taxValue = amount * ((detail.taxRate ?? 0) / 100);
     const total = amount + taxValue;
 
@@ -1349,6 +1409,8 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
       qty,
       beforeDiscount,
       discount,
+      distribute,
+      distributeValue,
       amount,
       taxValue,
       total,
@@ -1389,6 +1451,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
     : total;
 
   const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -1404,7 +1467,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
           total,
           change,
           totalPayment,
-          underPayment: total - totalPayment,
+          underPayment,
         },
         select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
       });
@@ -1967,7 +2030,6 @@ const updateJournalEntryById = async <Key extends keyof Transaction>(
           entryDate,
           total,
           totalPayment: total,
-          underPayment: total,
           transactionDetails: {
             deleteMany: {
               transactionId,
