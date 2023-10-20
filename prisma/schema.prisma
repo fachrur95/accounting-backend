@@ -451,6 +451,7 @@ model Transaction {
   transactionType           TransactionType
   transactionNumber         String
   paymentInput              Float               @default(0)
+  specialDiscount           Float               @default(0)
   discountGroupInput        Float               @default(0)
   change                    Float               @default(0)
   beforeTax                 Float               @default(0)

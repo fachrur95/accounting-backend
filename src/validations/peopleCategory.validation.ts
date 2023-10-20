@@ -4,7 +4,7 @@ const createPeopleCategory = {
   body: Joi.object().keys({
     code: Joi.string(),
     name: Joi.string().required(),
-    discount: Joi.number(),
+    discount: Joi.number().max(100),
     isCustomer: Joi.boolean().required(),
     isSupplier: Joi.boolean().required(),
     isEmployee: Joi.boolean().required(),
@@ -57,7 +57,7 @@ const updatePeopleCategory = {
     .keys({
       code: Joi.string(),
       name: Joi.string(),
-      discount: Joi.number(),
+      discount: Joi.number().max(100),
       isCustomer: Joi.boolean(),
       isSupplier: Joi.boolean(),
       isEmployee: Joi.boolean(),

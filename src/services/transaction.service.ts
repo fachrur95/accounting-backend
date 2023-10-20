@@ -281,6 +281,12 @@ const createSell = async (
     return total + amount;
   }, 0);
 
+  const discountGroupInput = rest.discountGroupInput ?? 0;
+  const specialDiscount = rest.specialDiscount ?? 0;
+  const specialDiscountValue = (specialDiscount / 100) * totalAll;
+
+  const additionalDiscount = discountGroupInput + specialDiscountValue;
+
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
@@ -288,7 +294,7 @@ const createSell = async (
     const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
     const amountBefore = (qty * afterDiscount);
     const distribute = amountBefore / totalAll;
-    const distributeValue = (rest.discountGroupInput ?? 0) * distribute;
+    const distributeValue = additionalDiscount * distribute;
     const amount = amountBefore - distributeValue;
     const taxValue = amount * ((detail.taxRate ?? 0) / 100);
     const total = amount + taxValue;
@@ -384,6 +390,12 @@ const createPurchase = async (
     return total + amount;
   }, 0);
 
+  const discountGroupInput = rest.discountGroupInput ?? 0;
+  const specialDiscount = rest.specialDiscount ?? 0;
+  const specialDiscountValue = (specialDiscount / 100) * totalAll;
+
+  const additionalDiscount = discountGroupInput + specialDiscountValue;
+
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
@@ -391,7 +403,7 @@ const createPurchase = async (
     const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
     const amountBefore = (qty * afterDiscount);
     const distribute = amountBefore / totalAll;
-    const distributeValue = (rest.discountGroupInput ?? 0) * distribute;
+    const distributeValue = additionalDiscount * distribute;
     const amount = amountBefore - distributeValue;
     const taxValue = amount * ((detail.taxRate ?? 0) / 100);
     const total = amount + taxValue;
@@ -1088,6 +1100,9 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
     'transactionNumber',
     'chartOfAccount',
     'people',
+    'paymentInput',
+    'specialDiscount',
+    'discountGroupInput',
     'entryDate',
     'dueDate',
     'note',
@@ -1215,6 +1230,12 @@ const updateSellById = async <Key extends keyof Transaction>(
     return total + amount;
   }, 0);
 
+  const discountGroupInput = rest.discountGroupInput ?? 0;
+  const specialDiscount = rest.specialDiscount ?? 0;
+  const specialDiscountValue = (specialDiscount / 100) * totalAll;
+
+  const additionalDiscount = discountGroupInput + specialDiscountValue;
+
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
@@ -1222,7 +1243,7 @@ const updateSellById = async <Key extends keyof Transaction>(
     const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
     const amountBefore = (qty * afterDiscount);
     const distribute = amountBefore / totalAll;
-    const distributeValue = (rest.discountGroupInput ?? 0) * distribute;
+    const distributeValue = additionalDiscount * distribute;
     const amount = amountBefore - distributeValue;
     const taxValue = amount * ((detail.taxRate ?? 0) / 100);
     const total = amount + taxValue;
@@ -1397,6 +1418,12 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
     return total + amount;
   }, 0);
 
+  const discountGroupInput = rest.discountGroupInput ?? 0;
+  const specialDiscount = rest.specialDiscount ?? 0;
+  const specialDiscountValue = (specialDiscount / 100) * totalAll;
+
+  const additionalDiscount = discountGroupInput + specialDiscountValue;
+
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
@@ -1404,7 +1431,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
     const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
     const amountBefore = (qty * afterDiscount);
     const distribute = amountBefore / totalAll;
-    const distributeValue = (rest.discountGroupInput ?? 0) * distribute;
+    const distributeValue = additionalDiscount * distribute;
     const amount = amountBefore - distributeValue;
     const taxValue = amount * ((detail.taxRate ?? 0) / 100);
     const total = amount + taxValue;

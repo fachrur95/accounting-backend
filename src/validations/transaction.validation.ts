@@ -29,6 +29,7 @@ const createSalesPurchase = {
     // warehouseId: Joi.string().required(),
     // entryDate: Joi.date(),
     paymentInput: Joi.number().required(),
+    specialDiscount: Joi.number(),
     discountGroupInput: Joi.number(),
     note: Joi.string(),
     transactionDetails: Joi.array().items(
