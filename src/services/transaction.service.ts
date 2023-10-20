@@ -1105,7 +1105,12 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
       ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       transactionDetails: {
         include: {
-          multipleUom: true,
+          multipleUom: {
+            include: {
+              item: true,
+              unitOfMeasure: true,
+            }
+          },
           chartOfAccount: true,
           tax: true,
         }
