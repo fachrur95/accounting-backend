@@ -789,7 +789,7 @@ const recalculateFIFO = async (
       data: {
         ...rest,
         ...(children ? {
-          ItemCogsDetail: {
+          itemCogsDetails: {
             createMany: {
               data: children.map(child => ({
                 ...child,
@@ -958,7 +958,7 @@ const recalculateAVG = async (
       data: {
         ...rest,
         ...(children ? {
-          ItemCogsDetail: {
+          itemCogsDetails: {
             createMany: {
               data: children.map(child => ({
                 ...child,
@@ -1127,7 +1127,7 @@ const recalculateManual = async (
       data: {
         ...rest,
         ...(children ? {
-          ItemCogsDetail: {
+          itemCogsDetails: {
             createMany: {
               data: children.map(child => ({
                 ...child,

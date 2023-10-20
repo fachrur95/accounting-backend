@@ -234,6 +234,7 @@ const updateSalesPurchase = {
       // warehouseId: Joi.string(),
       // entryDate: Joi.date(),
       paymentInput: Joi.number(),
+      specialDiscount: Joi.number(),
       discountGroupInput: Joi.number(),
       note: Joi.string(),
       transactionDetails: Joi.array().items(
