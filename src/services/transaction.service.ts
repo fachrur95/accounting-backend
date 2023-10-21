@@ -1047,6 +1047,9 @@ const queryTransactions = async <Key extends keyof Transaction>(
         { people: { name: { contains: search, mode: 'insensitive' } } },
         { chartOfAccount: { name: { contains: search, mode: 'insensitive' } } },
         { chartOfAccount: { code: { contains: search, mode: 'insensitive' } } },
+        ...(!isNaN(parseFloat(search)) ? [
+          { total: { equals: parseFloat(search) } }
+        ] : []),
       ]
     }
   }
@@ -1346,6 +1349,8 @@ const updateSellById = async <Key extends keyof Transaction>(
 
       await Promise.all(recalculateCogsItem);
 
+      await generalLedgerService.createGeneralLedger(tx, transactionId);
+
       // Jika semua operasi berjalan lancar, transaksi akan di-commit
       return resTransaction as Pick<Transaction, Key> | null;
     }, {
@@ -1425,6 +1430,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
   const additionalDiscount = discountGroupInput + specialDiscountValue;
 
   const details = transactionDetails.reduce((obj, detail) => {
+    console.log({ detail });
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
@@ -1455,8 +1461,9 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
     return obj;
   }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
 
-
   const { dataLine, beforeTax, taxValue, total } = details;
+
+  console.log({ dataLine });
 
   const dataLineBecome: DetailCompare[] = []
   for (const line of dataLine) {
@@ -1500,6 +1507,12 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
           change,
           totalPayment,
           underPayment,
+          transactionDetails: {
+            deleteMany: {
+              transactionId,
+              NOT: dataLine.map(({ id }) => ({ id }))
+            },
+          }
         },
         select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
       });
@@ -1571,6 +1584,8 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
       }
 
       await Promise.all(recalculateCogsItem);
+
+      await generalLedgerService.createGeneralLedger(tx, transactionId);
 
       // Jika semua operasi berjalan lancar, transaksi akan di-commit
       return resTransaction as Pick<Transaction, Key> | null;

@@ -230,6 +230,7 @@ const updateSalesPurchase = {
     .keys({
       transactionNumber: Joi.string(),
       peopleId: Joi.string(),
+      chartOfAccountId: Joi.string(),
       termId: Joi.string(),
       // warehouseId: Joi.string(),
       // entryDate: Joi.date(),
