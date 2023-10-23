@@ -20,7 +20,8 @@ const createItem = {
         barcode: Joi.string(),
       })
     ).min(1),
-    files: Joi.array().items(Joi.string())
+    files: Joi.array().items(Joi.string()),
+    // images: Joi.array().items(Joi.string()),
   })
 };
 

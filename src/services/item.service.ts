@@ -12,12 +12,14 @@ import { NestedSort } from '../utils/pickNestedSort';
 
 interface ICreateItemData extends Omit<Prisma.ItemUncheckedCreateInput, "multipleUoms"> {
   multipleUoms: Prisma.MultipleUomCreateManyItemInput[],
-  fileImages: File[],
+  fileImages?: File[],
+  base64Images?: string[],
 }
 
 interface IUpdateItemData extends Omit<Prisma.ItemUncheckedCreateInput, "multipleUoms"> {
   multipleUoms: Prisma.MultipleUomCreateManyItemInput[],
-  fileImages: File[],
+  fileImages?: File[],
+  base64Images?: string[],
 }
 
 /**
@@ -31,11 +33,14 @@ const createItem = async (
   if (await getItemByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item already taken');
   }
-  const { multipleUoms, fileImages, ...rest } = data;
+  const { multipleUoms, fileImages, base64Images, ...rest } = data;
 
   let dataUploaded: UploadApiResponse[] = [];
   if (fileImages) {
     dataUploaded = await uploadService.upload(fileImages);
+  }
+  if (base64Images) {
+    dataUploaded = await uploadService.uploadWithBase64(base64Images);
   }
 
   return prisma.item.create({
@@ -250,11 +255,14 @@ const updateItemById = async <Key extends keyof Item>(
   if (updateBody.name && checkName && checkName.name !== item.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item name already taken');
   }
-  const { multipleUoms, fileImages, ...rest } = updateBody;
+  const { multipleUoms, fileImages, base64Images, ...rest } = updateBody;
   console.log({ multipleUoms });
   let dataUploaded: UploadApiResponse[] = [];
   if (fileImages) {
     dataUploaded = await uploadService.upload(fileImages);
+  }
+  if (base64Images) {
+    dataUploaded = await uploadService.uploadWithBase64(base64Images);
   }
   const updatedItem = await prisma.item.update({
     where: { id: item.id },

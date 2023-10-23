@@ -25,6 +25,10 @@ const createItem = catchAsync(async (req, res) => {
   } = req.body;
 
   const images = req.files as File[];
+  const imagesBase64 = req.body.files;
+  console.log({ imagesBase64 });
+  // const images2 = (req.files as Express.Multer.File[]).map((file) => file.buffer);
+  // console.log({ images, images2 });
   const item = await itemService.createItem({
     itemCategoryId,
     taxId,
@@ -37,6 +41,7 @@ const createItem = catchAsync(async (req, res) => {
     isActive,
     multipleUoms,
     fileImages: images,
+    base64Images: imagesBase64,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });

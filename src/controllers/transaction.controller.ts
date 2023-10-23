@@ -54,7 +54,8 @@ const closeCashRegister = catchAsync(async (req, res) => {
 const createSell = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const cashRegisterId = user.session.cashRegister?.id;
-  if (user.role === 'USER' && !cashRegisterId) {
+  // if (user.role === 'USER' && !cashRegisterId) {
+  if (!cashRegisterId) {
     throw new ApiError(httpStatus.FORBIDDEN, 'You must open the cash register before making a sale.');
   }
 

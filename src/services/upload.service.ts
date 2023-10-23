@@ -14,6 +14,14 @@ const upload = async (files: File[]) => {
   return dataUploaded;
 }
 
+const uploadWithBase64 = async (files: string[]) => {
+  const dataBuffer = files?.map((file) => handleUpload(file));
+  const dataUploaded = await Promise.all(dataBuffer);
+  // console.log({ dataUploaded });
+  return dataUploaded;
+}
+
 export default {
-  upload
+  upload,
+  uploadWithBase64
 };

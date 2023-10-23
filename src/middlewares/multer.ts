@@ -4,6 +4,7 @@ import path from "path";
 const storage = multer.memoryStorage();
 
 const fileFilter = (_req: any, file: any, callback: any) => {
+  console.log({ file })
   const ext = path.extname(file.originalname);
   if (
     ext !== ".jpg" &&
