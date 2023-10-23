@@ -12,14 +12,14 @@ import { NestedSort } from '../utils/pickNestedSort';
 
 interface ICreateItemData extends Omit<Prisma.ItemUncheckedCreateInput, "multipleUoms"> {
   multipleUoms: Prisma.MultipleUomCreateManyItemInput[],
-  fileImages?: File[],
-  base64Images?: string[],
+  fileImages?: File[] | string[],
+  // base64Images?: string[],
 }
 
 interface IUpdateItemData extends Omit<Prisma.ItemUncheckedCreateInput, "multipleUoms"> {
   multipleUoms: Prisma.MultipleUomCreateManyItemInput[],
-  fileImages?: File[],
-  base64Images?: string[],
+  fileImages?: File[] | string[],
+  // base64Images?: string[],
 }
 
 /**
@@ -33,14 +33,22 @@ const createItem = async (
   if (await getItemByName(data.name, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item already taken');
   }
-  const { multipleUoms, fileImages, base64Images, ...rest } = data;
+  const { multipleUoms, fileImages, ...rest } = data;
 
   let dataUploaded: UploadApiResponse[] = [];
   if (fileImages) {
-    dataUploaded = await uploadService.upload(fileImages);
-  }
-  if (base64Images) {
-    dataUploaded = await uploadService.uploadWithBase64(base64Images);
+    if (fileImages.length > 0 && typeof fileImages[0] === 'string') {
+      const stringArray: string[] = fileImages as string[];
+      dataUploaded = await uploadService.uploadWithBase64(stringArray);
+    } else if (fileImages.length > 0 && fileImages[0] instanceof File) {
+      const fileArray: File[] = fileImages as File[];
+      dataUploaded = await uploadService.upload(fileArray);
+    }
+    // console.log({ check: 'name' in fileImages[0] })
+    /* if (fileImages.length > 0 && fileImages[0] instanceof File) {
+      const fileArray: File[] = fileImages as File[];
+      dataUploaded = await uploadService.upload(fileArray);
+    } */
   }
 
   return prisma.item.create({
@@ -255,15 +263,18 @@ const updateItemById = async <Key extends keyof Item>(
   if (updateBody.name && checkName && checkName.name !== item.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Item name already taken');
   }
-  const { multipleUoms, fileImages, base64Images, ...rest } = updateBody;
-  console.log({ multipleUoms });
+  const { multipleUoms, fileImages, ...rest } = updateBody;
   let dataUploaded: UploadApiResponse[] = [];
   if (fileImages) {
-    dataUploaded = await uploadService.upload(fileImages);
+    if (fileImages.length > 0 && typeof fileImages[0] === 'string') {
+      const stringArray: string[] = fileImages as string[];
+      dataUploaded = await uploadService.uploadWithBase64(stringArray);
+    } else if (fileImages.length > 0 && fileImages[0] instanceof File) {
+      const fileArray: File[] = fileImages as File[];
+      dataUploaded = await uploadService.upload(fileArray);
+    }
   }
-  if (base64Images) {
-    dataUploaded = await uploadService.uploadWithBase64(base64Images);
-  }
+
   const updatedItem = await prisma.item.update({
     where: { id: item.id },
     data: {

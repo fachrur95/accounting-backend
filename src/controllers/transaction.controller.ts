@@ -191,6 +191,36 @@ const createJournalEntry = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send(transaction);
 });
 
+const getLastBalanceCashRegister = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  if (!user.session?.unit?.id || !user.session.cashRegister) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Please Choose Unit first!');
+  }
+  const result = await transactionService.getLastBalanceCashRegister(user.session.unit.id, user.session.cashRegister.id, user.session.cashRegister.openDate);
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: `Melihat Saldo Akhir Mesin Kasir ${user.session.cashRegister.name}`,
+    activityType: "READ",
+    createdBy: user.email,
+  });
+  res.send({ balance: result });
+});
+
+const getCashRegistersStandBy = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  if (!user.session?.unit?.id) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Please Choose Unit first!');
+  }
+  const result = await transactionService.getAllCashRegisterByUnitId(user.session.unit.id);
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Melihat Semua Transaksi",
+    activityType: "READ",
+    createdBy: user.email,
+  });
+  res.send(result);
+});
+
 const getTransactions = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const filter = pick(req.query, ['name', 'unitId', 'transactionType']);
@@ -401,4 +431,6 @@ export default {
   updateTransaction,
   deleteTransaction,
   generateTransactionNumber,
+  getCashRegistersStandBy,
+  getLastBalanceCashRegister,
 };

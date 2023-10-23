@@ -149,6 +149,20 @@ router.use(authSession())
   );
 
 router.use(authSession())
+  .route('/cash-register/stand-by')
+  .get(
+    auth('getTransactions'),
+    transactionController.getCashRegistersStandBy
+  );
+
+router.use(authSession())
+  .route('/cash-register/last-balance')
+  .get(
+    auth('getTransactions'),
+    transactionController.getLastBalanceCashRegister
+  );
+
+router.use(authSession())
   .route('/cash-register/open')
   .post(
     auth('manageTransactions'),

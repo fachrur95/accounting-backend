@@ -100,6 +100,34 @@ const getCashRegisterById = async (id: string, unitId: string): Promise<CashRegi
   return prisma.cashRegister.findFirst({ where: { id, unitId } });
 }
 
+
+/**
+ * Get All Cash Register By UnitId
+ * @param {String} unitId
+ * @param {String} cashRegisterId
+ * @param {Date} openDate
+ * @returns {Promise<CashRegister | null>}
+ */
+const getLastBalanceCashRegister = async (unitId: string, cashRegisterId: string, openDate: Date): Promise<number> => {
+  const sumTotal = await prisma.transaction.aggregate({
+    _sum: {
+      totalPayment: true,
+    },
+    where: {
+      unitId,
+      cashRegisterId,
+      entryDate: {
+        gte: openDate,
+      }
+    }
+  });
+
+  const total = sumTotal._sum.totalPayment ?? 0;
+  console.log({ total })
+
+  return total;
+}
+
 /**
  * Get All Cash Register By UnitId
  * @param {String} id?
@@ -471,7 +499,8 @@ const createPurchase = async (
         }
 
         const itemId = getItem.itemId;
-        const cogs = checkNaN(detail.qty ? (detail.total ?? 0 / detail.qty) : 0);
+        const cogs = checkNaN(detail.qty ? ((detail.total ?? 0) / detail.qty) : 0);
+        console.log({ cogs })
 
         const createDetail = await tx.transactionDetail.create({
           data: {
@@ -2260,4 +2289,6 @@ export default {
   updateTransactionById,
   deleteTransactionById,
   generateTransactionNumber,
+  getAllCashRegisterByUnitId,
+  getLastBalanceCashRegister,
 };

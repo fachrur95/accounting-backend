@@ -26,7 +26,6 @@ const createItem = catchAsync(async (req, res) => {
 
   const images = req.files as File[];
   const imagesBase64 = req.body.files;
-  console.log({ imagesBase64 });
   // const images2 = (req.files as Express.Multer.File[]).map((file) => file.buffer);
   // console.log({ images, images2 });
   const item = await itemService.createItem({
@@ -40,8 +39,8 @@ const createItem = catchAsync(async (req, res) => {
     note,
     isActive,
     multipleUoms,
-    fileImages: images,
-    base64Images: imagesBase64,
+    fileImages: images ?? imagesBase64,
+    // base64Images: imagesBase64,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -97,14 +96,35 @@ const getItem = catchAsync(async (req, res) => {
 
 const updateItem = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { multipleUoms, ...rest } = req.body;
+  const {
+    itemCategoryId,
+    taxId,
+    code,
+    name,
+    description,
+    minQty,
+    maxQty,
+    note,
+    isActive,
+    multipleUoms,
+  } = req.body;
   const images = req.files as File[];
+  const imagesBase64 = req.body.files;
   const item = await itemService.updateItemById(
     req.params.itemId,
     {
-      ...rest,
+      itemCategoryId,
+      taxId,
+      code,
+      name,
+      description,
+      minQty,
+      maxQty,
+      note,
+      isActive,
       multipleUoms,
-      fileImages: images,
+      fileImages: images ?? imagesBase64,
+      createdBy: user.email,
       updatedBy: user.email,
       unitId: user.session.unit?.id ?? ""
     }

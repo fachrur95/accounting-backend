@@ -402,12 +402,14 @@ const detailSale = async (
 
     if (cashRegister) {
       const { mainAccountId } = cashRegister;
-      dataDetail.push({
-        accountId: mainAccountId,
-        amount: transaction.totalPayment,
-        vector: "POSITIVE",
-        createdBy: data.createdBy,
-      });
+      if (transaction.totalPayment > 0) {
+        dataDetail.push({
+          accountId: mainAccountId,
+          amount: transaction.totalPayment,
+          vector: "POSITIVE",
+          createdBy: data.createdBy,
+        });
+      }
     }
     if (transaction.underPayment > 0) {
       dataDetail.push({
@@ -437,7 +439,7 @@ const detailSale = async (
           createdBy: data.createdBy,
           transactionDetailId: detail.id,
         });
-        if (detail.multipleUom.item.itemCategory.stockAccountId) {
+        /* if (detail.multipleUom.item.itemCategory.stockAccountId) {
           dataDetail.push({
             accountId: detail.multipleUom.item.itemCategory.stockAccountId,
             itemId: detail.multipleUom.itemId,
@@ -446,7 +448,7 @@ const detailSale = async (
             createdBy: data.createdBy,
             transactionDetailId: detail.id,
           });
-        }
+        } */
         const sumCogs = detail.itemCogsDetails.reduce((sum, item) => sum + item.cogs, 0);
         const currentCogs = detail.itemCogsDetails.length > 0 ? (sumCogs / detail.itemCogsDetails.length) : 0;
         const totalCogs = detail.qty * currentCogs;
@@ -456,7 +458,7 @@ const detailSale = async (
               accountId: detail.multipleUom.item.itemCategory.cogsAccountId,
               itemId: detail.multipleUom.itemId,
               amount: totalCogs,
-              vector: "POSITIVE",
+              vector: detail.vector === "NEGATIVE" ? "POSITIVE" : "NEGATIVE",
               createdBy: data.createdBy,
               transactionDetailId: detail.id,
             });
@@ -466,7 +468,7 @@ const detailSale = async (
               accountId: detail.multipleUom.item.itemCategory.stockAccountId,
               itemId: detail.multipleUom.itemId,
               amount: totalCogs,
-              vector: "POSITIVE",
+              vector: detail.vector,
               createdBy: data.createdBy,
               transactionDetailId: detail.id,
             });

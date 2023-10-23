@@ -10,14 +10,12 @@ const upload = async (files: File[]) => {
     return handleUpload(dataUri);
   });
   const dataUploaded = await Promise.all(dataBuffer);
-  // console.log({ dataUploaded });
   return dataUploaded;
 }
 
 const uploadWithBase64 = async (files: string[]) => {
-  const dataBuffer = files?.map((file) => handleUpload(file));
+  const dataBuffer = files?.map((file) => handleUpload(file.slice(1, -1)));
   const dataUploaded = await Promise.all(dataBuffer);
-  // console.log({ dataUploaded });
   return dataUploaded;
 }
 
