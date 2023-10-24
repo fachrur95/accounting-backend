@@ -40,6 +40,14 @@ router.use(authSession())
     itemController.deleteItem
   );
 
+router.use(authSession())
+  .route('/scan/:barcode')
+  .get(
+    auth('getItems'),
+    validate(itemValidation.scanBarcode),
+    itemController.scanBarcode
+  )
+
 export default router;
 
 /**

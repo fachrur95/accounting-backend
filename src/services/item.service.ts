@@ -220,6 +220,47 @@ const getItemById = async <Key extends keyof Item>(
   }) as Promise<Pick<Item, Key> | null>;
 };
 
+type ScanBarcodeResult = Prisma.MultipleUomGetPayload<{
+  include: {
+    item: {
+      include: {
+        images: true,
+        tax: true,
+      },
+    },
+    unitOfMeasure: true,
+  }
+}>
+
+/**
+ * Get item by id
+ * @param {ObjectId} unitId
+ * @param {ObjectId} barcode
+ * @returns {Promise<ScanBarcodeResult | null>}
+ */
+const getItemByBarcode = async (
+  unitId: string,
+  barcode: string,
+): Promise<ScanBarcodeResult | null> => {
+  return prisma.multipleUom.findUnique({
+    where: {
+      unitId_barcode: {
+        barcode,
+        unitId,
+      }
+    },
+    include: {
+      item: {
+        include: {
+          images: true,
+          tax: true,
+        },
+      },
+      unitOfMeasure: true,
+    }
+  });
+};
+
 /**
  * Get item by email
  * @param {string} email
@@ -338,6 +379,7 @@ export default {
   queryItems,
   getItemById,
   getItemByName,
+  getItemByBarcode,
   updateItemById,
   deleteItemById
 };

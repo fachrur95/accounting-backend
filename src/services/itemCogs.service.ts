@@ -116,6 +116,23 @@ const calculateCogs = async (
       transactionDetails: {
         select: {
           id: true,
+          multipleUom: {
+            select: {
+              item: {
+                select: {
+                  itemCategory: {
+                    select: {
+                      itemType: {
+                        select: {
+                          isStock: true,
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       },
       unitId: true,
@@ -128,6 +145,9 @@ const calculateCogs = async (
 
   const transactionDetails = transaction.transactionDetails;
   for (const detail of transactionDetails) {
+    if (detail.multipleUom?.item.itemCategory.itemType.isStock === false) {
+      continue;
+    }
     if (method === "FIFO") {
       await calculateFIFOByTransDetailId(tx, detail.id);
       continue;
@@ -665,6 +685,30 @@ const recalculateFIFO = async (
 
   const date = lastFinancialClosing?.entryDate;
 
+  const getItem = await tx.item.findUnique({
+    where: { id: itemId }, select: {
+      itemCategory: {
+        select: {
+          itemType: {
+            select: {
+              isStock: true,
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!getItem) {
+    throw new ApiError(httpStatus.NOT_FOUND, `Item Not Found`);
+  }
+
+  const isStock = getItem.itemCategory.itemType.isStock;
+
+  if (!isStock) {
+    return;
+  }
+
   const getTransactionDetail = tx.transactionDetail.findMany({
     where: {
       multipleUom: {
@@ -826,6 +870,30 @@ const recalculateAVG = async (
   });
 
   const date = lastFinancialClosing?.entryDate;
+
+  const getItem = await tx.item.findUnique({
+    where: { id: itemId }, select: {
+      itemCategory: {
+        select: {
+          itemType: {
+            select: {
+              isStock: true,
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!getItem) {
+    throw new ApiError(httpStatus.NOT_FOUND, `Item Not Found`);
+  }
+
+  const isStock = getItem.itemCategory.itemType.isStock;
+
+  if (!isStock) {
+    return;
+  }
 
   const getTransactionDetail = tx.transactionDetail.findMany({
     where: {
@@ -995,6 +1063,30 @@ const recalculateManual = async (
   });
 
   const date = lastFinancialClosing?.entryDate;
+
+  const getItem = await tx.item.findUnique({
+    where: { id: itemId }, select: {
+      itemCategory: {
+        select: {
+          itemType: {
+            select: {
+              isStock: true,
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!getItem) {
+    throw new ApiError(httpStatus.NOT_FOUND, `Item Not Found`);
+  }
+
+  const isStock = getItem.itemCategory.itemType.isStock;
+
+  if (!isStock) {
+    return;
+  }
 
   const getTransactionDetail = tx.transactionDetail.findMany({
     where: {

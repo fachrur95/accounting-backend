@@ -63,6 +63,12 @@ const getItem = {
   })
 };
 
+const scanBarcode = {
+  params: Joi.object().keys({
+    barcode: Joi.string()
+  })
+};
+
 const updateItem = {
   params: Joi.object().keys({
     itemId: Joi.string()
@@ -103,6 +109,7 @@ export default {
   createItem,
   getItems,
   getItem,
+  scanBarcode,
   updateItem,
   deleteItem
 };

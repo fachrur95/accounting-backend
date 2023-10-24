@@ -123,7 +123,6 @@ const getLastBalanceCashRegister = async (unitId: string, cashRegisterId: string
   });
 
   const total = sumTotal._sum.totalPayment ?? 0;
-  console.log({ total })
 
   return total;
 }
@@ -194,6 +193,7 @@ const openCashRegister = async (
           transactionNumber: data.transactionNumber,
           cashRegisterId: data.cashRegisterId,
           transactionType,
+          totalPayment: data.amount,
           total: data.amount,
           createdBy: data.createdBy,
           unitId: data.unitId,
@@ -248,6 +248,7 @@ const closeCashRegister = async (
           transactionNumber: data.transactionNumber,
           cashRegisterId: transactionOpen.cashRegisterId,
           transactionType,
+          totalPayment: data.amount,
           total: data.amount,
           createdBy: transactionOpen.createdBy,
           unitId: transactionOpen.unitId,

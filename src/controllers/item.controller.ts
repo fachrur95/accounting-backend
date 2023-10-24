@@ -25,7 +25,7 @@ const createItem = catchAsync(async (req, res) => {
   } = req.body;
 
   const images = req.files as File[];
-  const imagesBase64 = req.body.files;
+  const imagesBase64 = req.body.files as string[];
   // const images2 = (req.files as Express.Multer.File[]).map((file) => file.buffer);
   // console.log({ images, images2 });
   const item = await itemService.createItem({
@@ -94,6 +94,24 @@ const getItem = catchAsync(async (req, res) => {
   res.send(item);
 });
 
+const scanBarcode = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  if (!user.session?.unit?.id) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Unit not choosen');
+  }
+  const item = await itemService.getItemByBarcode(user.session?.unit?.id, req.params.barcode);
+  if (!item) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Item not found');
+  }
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: `Scan Barcode "${req.params.barcode}"`,
+    activityType: "READ",
+    createdBy: user.email,
+  });
+  res.send(item);
+});
+
 const updateItem = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const {
@@ -109,7 +127,7 @@ const updateItem = catchAsync(async (req, res) => {
     multipleUoms,
   } = req.body;
   const images = req.files as File[];
-  const imagesBase64 = req.body.files;
+  const imagesBase64 = req.body.files as string[];
   const item = await itemService.updateItemById(
     req.params.itemId,
     {
@@ -156,6 +174,7 @@ export default {
   createItem,
   getItems,
   getItem,
+  scanBarcode,
   updateItem,
-  deleteItem
+  deleteItem,
 };
