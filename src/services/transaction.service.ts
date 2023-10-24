@@ -52,6 +52,16 @@ interface ReduceAmountJournalEntry {
   totalCredit: number,
 }
 
+type TransactionWithInclude = Prisma.TransactionGetPayload<{
+  include: {
+    transactionDetails: {
+      include: {
+        multipleUom: true,
+      }
+    }
+  }
+}>
+
 const generateDueDate = async (entryDate: Date, termId?: string): Promise<Date> => {
   if (!termId) return entryDate;
 
@@ -1190,16 +1200,6 @@ const getTransactionByNumber = async <Key extends keyof Transaction>(
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<Transaction, Key> | null>;
 };
-
-type TransactionWithInclude = Prisma.TransactionGetPayload<{
-  include: {
-    transactionDetails: {
-      include: {
-        multipleUom: true,
-      }
-    }
-  }
-}>
 
 /**
  * Update transaction sell by id

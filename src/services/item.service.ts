@@ -22,6 +22,18 @@ interface IUpdateItemData extends Omit<Prisma.ItemUncheckedCreateInput, "multipl
   // base64Images?: string[],
 }
 
+type ScanBarcodeResult = Prisma.MultipleUomGetPayload<{
+  include: {
+    item: {
+      include: {
+        images: true,
+        tax: true,
+      },
+    },
+    unitOfMeasure: true,
+  }
+}>
+
 /**
  * Create a item
  * @param {Object} data
@@ -219,18 +231,6 @@ const getItemById = async <Key extends keyof Item>(
     }
   }) as Promise<Pick<Item, Key> | null>;
 };
-
-type ScanBarcodeResult = Prisma.MultipleUomGetPayload<{
-  include: {
-    item: {
-      include: {
-        images: true,
-        tax: true,
-      },
-    },
-    unitOfMeasure: true,
-  }
-}>
 
 /**
  * Get item by id

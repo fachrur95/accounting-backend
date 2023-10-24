@@ -26,3 +26,4 @@ export { default as generalLedgerService } from './generalLedger.service';
 export { default as uploadService } from './upload.service';
 export { default as logActivityService } from './logActivity.service';
 export { default as prefixService } from './prefix.service';
+export { default as generalSettingService } from './generalSetting.service';

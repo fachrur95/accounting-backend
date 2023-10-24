@@ -20,3 +20,4 @@ export { default as unitOfMeasureValidation } from './unitOfMeasure.validation';
 export { default as multipleUomValidation } from './multipleUom.validation';
 export { default as logActivityValidation } from './logActivity.validation';
 export { default as prefixValidation } from './prefix.validation';
+export { default as generalSettingValidation } from './generalSetting.validation';
