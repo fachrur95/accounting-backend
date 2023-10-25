@@ -21,7 +21,7 @@ const cookieOptions = (expires: Date): CookieOptions => {
 
 const register = catchAsync(async (req, res) => {
   const { email, password } = req.body;
-  const user = await userService.createUser(email, password);
+  const user = await userService.createUser({ email, password });
   const userWithoutPassword = exclude(user, ['password', 'createdAt', 'updatedAt']);
   const tokens = await tokenService.generateAuthTokens(user);
   await logActivityService.createLogActivity({

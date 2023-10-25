@@ -21,3 +21,4 @@ export { default as transactionController } from './transaction.controller';
 export { default as logActivityController } from './logActivity.controller';
 // export { default as uploadController } from './upload.controller';
 export { default as prefixController } from './prefix.controller';
+export { default as generalSettingController } from './generalSetting.controller';

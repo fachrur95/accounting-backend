@@ -6,10 +6,10 @@ import { userService } from '../services';
 import { FiltersType, SortType } from '../types/filtering';
 import pickNested from '../utils/pickNested';
 import pickNestedSort from '../utils/pickNestedSort';
+import exclude from '../utils/exclude';
 
 const createUser = catchAsync(async (req, res) => {
-  const { email, password, name, role } = req.body;
-  const user = await userService.createUser(email, password, name, role);
+  const user = await userService.createUser(req.body);
   res.status(httpStatus.CREATED).send(user);
 });
 
@@ -27,7 +27,8 @@ const getUser = catchAsync(async (req, res) => {
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
-  res.send(user);
+  const userWithoutPassword = exclude(user, ['password']);
+  res.send(userWithoutPassword);
 });
 
 const updateUser = catchAsync(async (req, res) => {

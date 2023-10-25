@@ -19,6 +19,7 @@ const allRoles = {
     'manageCashRegisters',
     'getMultipleUoms',
     'getLogActivities',
+    'manageGeneralSettings',
   ],
   [Role.AUDITOR]: [
     'getUsers',
@@ -33,6 +34,7 @@ const allRoles = {
     'manageAccountClasses',
     'getMultipleUoms',
     'getLogActivities',
+    'manageGeneralSettings',
   ],
   [Role.SUPERADMIN]: [
     'getUsers',
@@ -73,6 +75,7 @@ const allRoles = {
     'manageCashRegisters',
     'getMultipleUoms',
     'getLogActivities',
+    'manageGeneralSettings',
   ]
 };
 

@@ -7,6 +7,7 @@ const updateGeneralSetting = {
   }),
   body: Joi.object()
     .keys({
+      companyName: Joi.string(),
       recalculateMethod: Joi.string().valid(
         RecalculateMethod.AVG,
         RecalculateMethod.FIFO,

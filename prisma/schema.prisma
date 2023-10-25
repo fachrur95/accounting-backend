@@ -98,9 +98,7 @@ model Unit {
 model UserUnit {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
-  createdBy String
   updatedAt DateTime @updatedAt
-  updatedBy String?
   user      User     @relation(fields: [userId], references: [id])
   userId    String
   unit      Unit     @relation(fields: [unitId], references: [id])
@@ -200,6 +198,7 @@ model GeneralSetting {
   createdAt         DateTime          @default(now())
   createdBy         String
   updatedAt         DateTime          @updatedAt
+  updatedBy         String?
   unit              Unit              @relation(fields: [unitId], references: [id])
   unitId            String            @unique
   debitAccount      ChartOfAccount?   @relation("debit", fields: [debitAccountId], references: [id])

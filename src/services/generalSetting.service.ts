@@ -10,7 +10,7 @@ import prisma from '../client';
 const updateGeneralSettingById = async <Key extends keyof GeneralSetting>(
   unitId: string,
   updateBody: Prisma.GeneralSettingUncheckedUpdateInput,
-  keys: Key[] = ['id', 'name', 'unitId'] as Key[]
+  keys: Key[] = ['id', 'companyName', 'unitId'] as Key[]
 ): Promise<Pick<GeneralSetting, Key> | null> => {
   const updatedGeneralSetting = await prisma.generalSetting.update({
     where: { unitId },

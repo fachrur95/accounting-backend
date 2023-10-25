@@ -8,17 +8,29 @@ import getPagination from '../utils/pagination';
 import { NestedObject } from '../utils/pickNested';
 import { NestedSort } from '../utils/pickNestedSort';
 
+type UserUnitCreate = {
+  unitId: string;
+}
+interface ICreateUserData extends Omit<Prisma.UserUncheckedCreateInput, "userUnits"> {
+  userUnits?: UserUnitCreate[];
+}
+
+interface IUpdateUserData extends Omit<Prisma.UserUncheckedUpdateInput, "userUnits"> {
+  userUnits?: UserUnitCreate[],
+}
+
 /**
  * Create a user
  * @param {Object} userBody
  * @returns {Promise<User>}
  */
-const createUser = async (
-  email: string,
-  password: string,
-  name?: string,
-  role: Role = Role.USER
-): Promise<User> => {
+const createUser = async ({
+  email,
+  password,
+  name,
+  role = Role.USER,
+  userUnits,
+}: ICreateUserData): Promise<User> => {
   if (await getUserByEmail(email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
@@ -27,7 +39,16 @@ const createUser = async (
       email,
       name,
       password: await encryptPassword(password),
-      role
+      role,
+      ...(userUnits ? {
+        userUnits: {
+          createMany: {
+            data: userUnits.map((userUnit) => ({
+              unitId: userUnit.unitId
+            }))
+          }
+        }
+      } : {})
     }
   });
 };
@@ -56,7 +77,7 @@ const queryUsers = async <Key extends keyof User>(
     'id',
     'email',
     'name',
-    'password',
+    // 'password',
     'role',
     'isEmailVerified',
     'createdAt',
@@ -135,7 +156,14 @@ const getUserById = async <Key extends keyof User>(
 ): Promise<Pick<User, Key> | null> => {
   return prisma.user.findUnique({
     where: { id },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+    select: {
+      ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      userUnits: {
+        include: {
+          unit: true,
+        }
+      }
+    }
   }) as Promise<Pick<User, Key> | null>;
 };
 
@@ -172,7 +200,8 @@ const getUserByEmail = async <Key extends keyof User>(
  */
 const updateUserById = async <Key extends keyof User>(
   userId: string,
-  updateBody: Prisma.UserUpdateInput,
+  // updateBody: Prisma.UserUpdateInput,
+  updateBody: IUpdateUserData,
   keys: Key[] = ['id', 'email', 'name', 'role'] as Key[]
 ): Promise<Pick<User, Key> | null> => {
   const user = await getUserById(userId, ['id', 'email', 'name']);
@@ -183,9 +212,24 @@ const updateUserById = async <Key extends keyof User>(
   if (updateBody.name && checkName && checkName.name !== user.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
+  const { userUnits, ...data } = updateBody;
   const updatedUser = await prisma.user.update({
     where: { id: user.id },
-    data: updateBody,
+    data: {
+      ...data,
+      ...(userUnits ? {
+        userUnits: {
+          deleteMany: {
+            userId,
+          },
+          createMany: {
+            data: userUnits.map((userUnit) => ({
+              unitId: userUnit.unitId
+            }))
+          }
+        }
+      } : {})
+    },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   });
   return updatedUser as Pick<User, Key> | null;

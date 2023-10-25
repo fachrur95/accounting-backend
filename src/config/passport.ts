@@ -46,7 +46,12 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
     const getUnit = prisma.unit.findUnique({
       where: { id: payload.session?.unit ?? "" },
       include: {
-        generalSetting: true,
+        generalSetting: {
+          include: {
+            creditAccount: true,
+            debitAccount: true,
+          }
+        },
       }
     });
     const [institute, unit] = await Promise.all([getInstitute, getUnit]);
