@@ -100,6 +100,15 @@ interface IQueryRawCheckRegister {
   status: boolean;
 }
 
+interface IQueryRawPaymentDraft {
+  id: string;
+  transactionType: TransactionType;
+  entryDate: Date;
+  dueDate: Date;
+  underPayment: number;
+  remainingPayment: number;
+}
+
 /**
  * Get Cash Register By Id and UnitId
  * @param {String} id
@@ -164,6 +173,44 @@ const getAllCashRegisterByUnitId = async (unitId: string, id?: string): Promise<
     ${id ? Prisma.sql` AND cr."id" = ${id}` : Prisma.empty}
     ORDER BY cr."name" ASC;
   `;
+}
+
+/**
+ * Get All Cash Register By UnitId
+ * @param {String} peopleId
+ * @returns {Promise<CashRegister | null>}
+ */
+const getPaymentDraftByPeopleId = async (peopleId: string): Promise<IQueryRawPaymentDraft[]> => {
+  return prisma.$queryRaw<IQueryRawPaymentDraft[]>`
+    SELECT
+      "Transaction"."id",
+      "Transaction"."transactionType",
+      "Transaction"."transactionNumber",
+      "Transaction"."entryDate",
+      "Transaction"."dueDate",
+      "Transaction"."underPayment",
+      ( "Transaction"."underPayment" - COALESCE ( "transDetailChild".payed, 0 ) ) AS "remainingPayment" 
+    FROM
+      "Transaction"
+      LEFT JOIN (
+      SELECT DISTINCT SUM
+        ( "TransactionDetail".total ) AS payed,
+        "transactionPaymentId" AS "id" 
+      FROM
+        "TransactionDetail"
+        JOIN "Transaction" ON "Transaction"."id" = "TransactionDetail"."transactionId" 
+      WHERE
+        "Transaction"."transactionType" = 'RECEIVEABLE_PAYMENT' 
+      GROUP BY
+        "transactionPaymentId" 
+      ) AS "transDetailChild"
+      ON "transDetailChild"."id" = "Transaction"."id" 
+    WHERE
+      "Transaction"."transactionType" = 'SALE_INVOICE' 
+      AND ( "Transaction"."underPayment" - COALESCE ( "transDetailChild".payed, 0 ) ) > 0
+  `;
+  // ${id ? Prisma.sql` AND cr."id" = ${id}` : Prisma.empty}
+  // ORDER BY cr."name" ASC;
 }
 
 /**
