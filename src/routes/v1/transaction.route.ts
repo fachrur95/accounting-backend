@@ -163,6 +163,14 @@ router.use(authSession())
   );
 
 router.use(authSession())
+  .route('/payment-draft/:type/:peopleId')
+  .get(
+    auth('getTransactions'),
+    validate(transactionValidation.getPaymentDraft),
+    transactionController.getPaymentDraft
+  );
+
+router.use(authSession())
   .route('/cash-register/open')
   .post(
     auth('manageTransactions'),

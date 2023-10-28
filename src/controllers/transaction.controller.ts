@@ -101,7 +101,7 @@ const createReceivablePayment = catchAsync(async (req, res) => {
 
   const transaction = await transactionService.createReceivablePayment({
     ...req.body,
-    transactionType: "RECEIVEABLE_PAYMENT",
+    transactionType: "RECEIVABLE_PAYMENT",
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -215,6 +215,18 @@ const getCashRegistersStandBy = catchAsync(async (req, res) => {
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Melihat Semua Transaksi",
+    activityType: "READ",
+    createdBy: user.email,
+  });
+  res.send(result);
+});
+
+const getPaymentDraft = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const result = await transactionService.getPaymentDraftByPeopleId(req.params.type, req.params.peopleId);
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Melihat Daftar Pembayaran",
     activityType: "READ",
     createdBy: user.email,
   });
@@ -433,4 +445,5 @@ export default {
   generateTransactionNumber,
   getCashRegistersStandBy,
   getLastBalanceCashRegister,
+  getPaymentDraft,
 };

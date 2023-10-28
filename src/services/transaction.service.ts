@@ -180,7 +180,29 @@ const getAllCashRegisterByUnitId = async (unitId: string, id?: string): Promise<
  * @param {String} peopleId
  * @returns {Promise<CashRegister | null>}
  */
-const getPaymentDraftByPeopleId = async (peopleId: string): Promise<IQueryRawPaymentDraft[]> => {
+const getPaymentDraftByPeopleId = async (
+  type: "debt" | "receivable",
+  peopleId: string
+): Promise<IQueryRawPaymentDraft[]> => {
+  const people = await prisma.people.findUnique({
+    where: { id: peopleId },
+  });
+  if (!people) {
+    throw new ApiError(httpStatus.NOT_FOUND, `People Not Found`);
+  }
+
+  let transType1: TransactionType = 'SALE_INVOICE';
+  let transType2: TransactionType = 'BEGINNING_BALANCE_RECEIVABLE';
+
+  let transTypeChild: TransactionType = 'RECEIVABLE_PAYMENT';
+
+  if (type === "debt") {
+    transType1 = 'PURCHASE_INVOICE';
+    transType2 = 'BEGINNING_BALANCE_DEBT';
+
+    transTypeChild = 'DEBT_PAYMENT';
+  }
+
   return prisma.$queryRaw<IQueryRawPaymentDraft[]>`
     SELECT
       "Transaction"."id",
@@ -200,13 +222,16 @@ const getPaymentDraftByPeopleId = async (peopleId: string): Promise<IQueryRawPay
         "TransactionDetail"
         JOIN "Transaction" ON "Transaction"."id" = "TransactionDetail"."transactionId" 
       WHERE
-        "Transaction"."transactionType" = 'RECEIVEABLE_PAYMENT' 
+        "Transaction"."transactionType" = ${transTypeChild} 
       GROUP BY
         "transactionPaymentId" 
       ) AS "transDetailChild"
       ON "transDetailChild"."id" = "Transaction"."id" 
     WHERE
-      "Transaction"."transactionType" = 'SALE_INVOICE' 
+      (
+        "Transaction"."transactionType" = ${transType1}
+        OR "Transaction"."transactionType" = ${transType2}
+      ) 
       AND ( "Transaction"."underPayment" - COALESCE ( "transDetailChild".payed, 0 ) ) > 0
   `;
   // ${id ? Prisma.sql` AND cr."id" = ${id}` : Prisma.empty}
@@ -2339,4 +2364,5 @@ export default {
   generateTransactionNumber,
   getAllCashRegisterByUnitId,
   getLastBalanceCashRegister,
+  getPaymentDraftByPeopleId,
 };

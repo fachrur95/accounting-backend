@@ -178,7 +178,7 @@ const getTransactions = {
       TransactionType.PURCHASE_ORDER,
       TransactionType.PURCHASE_INVOICE,
       TransactionType.PURCHASE_RETURN,
-      TransactionType.RECEIVEABLE_PAYMENT,
+      TransactionType.RECEIVABLE_PAYMENT,
       TransactionType.DEBT_PAYMENT,
       TransactionType.EXPENSE,
       TransactionType.REVENUE,
@@ -414,6 +414,13 @@ const deleteTransaction = {
   })
 };
 
+const getPaymentDraft = {
+  params: Joi.object().keys({
+    type: Joi.string().valid("debt", "receivable"),
+    peopleId: Joi.string(),
+  })
+};
+
 const generateTransactionNumber = {
   params: Joi.object().keys({
     transactionType: Joi.string().valid(
@@ -425,7 +432,7 @@ const generateTransactionNumber = {
       TransactionType.PURCHASE_ORDER,
       TransactionType.PURCHASE_INVOICE,
       TransactionType.PURCHASE_RETURN,
-      TransactionType.RECEIVEABLE_PAYMENT,
+      TransactionType.RECEIVABLE_PAYMENT,
       TransactionType.DEBT_PAYMENT,
       TransactionType.EXPENSE,
       TransactionType.REVENUE,
@@ -466,4 +473,5 @@ export default {
   updateBeginBalanceStock,
   deleteTransaction,
   generateTransactionNumber,
+  getPaymentDraft,
 };

@@ -43,7 +43,7 @@ const defaultPrefix: Omit<Prisma.PrefixCreateInput, "createdBy" | "unit">[] = [
   },
   {
     name: "Penerimaan Piutang",
-    transactionType: "RECEIVEABLE_PAYMENT",
+    transactionType: "RECEIVABLE_PAYMENT",
     prefix: "PP",
   },
   {
