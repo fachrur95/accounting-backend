@@ -69,6 +69,9 @@ const queryCashRegisters = async <Key extends keyof CashRegister>(
     globalSearch = {
       OR: [
         { name: { contains: search, mode: 'insensitive' } },
+        { mainAccount: { name: { contains: search, mode: 'insensitive' } } },
+        { depositAccount: { name: { contains: search, mode: 'insensitive' } } },
+        { beginBalanceAccount: { name: { contains: search, mode: 'insensitive' } } },
         { createdBy: { contains: search, mode: 'insensitive' } },
         { updatedBy: { contains: search, mode: 'insensitive' } },
       ]

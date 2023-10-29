@@ -12605,7 +12605,7 @@ END LOOP;
 CLOSE myCursor;
 END / / DELIMITER;
 -- Dumping structure for procedure gogabook.X_CreateSomething
-DELIMITER / / CREATE PROCEDURE `X_CreateSomething`(
+DELIMITER / / CREATE PROCEDURE ``X_CreateSomething``(
 	IN `myid` CHAR(36),
 	IN `myBussinessCode` CHAR(36)
 ) BEGIN

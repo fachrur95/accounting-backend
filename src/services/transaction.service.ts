@@ -222,15 +222,15 @@ const getPaymentDraftByPeopleId = async (
         "TransactionDetail"
         JOIN "Transaction" ON "Transaction"."id" = "TransactionDetail"."transactionId" 
       WHERE
-        "Transaction"."transactionType" = ${transTypeChild} 
+        "Transaction"."transactionType"::text = ${transTypeChild} 
       GROUP BY
         "transactionPaymentId" 
       ) AS "transDetailChild"
       ON "transDetailChild"."id" = "Transaction"."id" 
     WHERE
       (
-        "Transaction"."transactionType" = ${transType1}
-        OR "Transaction"."transactionType" = ${transType2}
+        "Transaction"."transactionType"::text = ${transType1}
+        OR "Transaction"."transactionType"::text = ${transType2}
       ) 
       AND ( "Transaction"."underPayment" - COALESCE ( "transDetailChild".payed, 0 ) ) > 0
   `;
@@ -650,7 +650,7 @@ const createReceivablePayment = async (
       amount,
       taxValue,
       total,
-      vector: "POSITIVE",
+      vector: "NEGATIVE",
       createdBy: rest.createdBy
     });
     obj.beforeTax += amount;
@@ -691,6 +691,7 @@ const createReceivablePayment = async (
       isolationLevel: 'Serializable'
     });
   } catch (error: any) {
+    console.log({ error })
     throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
   }
 };
@@ -723,7 +724,7 @@ const createDebtPayment = async (
       amount,
       taxValue,
       total,
-      vector: "NEGATIVE",
+      vector: "POSITIVE",
       createdBy: rest.createdBy
     });
     obj.beforeTax += amount;
@@ -1229,22 +1230,76 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
     'updatedAt'
   ] as Key[]
 ): Promise<Pick<TransactionWithInclude, Key> | null> => {
-  return prisma.transaction.findUnique({
+  const transaction = await prisma.transaction.findUnique({
     where: { id },
     select: {
-      ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      transactionType: true,
+    }
+  });
+  if (!transaction) {
+    return null;
+  }
+  const transactionType = transaction.transactionType;
+
+  let additionalSelect: Prisma.TransactionSelect = {
+    transactionDetails: {
+      include: {
+        multipleUom: {
+          include: {
+            item: true,
+            unitOfMeasure: true,
+          }
+        },
+        chartOfAccount: true,
+        tax: true,
+      }
+    }
+  }
+
+  if (transactionType === "DEBT_PAYMENT" || transactionType === "RECEIVABLE_PAYMENT") {
+    additionalSelect = {
       transactionDetails: {
         include: {
-          multipleUom: {
+          transactionPayment: {
             include: {
-              item: true,
-              unitOfMeasure: true,
+              transactionDetailPayments: {
+                select: {
+                  priceInput: true,
+                }
+              }
             }
           },
+        }
+      }
+    }
+  }
+
+  if (transactionType === "REVENUE" || transactionType === "EXPENSE") {
+    additionalSelect = {
+      transactionDetails: {
+        include: {
           chartOfAccount: true,
           tax: true,
         }
       }
+    }
+  }
+
+  if (transactionType === "JOURNAL_ENTRY") {
+    additionalSelect = {
+      transactionDetails: {
+        include: {
+          chartOfAccount: true,
+        }
+      }
+    }
+  }
+
+  return prisma.transaction.findUnique({
+    where: { id },
+    select: {
+      ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+      ...additionalSelect,
     }
   }) as Promise<Pick<TransactionWithInclude, Key> | null>;
 };

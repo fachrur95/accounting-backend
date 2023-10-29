@@ -60,6 +60,11 @@ const createGeneralLedger = async (
         await detailGeneral(tx, generalLedger.id, transactionId);
         break;
 
+      case "RECEIVABLE_PAYMENT":
+      case "DEBT_PAYMENT":
+        await detailPayment(tx, generalLedger.id, transactionId);
+        break;
+
       case "PURCHASE_INVOICE":
         await detailPurchase(tx, generalLedger.id, transactionId);
         break;
@@ -80,8 +85,8 @@ const createGeneralLedger = async (
         throw new Error('No such transaction');
     }
 
-  } catch (error) {
-    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  } catch (error: any) {
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, error?.message ?? 'An error occurred');
   }
 }
 
@@ -229,6 +234,78 @@ const detailGeneral = async (
         amount: data.total,
         createdBy: data.createdBy,
         vector: data.transactionType === "REVENUE" ? "POSITIVE" : data.transactionType === "EXPENSE" ? "NEGATIVE" : "POSITIVE",
+      })
+    }
+
+    await tx.generalLedgerDetail.createMany({
+      data: dataGeneralLedgerDetails.map((detail) => ({
+        ...detail,
+        generalLedgerId,
+      }))
+    });
+  } catch (error) {
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
+}
+
+const detailPayment = async (
+  tx: TransactionMethod,
+  generalLedgerId: string,
+  transactionId: string,
+): Promise<void> => {
+  try {
+    const transaction = await tx.transaction.findUnique({
+      where: { id: transactionId },
+      include: {
+        transactionDetails: true,
+      }
+    });
+    if (!transaction) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Transaction Not Found');
+    }
+
+    const { transactionDetails, ...data } = transaction;
+
+    const coreAccountId = data.chartOfAccountId;
+    
+    const generalSetting = await tx.generalSetting.findUnique({
+      where: { unitId: transaction.unitId },
+      select: {
+        debitAccountId: true,
+        creditAccountId: true,
+      }
+    });
+    if (!generalSetting || !generalSetting.debitAccountId || !generalSetting.creditAccountId) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'General Setting Not Found');
+    }
+
+    const dataDetail = transactionDetails.reduce((array, detail) => {
+      if (generalSetting.creditAccountId && generalSetting.debitAccountId) {
+        array.push({
+          accountId: data.transactionType === "RECEIVABLE_PAYMENT" ? generalSetting.creditAccountId : generalSetting.debitAccountId,
+          amount: detail.total,
+          vector: detail.vector,
+          createdBy: data.createdBy,
+          transactionDetailId: detail.id,
+        });
+      }
+      return array;
+    }, [] as ReduceAccountLine[]);
+
+    const dataGeneralLedgerDetails: Prisma.GeneralLedgerDetailCreateManyGeneralLedgerInput[] = dataDetail.map((detail) => {
+      const { accountId, ...rest } = detail;
+      return ({
+        ...rest,
+        chartOfAccountId: accountId,
+      })
+    });
+
+    if (coreAccountId) {
+      dataGeneralLedgerDetails.push({
+        chartOfAccountId: coreAccountId,
+        amount: data.total,
+        createdBy: data.createdBy,
+        vector: data.transactionType === "RECEIVABLE_PAYMENT" ? "POSITIVE" : data.transactionType === "DEBT_PAYMENT" ? "NEGATIVE" : "POSITIVE",
       })
     }
 

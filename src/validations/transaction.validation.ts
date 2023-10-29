@@ -268,6 +268,7 @@ const updatePayment = {
       note: Joi.string(),
       transactionDetails: Joi.array().items(
         Joi.object().keys({
+          id: Joi.string(),
           transactionPaymentId: Joi.string().required(),
           priceInput: Joi.number().min(0).required(),
           note: Joi.string(),
@@ -290,6 +291,7 @@ const updateLiability = {
       note: Joi.string(),
       transactionDetails: Joi.array().items(
         Joi.object().keys({
+          id: Joi.string(),
           chartOfAccountId: Joi.string().required(),
           taxId: Joi.string(),
           priceInput: Joi.number().min(0).required(),
@@ -355,6 +357,7 @@ const updateJournalEntry = {
       note: Joi.string(),
       transactionDetails: Joi.array().items(
         Joi.object().keys({
+          id: Joi.string(),
           chartOfAccountId: Joi.string().required(),
           debit: Joi.number().min(0).required(),
           credit: Joi.number().min(0).required(),
@@ -376,6 +379,7 @@ const updateBeginBalancePayment = {
       chartOfAccountId: Joi.string(),
       transactionDetails: Joi.array().items(
         Joi.object().keys({
+          id: Joi.string(),
           peopleId: Joi.string().required(),
           dueDate: Joi.date().required(),
           priceInput: Joi.number().required(),
@@ -398,6 +402,7 @@ const updateBeginBalanceStock = {
       note: Joi.string(),
       transactionDetails: Joi.array().items(
         Joi.object().keys({
+          id: Joi.string(),
           multipleUomId: Joi.string().required(),
           qtyInput: Joi.number().required(),
           hpp: Joi.number().required(),
