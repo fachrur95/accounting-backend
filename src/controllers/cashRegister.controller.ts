@@ -10,21 +10,8 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createCashRegister = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const {
-    mainAccountId,
-    depositAccountId,
-    beginBalanceAccountId,
-    name,
-    note,
-    isActive
-  } = req.body;
   const cashRegister = await cashRegisterService.createCashRegister({
-    mainAccountId,
-    depositAccountId,
-    beginBalanceAccountId,
-    name,
-    note,
-    isActive,
+    ...req.body,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });

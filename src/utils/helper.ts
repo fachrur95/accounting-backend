@@ -77,3 +77,35 @@ export const getItemChanges = (
 
   return changes;
 }
+
+const codeFormat = "id-ID";
+
+const FormatCurrency = new Intl.NumberFormat(codeFormat, {
+  minimumFractionDigits: 0,
+  style: 'currency',
+  currency: 'IDR',
+});
+
+const FormatNumber = new Intl.NumberFormat(codeFormat, {
+  minimumFractionDigits: 0,
+});
+
+export const formatCurrency = (value: number): string => FormatCurrency.format(value);
+
+export const formatNumber = (value: number): string => FormatNumber.format(value);
+
+export const formatNumberReport = (value: number): string => {
+  if (isNaN(value)) {
+    return "";
+  }
+  if (value < 0) {
+    const formatted = FormatNumber.format(Math.abs(value))
+    return `(${formatted})`
+  }
+  return FormatNumber.format(value);
+};
+
+export const convertDateOnly = (date: Date) => {
+  return new Date(date).toLocaleString("id-ID", { dateStyle: "long" });
+
+};

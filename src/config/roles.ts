@@ -76,6 +76,8 @@ const allRoles = {
     'getMultipleUoms',
     'getLogActivities',
     'manageGeneralSettings',
+    'getBalanceSheet',
+    'getDebtReceivable',
   ]
 };
 

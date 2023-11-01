@@ -1,4 +1,4 @@
-import { BalanceSheet, Vector } from '@prisma/client';
+// import { BalanceSheet, Vector } from '@prisma/client';
 import Joi from 'joi';
 
 const createAccountClass = {
@@ -6,8 +6,8 @@ const createAccountClass = {
     code: Joi.string().required(),
     group: Joi.string(),
     name: Joi.string().required(),
-    type: Joi.string().required().valid(BalanceSheet.AKTIVA, BalanceSheet.PASIVA),
-    balanceSheetPosition: Joi.string().required().valid(Vector.POSITIVE, Vector.NEGATIVE),
+    // type: Joi.string().required().valid(BalanceSheet.AKTIVA, BalanceSheet.PASIVA),
+    // balanceSheetPosition: Joi.string().required().valid(Vector.POSITIVE, Vector.NEGATIVE),
   })
 };
 
@@ -53,8 +53,8 @@ const updateAccountClass = {
       code: Joi.string(),
       group: Joi.string(),
       name: Joi.string(),
-      type: Joi.string().valid(BalanceSheet.AKTIVA, BalanceSheet.PASIVA),
-      balanceSheetPosition: Joi.string().valid(Vector.POSITIVE, Vector.NEGATIVE),
+      // type: Joi.string().valid(BalanceSheet.AKTIVA, BalanceSheet.PASIVA),
+      // balanceSheetPosition: Joi.string().valid(Vector.POSITIVE, Vector.NEGATIVE),
     })
     .min(1)
 };

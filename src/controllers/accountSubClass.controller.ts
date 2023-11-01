@@ -10,8 +10,7 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createAccountSubClass = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
-  const { accountClassId, code, group, name, balanceSheetPosition } = req.body;
-  const accountSubClass = await accountSubClassService.createAccountSubClass({ accountClassId, code, group, name, balanceSheetPosition, createdBy: user.email });
+  const accountSubClass = await accountSubClassService.createAccountSubClass({ ...req.body, createdBy: user.email });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Account Sub Class",

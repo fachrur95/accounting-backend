@@ -10,8 +10,7 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createTax = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { name, rate, note, isActive } = req.body;
-  const tax = await taxService.createTax({ name, rate, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
+  const tax = await taxService.createTax({ ...req.body, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Tax",

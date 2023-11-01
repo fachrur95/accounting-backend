@@ -10,8 +10,7 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createTerm = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { name, period, note, isActive } = req.body;
-  const term = await termService.createTerm({ name, period, note, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
+  const term = await termService.createTerm({ ...req.body, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Term",

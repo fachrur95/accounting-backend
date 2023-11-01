@@ -13,6 +13,7 @@ const updateGeneralSetting = {
         RecalculateMethod.FIFO,
         RecalculateMethod.MANUAL,
       ),
+      currentProfitAccountId: Joi.string(),
       debitAccountId: Joi.string(),
       creditAccountId: Joi.string(),
     })

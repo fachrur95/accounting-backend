@@ -23,7 +23,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     categoryClassCode: 1,
     type: "AKTIVA",
     code: "110",
-    name: "Aktiva lancar",
+    name: "Aktiva Lancar",
     balanceSheetPosition: "POSITIVE",
     profitLossPosition: "POSITIVE",
     createdBy: "system",
@@ -32,7 +32,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
         data: [
           {
             cashFlow: "Operasi",
-            subCashFlow: "Penerimaan dari pelanggan",
+            subCashFlow: "Penerimaan Dari Pelanggan",
             code: "130",
             name: "Piutang Usaha",
             balanceSheetPosition: "POSITIVE",
@@ -41,7 +41,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Penerimaan dari pelanggan",
+            subCashFlow: "Penerimaan Dari Pelanggan",
             code: "131",
             name: "Piutang Giro",
             balanceSheetPosition: "POSITIVE",
@@ -50,7 +50,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Penerimaan lainnya",
+            subCashFlow: "Penerimaan Lainnya",
             code: "132",
             name: "Piutang Lainnya",
             balanceSheetPosition: "POSITIVE",
@@ -68,7 +68,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Penerimaan dari pelanggan",
+            subCashFlow: "Penerimaan Dari Pelanggan",
             code: "150",
             name: "Pendapatan Yang Masih Harus Diterima",
             balanceSheetPosition: "POSITIVE",
@@ -77,7 +77,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Pembayaran ke pemasok",
+            subCashFlow: "Pembayaran Ke Pemasok",
             code: "151",
             name: "Uang Muka Pembelian",
             balanceSheetPosition: "POSITIVE",
@@ -86,7 +86,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Pembayaran ke pemasok",
+            subCashFlow: "Pembayaran Ke Pemasok",
             code: "152",
             name: "Beban Dibayar Dimuka",
             balanceSheetPosition: "POSITIVE",
@@ -122,7 +122,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Aktiva lancar lainnya",
+            subCashFlow: "Aktiva Lancar Lainnya",
             code: "159",
             name: "Aktiva Lancar Lainnya",
             balanceSheetPosition: "POSITIVE",
@@ -138,7 +138,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     categoryClassCode: 1,
     type: "AKTIVA",
     code: "120",
-    name: "Kas dan setara kas",
+    name: "Kas dan Setara Kas",
     balanceSheetPosition: "POSITIVE",
     profitLossPosition: "POSITIVE",
     createdBy: "system",
@@ -181,7 +181,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
         data: [
           {
             cashFlow: "Operasi",
-            subCashFlow: "Pembayaran ke pemasok",
+            subCashFlow: "Pembayaran Ke Pemasok",
             code: "140",
             name: "Persediaan",
             balanceSheetPosition: "POSITIVE",
@@ -190,7 +190,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Pembayaran ke pemasok",
+            subCashFlow: "Pembayaran Ke Pemasok",
             code: "141",
             name: "Persediaan Barang Setengah Jadi",
             balanceSheetPosition: "POSITIVE",
@@ -199,7 +199,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Pembayaran ke pemasok",
+            subCashFlow: "Pembayaran Ke Pemasok",
             code: "142",
             name: "Persediaan Bahan Baku",
             balanceSheetPosition: "POSITIVE",
@@ -224,7 +224,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
         data: [
           {
             cashFlow: "Investasi",
-            subCashFlow: "Perolehan/ Penjualan asset",
+            subCashFlow: "Perolehan/ Penjualan Asset",
             code: "160",
             name: "Tanah",
             balanceSheetPosition: "POSITIVE",
@@ -233,7 +233,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Investasi",
-            subCashFlow: "Perolehan/ Penjualan asset",
+            subCashFlow: "Perolehan/ Penjualan Asset",
             code: "161",
             name: "Bangunan",
             balanceSheetPosition: "POSITIVE",
@@ -242,7 +242,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Investasi",
-            subCashFlow: "Perolehan/ Penjualan asset",
+            subCashFlow: "Perolehan/ Penjualan Asset",
             code: "162",
             name: "Kendaraan",
             balanceSheetPosition: "POSITIVE",
@@ -251,7 +251,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Investasi",
-            subCashFlow: "Perolehan/ Penjualan asset",
+            subCashFlow: "Perolehan/ Penjualan Asset",
             code: "163",
             name: "Mesin dan Peralatan",
             balanceSheetPosition: "POSITIVE",
@@ -260,7 +260,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Investasi",
-            subCashFlow: "Perolehan/ Penjualan asset",
+            subCashFlow: "Perolehan/ Penjualan Asset",
             code: "164",
             name: "Peralatan Kantor",
             balanceSheetPosition: "POSITIVE",
@@ -269,7 +269,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Investasi",
-            subCashFlow: "Perolehan/ Penjualan asset",
+            subCashFlow: "Perolehan/ Penjualan Asset",
             code: "169",
             name: "Aktiva Tetap Lainnya",
             balanceSheetPosition: "POSITIVE",
@@ -339,7 +339,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     categoryClassCode: 2,
     type: "AKTIVA",
     code: "150",
-    name: "Aktiva tidak berwujud",
+    name: "Aktiva Tidak Berwujud",
     balanceSheetPosition: "POSITIVE",
     profitLossPosition: "POSITIVE",
     createdBy: "system",
@@ -357,7 +357,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Investasi",
-            subCashFlow: "Aktiva tidak berwujud lainnya",
+            subCashFlow: "Aktiva Tidak Berwujud Lainnya",
             code: "199",
             name: "Aktiva Tidak Berwujud Lainnya",
             balanceSheetPosition: "POSITIVE",
@@ -373,7 +373,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     categoryClassCode: 3,
     type: "PASIVA",
     code: "210",
-    name: "kewajiban jangka pendek",
+    name: "Kewajiban Jangka Pendek",
     balanceSheetPosition: "NEGATIVE",
     profitLossPosition: "POSITIVE",
     createdBy: "system",
@@ -382,7 +382,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
         data: [
           {
             cashFlow: "Operasi",
-            subCashFlow: "Pembayaran ke pemasok",
+            subCashFlow: "Pembayaran Ke Pemasok",
             code: "210",
             name: "Utang Usaha",
             balanceSheetPosition: "NEGATIVE",
@@ -391,7 +391,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Pembayaran ke pemasok",
+            subCashFlow: "Pembayaran Ke Pemasok",
             code: "211",
             name: "Utang Giro",
             balanceSheetPosition: "NEGATIVE",
@@ -418,7 +418,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Penerimaan dari pelanggan",
+            subCashFlow: "Penerimaan Dari Pelanggan",
             code: "221",
             name: "Uang Muka Penjualan",
             balanceSheetPosition: "NEGATIVE",
@@ -470,7 +470,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     categoryClassCode: 4,
     type: "PASIVA",
     code: "220",
-    name: "Kewajiban jangka panjang",
+    name: "Kewajiban Jangka Panjang",
     balanceSheetPosition: "NEGATIVE",
     profitLossPosition: "POSITIVE",
     createdBy: "system",
@@ -479,7 +479,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
         data: [
           {
             cashFlow: "Keuangan",
-            subCashFlow: "Penerimaan / pembayaran hutang bank",
+            subCashFlow: "Penerimaan/ Pembayaran Hutang Bank",
             code: "250",
             name: "Utang Bank",
             balanceSheetPosition: "NEGATIVE",
@@ -488,7 +488,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Keuangan",
-            subCashFlow: "Penerimaan / pembayaran hutang lainnya",
+            subCashFlow: "Penerimaan/ Pembayaran Hutang Lainnya",
             code: "299",
             name: "Utang Jangka Panjang Lainnya",
             balanceSheetPosition: "NEGATIVE",
@@ -543,7 +543,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     }
   },
   {
-    categoryClass: "CURRENT_ASSET",
+    categoryClass: "NET_PROFIT",
     categoryClassCode: 6,
     type: "PASIVA",
     code: "390",
@@ -568,7 +568,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     }
   },
   {
-    categoryClass: "CURRENT_ASSET",
+    categoryClass: "REVENUE",
     categoryClassCode: 7,
     type: "PASIVA",
     code: "410",
@@ -581,7 +581,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
         data: [
           {
             cashFlow: "Operasi",
-            subCashFlow: "Penerimaan dari pelanggan",
+            subCashFlow: "Penerimaan Dari Pelanggan",
             code: "410",
             name: "Penjualan",
             balanceSheetPosition: "NEGATIVE",
@@ -590,7 +590,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Penerimaan dari pelanggan",
+            subCashFlow: "Penerimaan Dari Pelanggan",
             code: "420",
             name: "Retur Penjualan",
             balanceSheetPosition: "NEGATIVE",
@@ -599,7 +599,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Penerimaan dari pelanggan",
+            subCashFlow: "Penerimaan Dari Pelanggan",
             code: "430",
             name: "Diskon Penjualan",
             balanceSheetPosition: "NEGATIVE",
@@ -611,7 +611,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     }
   },
   {
-    categoryClass: "CURRENT_ASSET",
+    categoryClass: "COGS",
     categoryClassCode: 8,
     type: "PASIVA",
     code: "510",
@@ -681,7 +681,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     }
   },
   {
-    categoryClass: "CURRENT_ASSET",
+    categoryClass: "COGM",
     categoryClassCode: 8,
     type: "PASIVA",
     code: "520",
@@ -715,7 +715,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     }
   },
   {
-    categoryClass: "CURRENT_ASSET",
+    categoryClass: "EXPENSE",
     categoryClassCode: 9,
     type: "PASIVA",
     code: "610",
@@ -821,11 +821,11 @@ const defaultAccountClass: ICreateAccountClass[] = [
     }
   },
   {
-    categoryClass: "CURRENT_ASSET",
+    categoryClass: "OTHER_REVENUE",
     categoryClassCode: 10,
     type: "PASIVA",
     code: "710",
-    name: "Pendapatan lain lain",
+    name: "Pendapatan Lain Lain",
     balanceSheetPosition: "NEGATIVE",
     profitLossPosition: "NEGATIVE",
     createdBy: "system",
@@ -879,7 +879,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
           },
           {
             cashFlow: "Operasi",
-            subCashFlow: "Pendapatan lainnya",
+            subCashFlow: "Pendapatan Lainnya",
             code: "799",
             name: "Pendapatan Non Operasional Lainnya",
             balanceSheetPosition: "NEGATIVE",
@@ -891,11 +891,11 @@ const defaultAccountClass: ICreateAccountClass[] = [
     }
   },
   {
-    categoryClass: "CURRENT_ASSET",
+    categoryClass: "OTHER_EXPENSE",
     categoryClassCode: 11,
     type: "PASIVA",
     code: "810",
-    name: "Beban lain lain",
+    name: "Beban Lain Lain",
     balanceSheetPosition: "POSITIVE",
     profitLossPosition: "POSITIVE",
     createdBy: "system",
@@ -925,7 +925,7 @@ const defaultAccountClass: ICreateAccountClass[] = [
     }
   },
   {
-    categoryClass: "CURRENT_ASSET",
+    categoryClass: "TAX",
     categoryClassCode: 12,
     type: "PASIVA",
     code: "910",

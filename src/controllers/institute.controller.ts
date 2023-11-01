@@ -10,8 +10,7 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createInstitute = catchAsync(async (req, res) => {
   const user = req.user as SessionData;
-  const { name } = req.body;
-  const institute = await instituteService.createInstitute({ name, createdBy: user.email });
+  const institute = await instituteService.createInstitute({ ...req.body, createdBy: user.email });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Institute",

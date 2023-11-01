@@ -50,6 +50,7 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
           include: {
             creditAccount: true,
             debitAccount: true,
+            currentProfitAccount: true,
           }
         },
       }

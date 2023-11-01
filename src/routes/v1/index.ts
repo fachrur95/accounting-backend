@@ -21,6 +21,7 @@ import priceBookRoute from './priceBook.route';
 import transactionRoute from './transaction.route';
 import logActivityRoute from './logActivity.route';
 import generalSettingRoute from './generalSetting.route';
+import reportRoute from './report.route';
 // import uploadRoute from './upload.route';
 import docsRoute from './docs.route';
 import config from '../../config/config';
@@ -107,6 +108,10 @@ const defaultRoutes = [
   {
     path: '/transactions',
     route: transactionRoute
+  },
+  {
+    path: '/reports',
+    route: reportRoute
   },
   {
     path: '/general-settings',

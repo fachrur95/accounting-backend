@@ -11,40 +11,14 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createItem = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const {
-    itemCategoryId,
-    taxId,
-    code,
-    name,
-    description,
-    manualCogs,
-    price,
-    minQty,
-    maxQty,
-    note,
-    isActive,
-    multipleUoms,
-  } = req.body;
+  const { files, ...data } = req.body;
 
   const images = req.files as File[];
-  const imagesBase64 = req.body.files as string[];
-  // const images2 = (req.files as Express.Multer.File[]).map((file) => file.buffer);
-  // console.log({ images, images2 });
+  const imagesBase64 = files as string[];
+
   const item = await itemService.createItem({
-    itemCategoryId,
-    taxId,
-    code,
-    name,
-    description,
-    manualCogs,
-    price,
-    minQty,
-    maxQty,
-    note,
-    isActive,
-    multipleUoms,
+    ...data,
     fileImages: images ?? imagesBase64,
-    // base64Images: imagesBase64,
     createdBy: user.email,
     unitId: user.session.unit?.id ?? ""
   });
@@ -118,37 +92,14 @@ const scanBarcode = catchAsync(async (req, res) => {
 
 const updateItem = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const {
-    itemCategoryId,
-    taxId,
-    code,
-    name,
-    description,
-    manualCogs,
-    price,
-    minQty,
-    maxQty,
-    note,
-    isActive,
-    multipleUoms,
-  } = req.body;
+  const { files, ...data } = req.body;
+
   const images = req.files as File[];
-  const imagesBase64 = req.body.files as string[];
+  const imagesBase64 = files as string[];
   const item = await itemService.updateItemById(
     req.params.itemId,
     {
-      itemCategoryId,
-      taxId,
-      code,
-      name,
-      description,
-      manualCogs,
-      price,
-      minQty,
-      maxQty,
-      note,
-      isActive,
-      multipleUoms,
+      ...data,
       fileImages: images ?? imagesBase64,
       createdBy: user.email,
       updatedBy: user.email,

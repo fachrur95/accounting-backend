@@ -12,6 +12,7 @@ const updateGeneralSettingById = async <Key extends keyof GeneralSetting>(
   updateBody: Prisma.GeneralSettingUncheckedUpdateInput,
   keys: Key[] = ['id', 'companyName', 'unitId'] as Key[]
 ): Promise<Pick<GeneralSetting, Key> | null> => {
+  console.log({ updateBody })
   const updatedGeneralSetting = await prisma.generalSetting.update({
     where: { unitId },
     data: updateBody,

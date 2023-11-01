@@ -10,8 +10,7 @@ import pickNestedSort from '../utils/pickNestedSort';
 
 const createChartOfAccount = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const { accountSubClassId, code, group, name, isActive } = req.body;
-  const chartOfAccount = await chartOfAccountService.createChartOfAccount({ accountSubClassId, code, group, name, isActive, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
+  const chartOfAccount = await chartOfAccountService.createChartOfAccount({ ...req.body, createdBy: user.email, unitId: user.session.unit?.id ?? "" });
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Create Chart Of Account",
