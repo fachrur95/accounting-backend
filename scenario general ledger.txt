@@ -59,4 +59,4 @@ JOURNAL UMUM
 semua mengikuti barisnya masing2
 
 
-    "build": "set NODE_OPTIONS=--max-old-space-size=16192 && next build",
+"build": "set NODE_OPTIONS=--max-old-space-size=16192 && next build",

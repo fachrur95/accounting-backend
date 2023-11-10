@@ -1,6 +1,37 @@
 import Joi from 'joi';
 
-const getBalanceSheet = {
+const getTransactionDaily = {
+  params: Joi.object().keys({
+    type: Joi.string().valid('sales', 'purchase'),
+    startDate: Joi.date(),
+    endDate: Joi.date(),
+  }),
+};
+
+const getTransactionMonthly = {
+  params: Joi.object().keys({
+    type: Joi.string().valid('sales', 'purchase'),
+    startDate: Joi.date(),
+    endDate: Joi.date(),
+  }),
+};
+
+const getDebtReceivableTotal = {
+  params: Joi.object().keys({
+    type: Joi.string().valid('debt', 'receivable'),
+    startDate: Joi.date(),
+    endDate: Joi.date(),
+  }),
+};
+
+const getIncome = {
+  params: Joi.object().keys({
+    startDate: Joi.date(),
+    endDate: Joi.date(),
+  }),
+};
+
+const getExpense = {
   params: Joi.object().keys({
     startDate: Joi.date(),
     endDate: Joi.date(),
@@ -14,43 +45,11 @@ const getProfitLoss = {
   }),
 };
 
-const getBestSellingProduct = {
-  params: Joi.object().keys({
-    startDate: Joi.date(),
-    endDate: Joi.date(),
-  }),
-};
-
-const getCashFlow = {
-  params: Joi.object().keys({
-    startDate: Joi.date(),
-    endDate: Joi.date(),
-  }),
-};
-
-const getDebtReceivable = {
-  params: Joi.object().keys({
-    type: Joi.string().valid('debt', 'receivable'),
-    startDate: Joi.date(),
-    endDate: Joi.date(),
-  }),
-  query: Joi.object().keys({
-    partnerId: Joi.string(),
-  })
-};
-
-const getBankSummary = {
-  params: Joi.object().keys({
-    startDate: Joi.date(),
-    endDate: Joi.date(),
-  }),
-};
-
 export default {
-  getBalanceSheet,
-  getDebtReceivable,
+  getTransactionDaily,
+  getTransactionMonthly,
+  getDebtReceivableTotal,
+  getIncome,
+  getExpense,
   getProfitLoss,
-  getBestSellingProduct,
-  getCashFlow,
-  getBankSummary,
 };

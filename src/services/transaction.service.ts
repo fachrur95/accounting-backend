@@ -22,9 +22,9 @@ interface ICreateJournalEntryData extends Omit<Prisma.TransactionUncheckedCreate
   })[],
 }
 
-interface ICreateBeginBalanceStockData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
+interface ICreateBeginBalanceDebtReceivableData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
   transactionDetails: (Prisma.TransactionDetailCreateManyTransactionInput & {
-    cogsInput: number;
+    peopleId: string;
   })[],
 }
 
@@ -41,6 +41,13 @@ interface IUpdateJournalEntryData extends Omit<Prisma.TransactionUncheckedCreate
 
 interface ReduceAmount {
   dataLine: Prisma.TransactionDetailCreateManyTransactionInput[],
+  beforeTax: number,
+  taxValue: number,
+  total: number
+}
+
+interface ReduceAmountBeginBalanceDebtReceivable {
+  dataLine: (Prisma.TransactionDetailCreateManyTransactionInput & { peopleId: string })[],
   beforeTax: number,
   taxValue: number,
   total: number
@@ -135,6 +142,7 @@ const getLastBalanceCashRegister = async (unitId: string, cashRegisterId: string
     where: {
       unitId,
       cashRegisterId,
+      paymentType: 'CASH',
       entryDate: {
         gte: openDate,
       }
@@ -373,14 +381,32 @@ const createSell = async (
   }
   const { transactionDetails, ...rest } = data;
   const entryDate = new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
   const cashRegisterId = rest.cashRegisterId;
   let chartOfAccountId: string | undefined = undefined;
   if (cashRegisterId) {
     const cashRegister = await prisma.cashRegister.findUnique({ where: { id: cashRegisterId } });
 
-    if (cashRegister) {
+    if (cashRegister && rest.paymentType === 'CASH') {
       chartOfAccountId = cashRegister.mainAccountId;
     }
+  }
+  if (rest.paymentType === 'CASHLESS' && rest.chartOfAccountId) {
+    chartOfAccountId = rest.chartOfAccountId;
   }
 
   const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
@@ -491,6 +517,21 @@ const createPurchase = async (
   }
   const { transactionDetails, ...rest } = data;
   const entryDate = new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
 
   const dueDate = await generateDueDate(entryDate, rest.termId ?? undefined);
 
@@ -583,7 +624,6 @@ const createPurchase = async (
 
         const itemId = getItem.itemId;
         const cogs = checkNaN(detail.qty ? ((detail.total ?? 0) / detail.qty) : 0);
-        console.log({ cogs })
 
         const createDetail = await tx.transactionDetail.create({
           data: {
@@ -635,6 +675,21 @@ const createReceivablePayment = async (
   }
   const { transactionDetails, ...rest } = data;
   const entryDate = rest.entryDate ?? new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -709,6 +764,21 @@ const createDebtPayment = async (
   }
   const { transactionDetails, ...rest } = data;
   const entryDate = rest.entryDate ?? new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -782,6 +852,21 @@ const createRevenue = async (
   }
   const { transactionDetails, ...rest } = data;
   const entryDate = rest.entryDate ?? new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -856,6 +941,21 @@ const createExpense = async (
   }
   const { transactionDetails, ...rest } = data;
   const entryDate = rest.entryDate ?? new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -930,6 +1030,21 @@ const createJournalEntry = async (
   }
   const { transactionDetails, ...rest } = data;
   const entryDate = rest.entryDate ?? new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     const { debit, credit, ...restDetail } = detail;
@@ -1001,17 +1116,35 @@ const createJournalEntry = async (
  * @returns {Promise<Transaction>}
  */
 const createBeginBalanceStock = async (
-  data: ICreateBeginBalanceStockData
+  data: ICreateTransactionData
 ): Promise<Transaction> => {
   if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
   const { transactionDetails, ...rest } = data;
   const entryDate = new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
+    /* if (detail.qtyInput === 0) { // if want to skip zero value
+      return obj;
+    } */
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
-    const total = qty * (detail.cogsInput ?? 0);
+    const total = qty * (detail.priceInput ?? 0);
 
     obj.dataLine.push({
       ...detail,
@@ -1059,8 +1192,7 @@ const createBeginBalanceStock = async (
         }
 
         const itemId = getItem.itemId;
-
-        const cogs = checkNaN(detail.qty ? (detail.total ?? 0 / detail.qty) : 0);
+        const cogs = checkNaN(detail.qty ? ((detail.total ?? 0) / detail.qty) : 0);
 
         const createDetail = await tx.transactionDetail.create({
           data: {
@@ -1069,26 +1201,28 @@ const createBeginBalanceStock = async (
           }
         });
 
-        const dataCreateItemCogs = tx.itemCogs.create({
-          data: {
-            itemId,
-            qty: detail.qty ?? 0,
-            qtyStatic: detail.qty ?? 0,
-            cogs,
-            date: entryDate,
-            createdBy: rest.createdBy,
-            unitId: rest.unitId,
-            transactionDetailId: createDetail.id
+        if ((detail.qty ?? 0) > 0) {
+          const dataCreateItemCogs = tx.itemCogs.create({
+            data: {
+              itemId,
+              qty: detail.qty ?? 0,
+              qtyStatic: detail.qty ?? 0,
+              cogs,
+              date: entryDate,
+              createdBy: rest.createdBy,
+              unitId: rest.unitId,
+              transactionDetailId: createDetail.id
+            }
+          });
+
+          await Promise.all([dataCreateItemCogs]);
+
+          if (method === "MANUAL") {
+            updateItem.push(tx.item.update({
+              where: { id: itemId },
+              data: { manualCogs: cogs },
+            }));
           }
-        });
-
-        await Promise.all([dataCreateItemCogs]);
-
-        if (method === "MANUAL") {
-          updateItem.push(tx.item.update({
-            where: { id: itemId },
-            data: { manualCogs: cogs },
-          }));
         }
       }
 
@@ -1099,6 +1233,100 @@ const createBeginBalanceStock = async (
       await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
 
       return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Create a beginning balance debt/ receive transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createBeginBalanceDebtReceive = async (
+  data: ICreateBeginBalanceDebtReceivableData,
+): Promise<{ message: string }> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetails, ...rest } = data;
+  const entryDate = new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    /* if (detail.qtyInput === 0) { // if want to skip zero value
+      return obj;
+    } */
+    const total = (detail.priceInput ?? 0);
+
+    obj.dataLine.push({
+      ...detail,
+      total,
+      vector: "POSITIVE",
+      createdBy: rest.createdBy
+    });
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmountBeginBalanceDebtReceivable);
+
+  const { dataLine } = details;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      for (const detail of dataLine) {
+        const { peopleId, ...data } = detail;
+        const getPeople = await tx.people.findUnique({
+          where: {
+            id: peopleId ?? "",
+          },
+        });
+
+        if (!getPeople) {
+          throw new ApiError(httpStatus.NOT_FOUND, "People not found");
+        }
+
+        const transactionNumber = await generateTransactionNumber(rest.transactionType, rest.unitId);
+
+        const resTransaction = await tx.transaction.create({
+          data: {
+            ...rest,
+            transactionNumber,
+            peopleId,
+            entryDate,
+            total: detail.priceInput,
+            underPayment: detail.priceInput,
+          }
+        });
+
+        await tx.transactionDetail.create({
+          data: {
+            ...data,
+            transactionId: resTransaction.id
+          }
+        });
+        await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
+
+        await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, transactionNumber);
+      }
+
+      return { message: `Success create ${dataLine.length} transaction` };
     }, {
       isolationLevel: 'Serializable'
     });
@@ -1137,6 +1365,7 @@ const queryTransactions = async <Key extends keyof Transaction>(
     'note',
     'total',
     'totalPayment',
+    'paymentType',
     'createdBy',
     'createdAt',
     'updatedBy',
@@ -1219,6 +1448,7 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
     'paymentInput',
     'specialDiscount',
     'discountGroupInput',
+    'paymentType',
     'entryDate',
     'dueDate',
     'note',
@@ -1300,7 +1530,7 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
     select: {
       ...keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
       ...additionalSelect,
-    }
+    },
   }) as Promise<Pick<TransactionWithInclude, Key> | null>;
 };
 
@@ -1356,11 +1586,11 @@ const updateSellById = async <Key extends keyof Transaction>(
 
   if (
     lastFinancialClosing &&
-    new Date(lastFinancialClosing.entryDate) < new Date(entryDate as Date)
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
   ) {
     throw new ApiError(
       httpStatus.FORBIDDEN,
-      "You cannot recalculate COGS on the closing date."
+      "You cannot modify transaction on the closed date."
     );
   }
 
@@ -1381,54 +1611,26 @@ const updateSellById = async <Key extends keyof Transaction>(
 
   const { transactionDetails, ...rest } = updateBody;
 
-  const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
-
-  const totalAll = transactionDetails.reduce((total, detail) => {
-    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
-    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
-    const amount = (qty * afterDiscount);
-    return total + amount;
-  }, 0);
-
-  const discountGroupInput = rest.discountGroupInput ?? 0;
-  const specialDiscount = rest.specialDiscount ?? 0;
-  const specialDiscountValue = (specialDiscount / 100) * totalAll;
-
-  const additionalDiscount = discountGroupInput + specialDiscountValue;
-
   const details = transactionDetails.reduce((obj, detail) => {
+    /* if (detail.qtyInput === 0) { // if want to skip zero value
+      return obj;
+    } */
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
-    const beforeDiscount = qty * (detail.priceInput ?? 0);
-    const discount = qty * (detail.discountInput ?? 0);
-    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
-    const amountBefore = (qty * afterDiscount);
-    const distribute = amountBefore / totalAll;
-    const distributeValue = additionalDiscount * distribute;
-    const amount = amountBefore - distributeValue;
-    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
-    const total = amount + taxValue;
+    const total = qty * (detail.priceInput ?? 0);
 
     obj.dataLine.push({
       ...detail,
       qty,
-      beforeDiscount,
-      discount,
-      distribute,
-      distributeValue,
-      amount,
-      taxValue,
       total,
-      vector: "NEGATIVE",
+      vector: "POSITIVE",
       createdBy: rest.createdBy
     });
-    obj.beforeTax += amount;
-    obj.taxValue += taxValue;
     obj.total += total;
     return obj;
   }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
 
 
-  const { dataLine, beforeTax, taxValue, total } = details;
+  const { dataLine, total } = details;
 
   const dataLineBecome: DetailCompare[] = []
   for (const line of dataLine) {
@@ -1450,13 +1652,6 @@ const updateSellById = async <Key extends keyof Transaction>(
 
   const dataItemIds = getItemChanges(dataLineBefore, dataLineBecome);
 
-  const totalPayment = (rest.paymentInput ?? 0) <= total
-    ? (rest.paymentInput ?? 0)
-    : total;
-
-  const change = (rest.paymentInput ?? 0) - total;
-  const underPayment = total - totalPayment;
-
   try {
     return await prisma.$transaction(async (tx) => {
       const resTransaction = await tx.transaction.update({
@@ -1465,13 +1660,8 @@ const updateSellById = async <Key extends keyof Transaction>(
         },
         data: {
           ...rest,
-          dueDate,
-          beforeTax,
-          taxValue,
+          entryDate,
           total,
-          change,
-          totalPayment,
-          underPayment,
           transactionDetails: {
             deleteMany: {
               transactionId,
@@ -1498,7 +1688,6 @@ const updateSellById = async <Key extends keyof Transaction>(
         },
         select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
       });
-      console.log({ dataItemIds });
       const recalculateCogsItem = [];
       for (const itemId of dataItemIds) {
         recalculateCogsItem.push(itemCogsService.recalculateCogs(tx, itemId, rest.unitId));
@@ -1546,11 +1735,11 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
 
   if (
     lastFinancialClosing &&
-    new Date(lastFinancialClosing.entryDate) < new Date(entryDate as Date)
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
   ) {
     throw new ApiError(
       httpStatus.FORBIDDEN,
-      "You cannot recalculate COGS on the closing date."
+      "You cannot modify transaction on the closed date."
     );
   }
 
@@ -1694,7 +1883,7 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
         }
 
         const itemId = getItem.itemId;
-        const cogs = checkNaN(detail.qty ? (detail.total ?? 0 / detail.qty) : 0);
+        const cogs = checkNaN(detail.qty ? ((detail.total ?? 0) / detail.qty) : 0);
 
         const upsertDetail = await tx.transactionDetail.upsert({
           where: {
@@ -1774,6 +1963,21 @@ const updateReceivablePaymentById = async <Key extends keyof Transaction>(
   }
   const { transactionDetails, ...rest } = updateBody;
   const entryDate = rest.entryDate ?? transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -1877,6 +2081,21 @@ const updateDebtPaymentById = async <Key extends keyof Transaction>(
   }
   const { transactionDetails, ...rest } = updateBody;
   const entryDate = rest.entryDate ?? transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -1980,6 +2199,21 @@ const updateRevenueById = async <Key extends keyof Transaction>(
   }
   const { transactionDetails, ...rest } = updateBody;
   const entryDate = rest.entryDate ?? transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -2084,6 +2318,21 @@ const updateExpenseById = async <Key extends keyof Transaction>(
   }
   const { transactionDetails, ...rest } = updateBody;
   const entryDate = rest.entryDate ?? transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     // const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
@@ -2188,6 +2437,21 @@ const updateJournalEntryById = async <Key extends keyof Transaction>(
   }
   const { transactionDetails, ...rest } = updateBody;
   const entryDate = rest.entryDate ?? transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     const { debit, credit, ...restDetail } = detail;
@@ -2276,6 +2540,242 @@ const updateJournalEntryById = async <Key extends keyof Transaction>(
 };
 
 /**
+ * Update transaction sell by id
+ * @param {ObjectId} transactionId
+ * @param {Object} updateBody
+ * @returns {Promise<Transaction>}
+ */
+const updateBeginBalanceStockById = async <Key extends keyof Transaction>(
+  transactionId: string,
+  updateBody: IUpdateTransactionData,
+  keys: Key[] = ['id', 'transactionNumber'] as Key[]
+): Promise<Pick<Transaction, Key> | null> => {
+  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'transactionDetails', 'entryDate']);
+  if (!transaction) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
+  }
+  const checkName = await getTransactionByNumber(updateBody.transactionNumber as string, updateBody.unitId as string);
+  if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const entryDate = transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
+
+  const { transactionDetails: transactionDetailsBefore } = transaction;
+
+  const dataLineBefore = transactionDetailsBefore.reduce((arr, detail) => {
+    if (detail.multipleUom) {
+      arr.push({
+        id: detail.id,
+        itemId: detail.multipleUom.itemId,
+        qty: detail.qty,
+        price: detail.priceInput,
+        disc: detail.discountInput,
+      });
+    }
+    return arr;
+  }, [] as unknown as DetailCompare[]);
+
+  const { transactionDetails, ...rest } = updateBody;
+
+  const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
+
+  const totalAll = transactionDetails.reduce((total, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
+    const amount = (qty * afterDiscount);
+    return total + amount;
+  }, 0);
+
+  const discountGroupInput = rest.discountGroupInput ?? 0;
+  const specialDiscount = rest.specialDiscount ?? 0;
+  const specialDiscountValue = (specialDiscount / 100) * totalAll;
+
+  const additionalDiscount = discountGroupInput + specialDiscountValue;
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    console.log({ detail });
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = qty * (detail.priceInput ?? 0);
+    const discount = qty * (detail.discountInput ?? 0);
+    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
+    const amountBefore = (qty * afterDiscount);
+    const distribute = amountBefore / totalAll;
+    const distributeValue = additionalDiscount * distribute;
+    const amount = amountBefore - distributeValue;
+    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
+    const total = amount + taxValue;
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      beforeDiscount,
+      discount,
+      distribute,
+      distributeValue,
+      amount,
+      taxValue,
+      total,
+      vector: "POSITIVE",
+      updatedBy: rest.updatedBy
+    });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, beforeTax, taxValue, total } = details;
+
+  const dataLineBecome: DetailCompare[] = []
+  for (const line of dataLine) {
+    if (line.multipleUomId) {
+      const getItem = await prisma.multipleUom.findUnique({
+        where: { id: line.multipleUomId },
+        select: { itemId: true },
+      });
+      if (getItem) {
+        dataLineBecome.push({
+          itemId: getItem.itemId,
+          qty: line.qty ?? 0,
+          price: line.priceInput as number,
+          disc: line.discountInput as number,
+        })
+      }
+    }
+  }
+
+  const dataItemIds = getItemChanges(dataLineBefore, dataLineBecome);
+
+  const totalPayment = (rest.paymentInput ?? 0) <= total
+    ? (rest.paymentInput ?? 0)
+    : total;
+
+  const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.update({
+        where: {
+          id: transactionId,
+        },
+        data: {
+          ...rest,
+          dueDate,
+          beforeTax,
+          taxValue,
+          total,
+          change,
+          totalPayment,
+          underPayment,
+          transactionDetails: {
+            deleteMany: {
+              transactionId,
+              NOT: dataLine.map(({ id }) => ({ id }))
+            },
+          }
+        },
+        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+      });
+
+      for (const detail of dataLine) {
+        const getItem = await tx.multipleUom.findUnique({
+          where: {
+            id: detail.multipleUomId ?? "",
+          },
+          select: {
+            itemId: true,
+            item: {
+              select: {
+                name: true,
+              }
+            }
+          }
+        });
+
+        if (!getItem) {
+          throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
+        }
+
+        const itemId = getItem.itemId;
+        const cogs = checkNaN(detail.qty ? ((detail.total ?? 0) / detail.qty) : 0);
+
+        const upsertDetail = await tx.transactionDetail.upsert({
+          where: {
+            id: detail.id ?? "0",
+          },
+          create: {
+            ...detail,
+            transactionId,
+            createdBy: rest.updatedBy as string,
+          },
+          update: {
+            ...detail,
+            updatedBy: rest.updatedBy as string,
+          }
+        });
+
+        if ((detail.qty ?? 0) > 0) {
+          const dataUpsertItemCogs = tx.itemCogs.upsert({
+            where: {
+              transactionDetailId: detail.id ?? "0",
+            },
+            create: {
+              itemId,
+              qty: detail.qty ?? 0,
+              qtyStatic: detail.qty ?? 0,
+              cogs,
+              date: entryDate as Date,
+              unitId: rest.unitId,
+              transactionDetailId: upsertDetail.id,
+              createdBy: rest.updatedBy as string,
+            },
+            update: {
+              qtyStatic: detail.qty,
+              cogs,
+              date: entryDate as Date,
+              updatedBy: rest.updatedBy as string,
+            }
+          });
+
+          await Promise.all([dataUpsertItemCogs]);
+        }
+      }
+      const recalculateCogsItem = [];
+      for (const itemId of dataItemIds) {
+        recalculateCogsItem.push(itemCogsService.recalculateCogs(tx, itemId, rest.unitId));
+      }
+
+      await Promise.all(recalculateCogsItem);
+
+      await generalLedgerService.createGeneralLedger(tx, transactionId);
+
+      // Jika semua operasi berjalan lancar, transaksi akan di-commit
+      return resTransaction as Pick<Transaction, Key> | null;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
  * Update transaction by id
  * @param {ObjectId} transactionId
  * @param {Object} updateBody
@@ -2335,6 +2835,22 @@ const deleteTransactionById = async (transactionId: string): Promise<Transaction
   const transaction = await getTransactionById(transactionId);
   if (!transaction) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
+  }
+  const { unitId, entryDate } = transaction;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot delete transaction on the closed date."
+    );
   }
 
   const transactionDetail = transaction.transactionDetails.map((detail) => detail.multipleUom?.itemId);
@@ -2404,6 +2920,7 @@ export default {
   createExpense,
   createJournalEntry,
   createBeginBalanceStock,
+  createBeginBalanceDebtReceive,
   queryTransactions,
   getTransactionById,
   getTransactionByNumber,
@@ -2414,6 +2931,7 @@ export default {
   updateRevenueById,
   updateExpenseById,
   updateJournalEntryById,
+  updateBeginBalanceStockById,
   updateTransactionById,
   deleteTransactionById,
   generateTransactionNumber,

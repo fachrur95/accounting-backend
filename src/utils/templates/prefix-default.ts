@@ -12,7 +12,7 @@ const defaultPrefix: Omit<Prisma.PrefixCreateInput, "createdBy" | "unit">[] = [
     prefix: "PO",
   },
   {
-    name: "Pembelian Langsung",
+    name: "Pembelian",
     transactionType: "PURCHASE_INVOICE",
     prefix: "PI",
   },
@@ -32,7 +32,7 @@ const defaultPrefix: Omit<Prisma.PrefixCreateInput, "createdBy" | "unit">[] = [
     prefix: "SO",
   },
   {
-    name: "Penjualan Langsung",
+    name: "Penjualan",
     transactionType: "SALE_INVOICE",
     prefix: "SI",
   },

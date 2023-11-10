@@ -18,7 +18,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/sell')
   .post(
-    auth('manageTransactions'),
+    auth('createSell'),
     validate(transactionValidation.createSalesPurchase),
     transactionController.createSell
   );
@@ -26,7 +26,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/purchase')
   .post(
-    auth('manageTransactions'),
+    auth('createPurchase'),
     validate(transactionValidation.createSalesPurchase),
     transactionController.createBuy
   );
@@ -34,7 +34,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/receivable-payment')
   .post(
-    auth('manageTransactions'),
+    auth('createReceivablePayment'),
     validate(transactionValidation.createPayment),
     transactionController.createReceivablePayment
   );
@@ -42,7 +42,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/debt-payment')
   .post(
-    auth('manageTransactions'),
+    auth('createDebtPayment'),
     validate(transactionValidation.createPayment),
     transactionController.createDebtPayment
   );
@@ -50,7 +50,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/revenue')
   .post(
-    auth('manageTransactions'),
+    auth('createRevenue'),
     validate(transactionValidation.createLiability),
     transactionController.createRevenue
   );
@@ -58,7 +58,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/expense')
   .post(
-    auth('manageTransactions'),
+    auth('createExpense'),
     validate(transactionValidation.createLiability),
     transactionController.createExpense
   );
@@ -66,9 +66,33 @@ router.use(authSession())
 router.use(authSession())
   .route('/journal-entry')
   .post(
-    auth('manageTransactions'),
+    auth('createJournalEntry'),
     validate(transactionValidation.createJournalEntry),
     transactionController.createJournalEntry
+  );
+
+router.use(authSession())
+  .route('/beginning-balance-stock')
+  .post(
+    auth('createBeginBalanceStock'),
+    validate(transactionValidation.createBeginBalanceStock),
+    transactionController.createBeginBalanceStock
+  );
+
+router.use(authSession())
+  .route('/beginning-balance-debt')
+  .post(
+    auth('createBeginBalanceDebt'),
+    validate(transactionValidation.createBeginBalancePayment),
+    transactionController.createBeginBalanceDebt
+  );
+
+router.use(authSession())
+  .route('/beginning-balance-receivable')
+  .post(
+    auth('createBeginBalanceReceivable'),
+    validate(transactionValidation.createBeginBalancePayment),
+    transactionController.createBeginBalanceReceivable
   );
 
 router.use(authSession())
@@ -82,7 +106,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/sell/:transactionId')
   .patch(
-    auth('manageTransactions'),
+    auth('updateSell'),
     validate(transactionValidation.updateSalesPurchase),
     transactionController.updateSell
   );
@@ -90,7 +114,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/purchase/:transactionId')
   .patch(
-    auth('manageTransactions'),
+    auth('updatePurchase'),
     validate(transactionValidation.updateSalesPurchase),
     transactionController.updateBuy
   );
@@ -98,7 +122,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/receivable-payment/:transactionId')
   .patch(
-    auth('manageTransactions'),
+    auth('updateReceivablePayment'),
     validate(transactionValidation.updatePayment),
     transactionController.updateReceivablePayment
   );
@@ -106,7 +130,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/debt-payment/:transactionId')
   .patch(
-    auth('manageTransactions'),
+    auth('updateDebtPayment'),
     validate(transactionValidation.updatePayment),
     transactionController.updateDebtPayment
   );
@@ -114,7 +138,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/revenue/:transactionId')
   .patch(
-    auth('manageTransactions'),
+    auth('updateRevenue'),
     validate(transactionValidation.updateLiability),
     transactionController.updateRevenue
   );
@@ -122,7 +146,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/expense/:transactionId')
   .patch(
-    auth('manageTransactions'),
+    auth('updateExpense'),
     validate(transactionValidation.updateLiability),
     transactionController.updateExpense
   );
@@ -130,9 +154,17 @@ router.use(authSession())
 router.use(authSession())
   .route('/journal-entry/:transactionId')
   .patch(
-    auth('manageTransactions'),
+    auth('updateJournalEntry'),
     validate(transactionValidation.updateJournalEntry),
     transactionController.updateJournalEntry
+  );
+
+router.use(authSession())
+  .route('/beginning-balance-stock/:transactionId')
+  .patch(
+    auth('updateBeginBalanceStock'),
+    validate(transactionValidation.updateBeginBalanceStock),
+    transactionController.updateBeginBalanceStock
   );
 
 router.use(authSession())
@@ -165,7 +197,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/payment-draft/:type/:peopleId')
   .get(
-    auth('getTransactions'),
+    auth('getPaymentDraft'),
     validate(transactionValidation.getPaymentDraft),
     transactionController.getPaymentDraft
   );
@@ -173,7 +205,7 @@ router.use(authSession())
 router.use(authSession())
   .route('/cash-register/open')
   .post(
-    auth('manageTransactions'),
+    auth('openCashRegister'),
     validate(transactionValidation.openCashRegister),
     transactionController.openCashRegister
   );
@@ -181,28 +213,10 @@ router.use(authSession())
 router.use(authSession())
   .route('/cash-register/close')
   .post(
-    auth('manageTransactions'),
+    auth('closeCashRegister'),
     validate(transactionValidation.closeCashRegister),
     transactionController.closeCashRegister
   );
-
-/* router.use(authSession())
-  .route('/:transactionId')
-  .get(
-    auth('getTransactions'),
-    validate(transactionValidation.getTransaction),
-    transactionController.getTransaction
-  )
-  .patch(
-    auth('manageTransactions'),
-    validate(transactionValidation.updateTransaction),
-    transactionController.updateTransaction
-  )
-  .delete(
-    auth('manageTransactions'),
-    validate(transactionValidation.deleteTransaction),
-    transactionController.deleteTransaction
-  ); */
 
 export default router;
 

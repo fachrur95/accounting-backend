@@ -194,6 +194,8 @@ model CashRegister {
 model GeneralSetting {
   id                     String            @id @default(cuid())
   companyName            String
+  leader                 String?
+  accountant             String?
   recalculateMethod      RecalculateMethod @default(FIFO)
   isStrictMode           Boolean           @default(true)
   createdAt              DateTime          @default(now())
@@ -455,6 +457,7 @@ model Transaction {
   paymentInput              Float               @default(0)
   specialDiscount           Float               @default(0)
   discountGroupInput        Float               @default(0)
+  paymentType               PaymentType         @default(CASH)
   change                    Float               @default(0)
   beforeTax                 Float               @default(0)
   taxValue                  Float               @default(0)
@@ -537,6 +540,8 @@ model FinancialClosing {
   entryDate DateTime @default(now())
   createdAt DateTime @default(now())
   createdBy String
+  updatedAt DateTime @updatedAt
+  updatedBy String?
   unit      Unit     @relation(fields: [unitId], references: [id])
   unitId    String
 }
@@ -666,6 +671,11 @@ enum RecalculateMethod {
   AVG
   FIFO
   MANUAL
+}
+
+enum PaymentType {
+  CASH
+  CASHLESS
 }
 
 enum BalanceSheet {

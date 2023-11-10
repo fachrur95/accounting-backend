@@ -191,6 +191,63 @@ const createJournalEntry = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send(transaction);
 });
 
+const createBeginBalanceStock = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+
+  const transaction = await transactionService.createBeginBalanceStock({
+    ...req.body,
+    transactionType: "BEGINNING_BALANCE_STOCK",
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Buat Transaksi Saldo Awal Stok Barang",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
+const createBeginBalanceDebt = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+
+  const transaction = await transactionService.createBeginBalanceDebtReceive({
+    ...req.body,
+    transactionType: "BEGINNING_BALANCE_DEBT",
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Buat Transaksi Saldo Awal Hutang",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
+const createBeginBalanceReceivable = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+
+  const transaction = await transactionService.createBeginBalanceDebtReceive({
+    ...req.body,
+    transactionType: "BEGINNING_BALANCE_RECEIVABLE",
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Buat Transaksi Saldo Awal Piutang",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
 const getLastBalanceCashRegister = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   if (!user.session?.unit?.id || !user.session.cashRegister) {
@@ -235,9 +292,12 @@ const getPaymentDraft = catchAsync(async (req, res) => {
 
 const getTransactions = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const filter = pick(req.query, ['name', 'unitId', 'transactionType']);
+  const filter = pick(req.query, ['name', 'unitId', 'transactionType', 'createdBy']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
   filter.unitId = user.session?.unit?.id;
+  if (user.role === "USER") {
+    filter.createdBy = user.email;
+  }
   const conditions = pickNested(req.query?.filters as FiltersType);
   const multipleSort = pickNestedSort(req.query?.sorts as SortType[]);
   const result = await transactionService.queryTransactions(filter, options, conditions, multipleSort);
@@ -255,6 +315,11 @@ const getTransaction = catchAsync(async (req, res) => {
   const transaction = await transactionService.getTransactionById(req.params.transactionId);
   if (!transaction) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
+  }
+  if (user.role === "USER") {
+    if (transaction.createdBy !== user.email) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'This Transaction is forbidden for you');
+    }
   }
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
@@ -384,6 +449,23 @@ const updateJournalEntry = catchAsync(async (req, res) => {
   res.send(transaction);
 });
 
+const updateBeginBalanceStock = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateBeginBalanceStockById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Mengubah Saldo Awal Stock",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
 const updateTransaction = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const transaction = await transactionService.updateTransactionById(req.params.transactionId, {
@@ -431,6 +513,9 @@ export default {
   createRevenue,
   createExpense,
   createJournalEntry,
+  createBeginBalanceStock,
+  createBeginBalanceDebt,
+  createBeginBalanceReceivable,
   updateSell,
   updateBuy,
   updateReceivablePayment,
@@ -438,6 +523,7 @@ export default {
   updateRevenue,
   updateExpense,
   updateJournalEntry,
+  updateBeginBalanceStock,
   getTransactions,
   getTransaction,
   updateTransaction,

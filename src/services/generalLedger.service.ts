@@ -69,6 +69,15 @@ const createGeneralLedger = async (
         await detailPurchase(tx, generalLedger.id, transactionId);
         break;
 
+      case "BEGINNING_BALANCE_STOCK":
+        await detailBeginBalanceStock(tx, generalLedger.id, transactionId);
+        break;
+
+      case "BEGINNING_BALANCE_DEBT":
+      case "BEGINNING_BALANCE_RECEIVABLE":
+        await detailBeginBalanceDebtReceivable(tx, generalLedger.id, transactionId);
+        break;
+
       case "SALE_INVOICE":
         await detailSale(tx, generalLedger.id, transactionId);
         break;
@@ -267,7 +276,7 @@ const detailPayment = async (
     const { transactionDetails, ...data } = transaction;
 
     const coreAccountId = data.chartOfAccountId;
-    
+
     const generalSetting = await tx.generalSetting.findUnique({
       where: { unitId: transaction.unitId },
       select: {
@@ -424,6 +433,156 @@ const detailPurchase = async (
   }
 }
 
+const detailBeginBalanceStock = async (
+  tx: TransactionMethod,
+  generalLedgerId: string,
+  transactionId: string,
+): Promise<void> => {
+  try {
+    const transaction = await tx.transaction.findUnique({
+      where: { id: transactionId },
+      include: {
+        transactionDetails: {
+          include: {
+            multipleUom: {
+              include: {
+                item: {
+                  include: {
+                    itemCategory: {
+                      select: {
+                        cogsAccountId: true,
+                        stockAccountId: true,
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+    });
+    if (!transaction) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Transaction Not Found');
+    }
+
+    const { transactionDetails, ...data } = transaction;
+
+    const dataDetail: ReduceAccountLine[] = [];
+
+    const coreAccountId = data.chartOfAccountId;
+
+    if (!coreAccountId) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Choose Account first');
+    }
+
+    for (const detail of transactionDetails) {
+      if (!detail.multipleUom || !detail.multipleUom.item.itemCategory.stockAccountId) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'Barang Anda tidak terafiliasi dengan akun persediaan.');
+      }
+      if (detail.total > 0) {
+        dataDetail.push({
+          accountId: coreAccountId,
+          itemId: detail.multipleUom.itemId,
+          amount: detail.total,
+          vector: "NEGATIVE",
+          createdBy: data.createdBy,
+        });
+
+        dataDetail.push({
+          accountId: detail.multipleUom.item.itemCategory.stockAccountId,
+          itemId: detail.multipleUom.itemId,
+          amount: detail.total,
+          vector: "POSITIVE",
+          createdBy: data.createdBy,
+        });
+      }
+    }
+
+    await tx.generalLedgerDetail.createMany({
+      data: dataDetail.map((detail) => {
+        const { accountId, ...restDetail } = detail;
+        return ({
+          ...restDetail,
+          chartOfAccountId: accountId,
+          generalLedgerId,
+        })
+      })
+    });
+  } catch (error) {
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
+}
+
+const detailBeginBalanceDebtReceivable = async (
+  tx: TransactionMethod,
+  generalLedgerId: string,
+  transactionId: string,
+): Promise<void> => {
+  try {
+    const transaction = await tx.transaction.findUnique({
+      where: { id: transactionId },
+      include: {
+        transactionDetails: true,
+      },
+    });
+    if (!transaction) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Transaction Not Found');
+    }
+
+    const { transactionDetails, ...data } = transaction;
+
+    const dataDetail: ReduceAccountLine[] = [];
+
+    const coreAccountId = data.chartOfAccountId;
+
+    if (!coreAccountId) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Choose Account first');
+    }
+    const generalSetting = await tx.generalSetting.findUnique({
+      where: { unitId: transaction.unitId },
+      select: {
+        debitAccountId: true,
+        creditAccountId: true,
+      }
+    });
+    if (!generalSetting || !generalSetting.debitAccountId || !generalSetting.creditAccountId) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'General Setting Not Found');
+    }
+
+    for (const detail of transactionDetails) {
+      if (detail.total > 0) {
+        dataDetail.push({
+          accountId: coreAccountId,
+          amount: detail.total,
+          vector: detail.vector,
+          createdBy: data.createdBy,
+        });
+
+        dataDetail.push({
+          accountId: transaction.transactionType === "BEGINNING_BALANCE_RECEIVABLE" ? generalSetting.creditAccountId : generalSetting.debitAccountId,
+          amount: detail.total,
+          vector: detail.vector === "POSITIVE" ? "NEGATIVE" : "POSITIVE",
+          createdBy: data.createdBy,
+        });
+      }
+    }
+
+    await tx.generalLedgerDetail.createMany({
+      data: dataDetail.map((detail) => {
+        const { accountId, ...restDetail } = detail;
+        return ({
+          ...restDetail,
+          chartOfAccountId: accountId,
+          generalLedgerId,
+        })
+      })
+    });
+  } catch (error) {
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
+}
+
 const detailSale = async (
   tx: TransactionMethod,
   generalLedgerId: string,
@@ -479,9 +638,20 @@ const detailSale = async (
 
     if (cashRegister) {
       const { mainAccountId } = cashRegister;
-      if (transaction.totalPayment > 0) {
+      if (transaction.totalPayment > 0 && transaction.paymentType === 'CASH') {
         dataDetail.push({
           accountId: mainAccountId,
+          amount: transaction.totalPayment,
+          vector: "POSITIVE",
+          createdBy: data.createdBy,
+        });
+      }
+      if (transaction.totalPayment > 0 && transaction.paymentType === 'CASHLESS') {
+        if (!transaction.chartOfAccountId) {
+          throw new ApiError(httpStatus.NOT_FOUND, 'COA of Cashless Not Found');
+        }
+        dataDetail.push({
+          accountId: transaction.chartOfAccountId,
           amount: transaction.totalPayment,
           vector: "POSITIVE",
           createdBy: data.createdBy,

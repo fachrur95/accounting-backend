@@ -1,106 +1,58 @@
 import express from 'express';
 import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
-import { reportValidation } from '../../validations';
-import { reportController } from '../../controllers';
+import { dashboardValidation } from '../../validations';
+import { dashboardController } from '../../controllers';
 import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
 router.use(authSession())
-  .route('/balance-sheet/:startDate/:endDate')
+  .route('/transaction-daily/:type/:startDate/:endDate')
   .get(
-    auth('getBalanceSheet'),
-    validate(reportValidation.getBalanceSheet),
-    reportController.getBalanceSheet
+    auth('getTransactionDaily'),
+    validate(dashboardValidation.getTransactionDaily),
+    dashboardController.getTransactionDaily
   );
 
 router.use(authSession())
-  .route('/balance-sheet/pdf/:startDate/:endDate')
+  .route('/transaction-monthly/:type/:startDate/:endDate')
   .get(
-    auth('getBalanceSheet'),
-    validate(reportValidation.getBalanceSheet),
-    reportController.pdfBalanceSheet
+    auth('getTransactionMonthly'),
+    validate(dashboardValidation.getTransactionMonthly),
+    dashboardController.getTransactionMonthly
   );
 
 router.use(authSession())
-  .route('/debt-receivable/:type/:startDate/:endDate')
+  .route('/debt-receivable-total/:type/:startDate/:endDate')
   .get(
-    auth('getDebtReceivable'),
-    validate(reportValidation.getDebtReceivable),
-    reportController.getDebtReceivable
+    auth('getDebtReceivableTotal'),
+    validate(dashboardValidation.getDebtReceivableTotal),
+    dashboardController.getDebtReceivableTotal
   );
 
 router.use(authSession())
-  .route('/debt-receivable/pdf/:type/:startDate/:endDate')
+  .route('/income/:startDate/:endDate')
   .get(
-    auth('getDebtReceivable'),
-    validate(reportValidation.getDebtReceivable),
-    reportController.pdfDebtReceivable
+    auth('getDashboardIncome'),
+    validate(dashboardValidation.getIncome),
+    dashboardController.getIncome
+  );
+
+router.use(authSession())
+  .route('/expense/:startDate/:endDate')
+  .get(
+    auth('getDashboardExpense'),
+    validate(dashboardValidation.getExpense),
+    dashboardController.getExpense
   );
 
 router.use(authSession())
   .route('/profit-loss/:startDate/:endDate')
   .get(
-    auth('getProfitLoss'),
-    validate(reportValidation.getProfitLoss),
-    reportController.getProfitLoss
-  );
-
-router.use(authSession())
-  .route('/profit-loss/pdf/:startDate/:endDate')
-  .get(
-    auth('getProfitLoss'),
-    validate(reportValidation.getProfitLoss),
-    reportController.pdfProfitLoss
-  );
-
-router.use(authSession())
-  .route('/best-selling-product/pdf/:startDate/:endDate')
-  .get(
-    auth('getBestSellingProduct'),
-    validate(reportValidation.getBestSellingProduct),
-    reportController.pdfBestSellingProduct
-  );
-
-router.use(authSession())
-  .route('/best-selling-product/:startDate/:endDate')
-  .get(
-    auth('getBestSellingProduct'),
-    validate(reportValidation.getBestSellingProduct),
-    reportController.getBestSellingProduct
-  );
-
-router.use(authSession())
-  .route('/cash-flow/:startDate/:endDate')
-  .get(
-    auth('getCashFlow'),
-    validate(reportValidation.getCashFlow),
-    reportController.getCashFlow
-  );
-
-router.use(authSession())
-  .route('/cash-flow/pdf/:startDate/:endDate')
-  .get(
-    auth('getCashFlow'),
-    validate(reportValidation.getCashFlow),
-    reportController.pdfCashFlow
-  );
-
-router.use(authSession())
-  .route('/bank-summary/:startDate/:endDate')
-  .get(
-    auth('getBankSummary'),
-    validate(reportValidation.getBankSummary),
-    reportController.getBankSummary
-  );
-
-router.use(authSession())
-  .route('/bank-summary/pdf/:startDate/:endDate')
-  .get(
-    auth('getBankSummary'),
-    validate(reportValidation.getBankSummary),
-    reportController.pdfBankSummary
+    auth('getDashboardProfitLoss'),
+    validate(dashboardValidation.getProfitLoss),
+    dashboardController.getProfitLoss
   );
 
 export default router;
@@ -108,17 +60,17 @@ export default router;
 /**
  * @swagger
  * tags:
- *   name: Reports
- *   description: Report management and retrieval
+ *   name: Dashboards
+ *   description: Dashboard management and retrieval
  */
 
 /**
  * @swagger
- * /reports:
+ * /dashboards:
  *   post:
- *     summary: Create a report
- *     description: Only admins can create other reports.
- *     tags: [Reports]
+ *     summary: Create a dashboard
+ *     description: Only admins can create other dashboards.
+ *     tags: [Dashboards]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -146,19 +98,19 @@ export default router;
  *                 description: At least one number and one letter
  *               role:
  *                  type: string
- *                  enum: [report, admin]
+ *                  enum: [dashboard, admin]
  *             example:
  *               name: fake name
  *               email: fake@example.com
  *               password: password1
- *               role: report
+ *               role: dashboard
  *     responses:
  *       "201":
  *         description: Created
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Report'
+ *                $ref: '#/components/schemas/Dashboard'
  *       "400":
  *         $ref: '#/components/responses/DuplicateEmail'
  *       "401":
@@ -167,9 +119,9 @@ export default router;
  *         $ref: '#/components/responses/Forbidden'
  *
  *   get:
- *     summary: Get all reports
- *     description: Only admins can retrieve all reports.
- *     tags: [Reports]
+ *     summary: Get all dashboards
+ *     description: Only admins can retrieve all dashboards.
+ *     tags: [Dashboards]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -177,12 +129,12 @@ export default router;
  *         name: name
  *         schema:
  *           type: string
- *         description: Report name
+ *         description: Dashboard name
  *       - in: query
  *         name: role
  *         schema:
  *           type: string
- *         description: Report role
+ *         description: Dashboard role
  *       - in: query
  *         name: sortBy
  *         schema:
@@ -194,7 +146,7 @@ export default router;
  *           type: integer
  *           minimum: 1
  *         default: 10
- *         description: Maximum number of reports
+ *         description: Maximum number of dashboards
  *       - in: query
  *         name: page
  *         schema:
@@ -213,7 +165,7 @@ export default router;
  *                 results:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Report'
+ *                     $ref: '#/components/schemas/Dashboard'
  *                 page:
  *                   type: integer
  *                   example: 1
@@ -234,11 +186,11 @@ export default router;
 
 /**
  * @swagger
- * /reports/{id}:
+ * /dashboards/{id}:
  *   get:
- *     summary: Get a report
- *     description: Logged in reports can fetch only their own report information. Only admins can fetch other reports.
- *     tags: [Reports]
+ *     summary: Get a dashboard
+ *     description: Logged in dashboards can fetch only their own dashboard information. Only admins can fetch other dashboards.
+ *     tags: [Dashboards]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -247,14 +199,14 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Report id
+ *         description: Dashboard id
  *     responses:
  *       "200":
  *         description: OK
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Report'
+ *                $ref: '#/components/schemas/Dashboard'
  *       "401":
  *         $ref: '#/components/responses/Unauthorized'
  *       "403":
@@ -263,9 +215,9 @@ export default router;
  *         $ref: '#/components/responses/NotFound'
  *
  *   patch:
- *     summary: Update a report
- *     description: Logged in reports can only update their own information. Only admins can update other reports.
- *     tags: [Reports]
+ *     summary: Update a dashboard
+ *     description: Logged in dashboards can only update their own information. Only admins can update other dashboards.
+ *     tags: [Dashboards]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -274,7 +226,7 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Report id
+ *         description: Dashboard id
  *     requestBody:
  *       required: true
  *       content:
@@ -303,7 +255,7 @@ export default router;
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Report'
+ *                $ref: '#/components/schemas/Dashboard'
  *       "400":
  *         $ref: '#/components/responses/DuplicateEmail'
  *       "401":
@@ -314,9 +266,9 @@ export default router;
  *         $ref: '#/components/responses/NotFound'
  *
  *   delete:
- *     summary: Delete a report
- *     description: Logged in reports can delete only themselves. Only admins can delete other reports.
- *     tags: [Reports]
+ *     summary: Delete a dashboard
+ *     description: Logged in dashboards can delete only themselves. Only admins can delete other dashboards.
+ *     tags: [Dashboards]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -325,7 +277,7 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Report id
+ *         description: Dashboard id
  *     responses:
  *       "200":
  *         description: No content

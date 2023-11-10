@@ -22,6 +22,8 @@ import transactionRoute from './transaction.route';
 import logActivityRoute from './logActivity.route';
 import generalSettingRoute from './generalSetting.route';
 import reportRoute from './report.route';
+import dashboardRoute from './dashboard.route';
+import financialClosingRoute from './financialClosing.route';
 // import uploadRoute from './upload.route';
 import docsRoute from './docs.route';
 import config from '../../config/config';
@@ -114,12 +116,20 @@ const defaultRoutes = [
     route: reportRoute
   },
   {
+    path: '/dashboards',
+    route: dashboardRoute
+  },
+  {
     path: '/general-settings',
     route: generalSettingRoute
   },
   {
     path: '/logs',
     route: logActivityRoute
+  },
+  {
+    path: '/financial-closings',
+    route: financialClosingRoute
   },
   /* {
     path: '/upload',

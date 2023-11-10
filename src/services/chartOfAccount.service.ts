@@ -113,6 +113,7 @@ const queryChartOfAccounts = async <Key extends keyof ChartOfAccount>(
       rows: chartOfAccounts as unknown as Pick<ChartOfAccount, Key>[],
     };
   } catch (error) {
+    console.log({ error })
     // Tangani kesalahan jika ada
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
   }

@@ -23,3 +23,5 @@ export { default as logActivityController } from './logActivity.controller';
 export { default as prefixController } from './prefix.controller';
 export { default as generalSettingController } from './generalSetting.controller';
 export { default as reportController } from './report.controller';
+export { default as dashboardController } from './dashboard.controller';
+export { default as financialClosingController } from './financialClosing.controller';

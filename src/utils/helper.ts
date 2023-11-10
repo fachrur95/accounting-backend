@@ -13,6 +13,10 @@ export const jsonParse = <T>(str: string): T | undefined => {
   return JSON.parse(str) as T;
 }
 
+export const isArray = (str: string): boolean => {
+  return Array.isArray(jsonParse<string[]>(str));
+}
+
 export const checkAndConvertVariable = (input: string | number): string | number | boolean => {
   if (typeof input === 'string') {
     if (input.toLowerCase() === 'true' || input.toLowerCase() === 'false') {
@@ -109,3 +113,11 @@ export const convertDateOnly = (date: Date) => {
   return new Date(date).toLocaleString("id-ID", { dateStyle: "long" });
 
 };
+
+export const dateID = (param = new Date()): string => {
+  const date = param.getDate();
+  const month = param.getMonth() + 1;
+  const year = param.getFullYear();
+
+  return `${date}/${month}/${year}`
+}

@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
-import moment, { Moment } from 'moment';
+// import moment, { Moment } from 'moment';
+import dayjs from 'dayjs';
 import httpStatus from 'http-status';
 import config from '../config/config';
 import userService from './user.service';
@@ -12,7 +13,7 @@ import { Session, PayloadData } from '../types/session';
 /**
  * Generate token
  * @param {number} userId
- * @param {Moment} expires
+ * @param {dayjs.Dayjs} expires
  * @param {string} type
  * @param {string} [secret]
  * @returns {string}
@@ -20,7 +21,7 @@ import { Session, PayloadData } from '../types/session';
 const generateToken = (
   // userId: number,
   data: PayloadData,
-  expires: Moment,
+  expires: dayjs.Dayjs,
   type: TokenType,
   secret: string = config.jwt.secret
 ): string => {
@@ -29,7 +30,7 @@ const generateToken = (
     // sub: data.userId,
     ...rest,
     sub: userId,
-    iat: moment().unix(),
+    iat: dayjs().unix(),
     exp: expires.unix(),
     type
   };
@@ -48,7 +49,7 @@ const generateToken = (
 const saveToken = async (
   token: string,
   userId: string,
-  expires: Moment,
+  expires: dayjs.Dayjs,
   type: TokenType,
   blacklisted = false
 ): Promise<Token> => {
@@ -90,7 +91,7 @@ const verifyToken = async (token: string, type: TokenType): Promise<Token> => {
 const generateAuthTokens = async (user: { id: string }, session?: Session): Promise<AuthTokensResponse> => {
   const dataUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { name: true, email: true },
+    select: { name: true, email: true, role: true, },
   });
   if (!dataUser) {
     throw new ApiError(httpStatus.NOT_FOUND, 'No users found');
@@ -99,14 +100,15 @@ const generateAuthTokens = async (user: { id: string }, session?: Session): Prom
     userId: user.id,
     name: dataUser.name,
     email: dataUser.email,
+    role: dataUser.role,
     image: null,
     session
   };
 
-  const accessTokenExpires = moment().add(config.jwt.accessExpirationMinutes, 'minutes');
+  const accessTokenExpires = dayjs().add(config.jwt.accessExpirationMinutes, 'minutes');
   const accessToken = generateToken(payload, accessTokenExpires, TokenType.ACCESS);
 
-  const refreshTokenExpires = moment().add(config.jwt.refreshExpirationDays, 'days');
+  const refreshTokenExpires = dayjs().add(config.jwt.refreshExpirationDays, 'days');
   const refreshToken = generateToken(payload, refreshTokenExpires, TokenType.REFRESH);
   await saveToken(refreshToken, user.id, refreshTokenExpires, TokenType.REFRESH);
 
@@ -132,7 +134,7 @@ const generateResetPasswordToken = async (email: string): Promise<string> => {
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'No users found with this email');
   }
-  const expires = moment().add(config.jwt.resetPasswordExpirationMinutes, 'minutes');
+  const expires = dayjs().add(config.jwt.resetPasswordExpirationMinutes, 'minutes');
   const resetPasswordToken = generateToken({ userId: user.id }, expires, TokenType.RESET_PASSWORD);
   await saveToken(resetPasswordToken, user.id, expires, TokenType.RESET_PASSWORD);
   return resetPasswordToken;
@@ -144,7 +146,7 @@ const generateResetPasswordToken = async (email: string): Promise<string> => {
  * @returns {Promise<string>}
  */
 const generateVerifyEmailToken = async (user: { id: string }): Promise<string> => {
-  const expires = moment().add(config.jwt.verifyEmailExpirationMinutes, 'minutes');
+  const expires = dayjs().add(config.jwt.verifyEmailExpirationMinutes, 'minutes');
   const verifyEmailToken = generateToken({ userId: user.id }, expires, TokenType.VERIFY_EMAIL);
   await saveToken(verifyEmailToken, user.id, expires, TokenType.VERIFY_EMAIL);
   return verifyEmailToken;

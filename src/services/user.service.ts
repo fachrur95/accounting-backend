@@ -217,6 +217,7 @@ const updateUserById = async <Key extends keyof User>(
     where: { id: user.id },
     data: {
       ...data,
+      password: data.password ? await encryptPassword(data.password as string) : undefined,
       ...(userUnits ? {
         userUnits: {
           deleteMany: {

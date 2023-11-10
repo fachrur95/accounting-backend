@@ -28,3 +28,5 @@ export { default as logActivityService } from './logActivity.service';
 export { default as prefixService } from './prefix.service';
 export { default as generalSettingService } from './generalSetting.service';
 export { default as reportService } from './report.service';
+export { default as dashboardService } from './dashboard.service';
+export { default as financialClosingService } from './financialClosing.service';

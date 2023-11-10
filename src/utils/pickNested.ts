@@ -1,5 +1,5 @@
 import { FieldType, FiltersType } from "../types/filtering";
-import { checkAndConvertVariable } from "./helper";
+import { checkAndConvertVariable, isArray, jsonParse } from "./helper";
 
 export type NestedObject = {
   [key: string]: NestedObject | string | unknown;
@@ -22,9 +22,9 @@ const pickNested = (obj?: FiltersType): NestedObject | undefined => {
         if (i === keys.length - 1) {
           // Ini adalah elemen terakhir, tambahkan properti "value"
           if (filter.type) {
-            temp[key] = { [filter.type]: value };
+            temp[key] = { [filter.type]: typeof value === "string" ? (isArray(value) ? jsonParse(value) : value) : value };
           } else {
-            temp[key] = value
+            temp[key] = typeof value === "string" ? (isArray(value) ? jsonParse(value) : value) : value
           }
         } else {
           // Ini bukan elemen terakhir, tambahkan objek kosong
@@ -37,10 +37,10 @@ const pickNested = (obj?: FiltersType): NestedObject | undefined => {
 
     if (filter.type) {
       finalObj[field] = {
-        [filter.type]: value,
+        [filter.type]: typeof value === "string" ? (isArray(value) ? jsonParse(value) : value) : value
       }
     } else {
-      finalObj[field] = value
+      finalObj[field] = typeof value === "string" ? (isArray(value) ? jsonParse(value) : value) : value
     }
     if (filter.type === "contains" || filter.type === "endsWith" || filter.type === "startsWith") {
       (finalObj[field] as NestedObject).mode = "insensitive"

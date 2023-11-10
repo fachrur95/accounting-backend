@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { balance } from './custom.validation';
-import { TransactionType } from '@prisma/client';
+import { PaymentType, TransactionType } from '@prisma/client';
 
 const openCashRegister = {
   body: Joi.object().keys({
@@ -28,6 +28,7 @@ const createSalesPurchase = {
     termId: Joi.string(),
     // warehouseId: Joi.string().required(),
     // entryDate: Joi.date(),
+    paymentType: Joi.string().valid(PaymentType.CASH, PaymentType.CASHLESS),
     paymentInput: Joi.number().required(),
     specialDiscount: Joi.number(),
     discountGroupInput: Joi.number(),
@@ -136,6 +137,7 @@ const createJournalEntry = {
 const createBeginBalancePayment = {
   body: Joi.object().keys({
     chartOfAccountId: Joi.string().required(),
+    entryDate: Joi.date(),
     transactionDetails: Joi.array().items(
       Joi.object().keys({
         peopleId: Joi.string().required(),
@@ -157,7 +159,8 @@ const createBeginBalanceStock = {
       Joi.object().keys({
         multipleUomId: Joi.string().required(),
         qtyInput: Joi.number().required(),
-        hpp: Joi.number().required(),
+        conversionQty: Joi.number().required(),
+        priceInput: Joi.number().required(),
         note: Joi.string(),
       })
     ).min(1),
@@ -234,6 +237,7 @@ const updateSalesPurchase = {
       termId: Joi.string(),
       // warehouseId: Joi.string(),
       // entryDate: Joi.date(),
+      paymentType: Joi.string().valid(PaymentType.CASH, PaymentType.CASHLESS),
       paymentInput: Joi.number(),
       specialDiscount: Joi.number(),
       discountGroupInput: Joi.number(),
@@ -377,6 +381,7 @@ const updateBeginBalancePayment = {
     .keys({
       transactionNumber: Joi.string(),
       chartOfAccountId: Joi.string(),
+      entryDate: Joi.date(),
       transactionDetails: Joi.array().items(
         Joi.object().keys({
           id: Joi.string(),
@@ -405,7 +410,8 @@ const updateBeginBalanceStock = {
           id: Joi.string(),
           multipleUomId: Joi.string().required(),
           qtyInput: Joi.number().required(),
-          hpp: Joi.number().required(),
+          conversionQty: Joi.number().required(),
+          priceInput: Joi.number().required(),
           note: Joi.string(),
         })
       ).min(1),

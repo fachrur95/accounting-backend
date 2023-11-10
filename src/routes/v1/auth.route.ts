@@ -57,6 +57,13 @@ router.post(
   authController.setUnit
 );
 
+router.patch(
+  '/update',
+  auth(),
+  validate(authValidation.updateAccount),
+  authController.updateAccount,
+)
+
 export default router;
 
 /**

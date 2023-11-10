@@ -1,106 +1,41 @@
 import express from 'express';
 import auth from '../../middlewares/auth';
 import validate from '../../middlewares/validate';
-import { reportValidation } from '../../validations';
-import { reportController } from '../../controllers';
+import { financialClosingValidation } from '../../validations';
+import { financialClosingController } from '../../controllers';
 import authSession from '../../middlewares/authSession';
 
 const router = express.Router();
 
 router.use(authSession())
-  .route('/balance-sheet/:startDate/:endDate')
+  .route('/')
+  .post(
+    auth('manageFinancialClosings'),
+    validate(financialClosingValidation.createFinancialClosing),
+    financialClosingController.createFinancialClosing
+  )
   .get(
-    auth('getBalanceSheet'),
-    validate(reportValidation.getBalanceSheet),
-    reportController.getBalanceSheet
+    auth('getFinancialClosings'),
+    validate(financialClosingValidation.getFinancialClosings),
+    financialClosingController.getFinancialClosings
   );
 
 router.use(authSession())
-  .route('/balance-sheet/pdf/:startDate/:endDate')
+  .route('/:financialClosingId')
   .get(
-    auth('getBalanceSheet'),
-    validate(reportValidation.getBalanceSheet),
-    reportController.pdfBalanceSheet
-  );
-
-router.use(authSession())
-  .route('/debt-receivable/:type/:startDate/:endDate')
-  .get(
-    auth('getDebtReceivable'),
-    validate(reportValidation.getDebtReceivable),
-    reportController.getDebtReceivable
-  );
-
-router.use(authSession())
-  .route('/debt-receivable/pdf/:type/:startDate/:endDate')
-  .get(
-    auth('getDebtReceivable'),
-    validate(reportValidation.getDebtReceivable),
-    reportController.pdfDebtReceivable
-  );
-
-router.use(authSession())
-  .route('/profit-loss/:startDate/:endDate')
-  .get(
-    auth('getProfitLoss'),
-    validate(reportValidation.getProfitLoss),
-    reportController.getProfitLoss
-  );
-
-router.use(authSession())
-  .route('/profit-loss/pdf/:startDate/:endDate')
-  .get(
-    auth('getProfitLoss'),
-    validate(reportValidation.getProfitLoss),
-    reportController.pdfProfitLoss
-  );
-
-router.use(authSession())
-  .route('/best-selling-product/pdf/:startDate/:endDate')
-  .get(
-    auth('getBestSellingProduct'),
-    validate(reportValidation.getBestSellingProduct),
-    reportController.pdfBestSellingProduct
-  );
-
-router.use(authSession())
-  .route('/best-selling-product/:startDate/:endDate')
-  .get(
-    auth('getBestSellingProduct'),
-    validate(reportValidation.getBestSellingProduct),
-    reportController.getBestSellingProduct
-  );
-
-router.use(authSession())
-  .route('/cash-flow/:startDate/:endDate')
-  .get(
-    auth('getCashFlow'),
-    validate(reportValidation.getCashFlow),
-    reportController.getCashFlow
-  );
-
-router.use(authSession())
-  .route('/cash-flow/pdf/:startDate/:endDate')
-  .get(
-    auth('getCashFlow'),
-    validate(reportValidation.getCashFlow),
-    reportController.pdfCashFlow
-  );
-
-router.use(authSession())
-  .route('/bank-summary/:startDate/:endDate')
-  .get(
-    auth('getBankSummary'),
-    validate(reportValidation.getBankSummary),
-    reportController.getBankSummary
-  );
-
-router.use(authSession())
-  .route('/bank-summary/pdf/:startDate/:endDate')
-  .get(
-    auth('getBankSummary'),
-    validate(reportValidation.getBankSummary),
-    reportController.pdfBankSummary
+    auth('getFinancialClosings'),
+    validate(financialClosingValidation.getFinancialClosing),
+    financialClosingController.getFinancialClosing
+  )
+  .patch(
+    auth('manageFinancialClosings'),
+    validate(financialClosingValidation.updateFinancialClosing),
+    financialClosingController.updateFinancialClosing
+  )
+  .delete(
+    auth('manageFinancialClosings'),
+    validate(financialClosingValidation.deleteFinancialClosing),
+    financialClosingController.deleteFinancialClosing
   );
 
 export default router;
@@ -108,17 +43,17 @@ export default router;
 /**
  * @swagger
  * tags:
- *   name: Reports
- *   description: Report management and retrieval
+ *   name: FinancialClosings
+ *   description: FinancialClosing management and retrieval
  */
 
 /**
  * @swagger
- * /reports:
+ * /financialClosings:
  *   post:
- *     summary: Create a report
- *     description: Only admins can create other reports.
- *     tags: [Reports]
+ *     summary: Create a financialClosing
+ *     description: Only admins can create other financialClosings.
+ *     tags: [FinancialClosings]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -146,19 +81,19 @@ export default router;
  *                 description: At least one number and one letter
  *               role:
  *                  type: string
- *                  enum: [report, admin]
+ *                  enum: [financialClosing, admin]
  *             example:
  *               name: fake name
  *               email: fake@example.com
  *               password: password1
- *               role: report
+ *               role: financialClosing
  *     responses:
  *       "201":
  *         description: Created
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Report'
+ *                $ref: '#/components/schemas/FinancialClosing'
  *       "400":
  *         $ref: '#/components/responses/DuplicateEmail'
  *       "401":
@@ -167,9 +102,9 @@ export default router;
  *         $ref: '#/components/responses/Forbidden'
  *
  *   get:
- *     summary: Get all reports
- *     description: Only admins can retrieve all reports.
- *     tags: [Reports]
+ *     summary: Get all financialClosings
+ *     description: Only admins can retrieve all financialClosings.
+ *     tags: [FinancialClosings]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -177,12 +112,12 @@ export default router;
  *         name: name
  *         schema:
  *           type: string
- *         description: Report name
+ *         description: FinancialClosing name
  *       - in: query
  *         name: role
  *         schema:
  *           type: string
- *         description: Report role
+ *         description: FinancialClosing role
  *       - in: query
  *         name: sortBy
  *         schema:
@@ -194,7 +129,7 @@ export default router;
  *           type: integer
  *           minimum: 1
  *         default: 10
- *         description: Maximum number of reports
+ *         description: Maximum number of financialClosings
  *       - in: query
  *         name: page
  *         schema:
@@ -213,7 +148,7 @@ export default router;
  *                 results:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Report'
+ *                     $ref: '#/components/schemas/FinancialClosing'
  *                 page:
  *                   type: integer
  *                   example: 1
@@ -234,11 +169,11 @@ export default router;
 
 /**
  * @swagger
- * /reports/{id}:
+ * /financialClosings/{id}:
  *   get:
- *     summary: Get a report
- *     description: Logged in reports can fetch only their own report information. Only admins can fetch other reports.
- *     tags: [Reports]
+ *     summary: Get a financialClosing
+ *     description: Logged in financialClosings can fetch only their own financialClosing information. Only admins can fetch other financialClosings.
+ *     tags: [FinancialClosings]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -247,14 +182,14 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Report id
+ *         description: FinancialClosing id
  *     responses:
  *       "200":
  *         description: OK
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Report'
+ *                $ref: '#/components/schemas/FinancialClosing'
  *       "401":
  *         $ref: '#/components/responses/Unauthorized'
  *       "403":
@@ -263,9 +198,9 @@ export default router;
  *         $ref: '#/components/responses/NotFound'
  *
  *   patch:
- *     summary: Update a report
- *     description: Logged in reports can only update their own information. Only admins can update other reports.
- *     tags: [Reports]
+ *     summary: Update a financialClosing
+ *     description: Logged in financialClosings can only update their own information. Only admins can update other financialClosings.
+ *     tags: [FinancialClosings]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -274,7 +209,7 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Report id
+ *         description: FinancialClosing id
  *     requestBody:
  *       required: true
  *       content:
@@ -303,7 +238,7 @@ export default router;
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Report'
+ *                $ref: '#/components/schemas/FinancialClosing'
  *       "400":
  *         $ref: '#/components/responses/DuplicateEmail'
  *       "401":
@@ -314,9 +249,9 @@ export default router;
  *         $ref: '#/components/responses/NotFound'
  *
  *   delete:
- *     summary: Delete a report
- *     description: Logged in reports can delete only themselves. Only admins can delete other reports.
- *     tags: [Reports]
+ *     summary: Delete a financialClosing
+ *     description: Logged in financialClosings can delete only themselves. Only admins can delete other financialClosings.
+ *     tags: [FinancialClosings]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -325,7 +260,7 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: Report id
+ *         description: FinancialClosing id
  *     responses:
  *       "200":
  *         description: No content

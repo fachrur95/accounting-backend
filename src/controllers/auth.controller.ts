@@ -219,6 +219,23 @@ const verifyEmail = catchAsync(async (req, res) => {
   });
 });
 
+const updateAccount = catchAsync(async (req, res) => {
+  const session = req.user as SessionData;
+  if (!session) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticated.');
+  }
+  const { password, newPassword, name } = req.body;
+  await authService.loginUserWithEmailAndPassword(session.email, password);
+  // const newPassword 
+  const user = await userService.updateUserById(session.id, { email: session.email, name, password: newPassword !== "" && newPassword !== null ? newPassword : undefined });
+  await logActivityService.createLogActivity({
+    message: `Update Account Info`,
+    activityType: "UPDATE",
+    createdBy: session.email,
+  });
+  res.send(user);
+});
+
 const userInfo = catchAsync(async (req, res) => {
   const user = req.user as User;
   res.send(user);
@@ -238,4 +255,5 @@ export default {
   sendVerificationEmail,
   verifyEmail,
   userInfo,
+  updateAccount,
 };

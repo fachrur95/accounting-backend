@@ -62,6 +62,17 @@ const verifyEmail = {
   })
 };
 
+const updateAccount = {
+  body: Joi.object()
+    .keys({
+      email: Joi.string().email(),
+      password: Joi.string().required(),
+      newPassword: Joi.string().custom(password).optional().allow(""),
+      name: Joi.string(),
+    })
+    .min(1)
+};
+
 export default {
   register,
   login,
@@ -71,5 +82,6 @@ export default {
   setUnit,
   forgotPassword,
   resetPassword,
-  verifyEmail
+  verifyEmail,
+  updateAccount,
 };
