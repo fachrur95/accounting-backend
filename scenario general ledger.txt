@@ -55,6 +55,10 @@ BAYAR PIUTANG
     vectornya mengikuti tiap baris dan nilainya sesuai nilai baris,
     sedangkan akunnya jika membayar piutang / saldo awal piutang/ aktiva tetap jual adalah akun piutang dari general setting
 
+SALDO AWAL PIUTANG
+  - {vector: ikut baris, account: piutang, amount: total keseluruhan baris}
+  - {vector: vector baris * -1, account: akun pilihan}
+
 JOURNAL UMUM
 semua mengikuti barisnya masing2
 

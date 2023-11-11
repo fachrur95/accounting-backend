@@ -234,10 +234,13 @@ const getDebtReceivable = async (
         gte: startDate,
         lte: endDate,
       },
-      transactionType: type === 'debt' ? 'PURCHASE_INVOICE' : 'SALE_INVOICE',
       underPayment: {
         gt: 0
-      }
+      },
+      OR: [
+        { transactionType: type === 'debt' ? 'PURCHASE_INVOICE' : 'SALE_INVOICE' },
+        { transactionType: type === 'debt' ? 'BEGINNING_BALANCE_DEBT' : 'BEGINNING_BALANCE_RECEIVABLE' },
+      ],
     },
     include: {
       // transactionDetails: true,
@@ -251,7 +254,12 @@ const getDebtReceivable = async (
           transaction: true,
         }
       }
-    }
+    },
+    orderBy: [
+      { people: { peopleCategory: { code: "asc" }, } },
+      { people: { code: "asc" } },
+      { entryDate: "asc" },
+    ],
   })
 }
 
@@ -958,7 +966,7 @@ const pdfDebtReceivable = async (
           style: 'tableExample',
           table: {
             headerRows: 1,
-            widths: ['28%', '8%', '13%', '22%', '10%', '10%', '10%'],
+            widths: ['27%', '8%', '15%', '21%', '10%', '10%', '10%'],
             body: rows,
           },
         },

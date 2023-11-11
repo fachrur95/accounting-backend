@@ -235,10 +235,12 @@ const getDebtReceivableTotal = async (
   let total = 0;
 
   let TYPE_TRANS = 'SALE_INVOICE';
+  let TYPE_TRANS2 = 'BEGINNING_BALANCE_RECEIVABLE';
   let TYPE_PAYMENT = 'RECEIVABLE_PAYMENT';
 
   if (type === 'debt') {
     TYPE_TRANS = 'PURCHASE_INVOICE';
+    TYPE_TRANS2 = 'BEGINNING_BALANCE_DEBT';
     TYPE_PAYMENT = 'DEBT_PAYMENT';
   }
 
@@ -256,7 +258,7 @@ const getDebtReceivableTotal = async (
       AND "trans"."unitId" = ${unitId}
       GROUP BY "detail"."transactionPaymentId"
     ) AS "payed" ON ("payed"."id" = "trans"."id")
-    WHERE "trans"."transactionType"::text = ${TYPE_TRANS}
+    WHERE ("trans"."transactionType"::text = ${TYPE_TRANS} OR "trans"."transactionType"::text = ${TYPE_TRANS2})
     AND "trans"."unitId" = ${unitId}
     AND DATE(TIMEZONE('Asia/Bangkok', "trans"."entryDate")) >= DATE(TIMEZONE('Asia/Bangkok', ${startDate}))
     AND DATE(TIMEZONE('Asia/Bangkok', "trans"."entryDate")) <= DATE(TIMEZONE('Asia/Bangkok', ${endDate}));

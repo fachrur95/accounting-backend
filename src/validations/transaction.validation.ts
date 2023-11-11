@@ -137,11 +137,10 @@ const createJournalEntry = {
 const createBeginBalancePayment = {
   body: Joi.object().keys({
     chartOfAccountId: Joi.string().required(),
-    entryDate: Joi.date(),
     transactionDetails: Joi.array().items(
       Joi.object().keys({
         peopleId: Joi.string().required(),
-        dueDate: Joi.date().required(),
+        entryDate: Joi.date().required(),
         priceInput: Joi.number().required(),
         note: Joi.string(),
       })
@@ -381,12 +380,11 @@ const updateBeginBalancePayment = {
     .keys({
       transactionNumber: Joi.string(),
       chartOfAccountId: Joi.string(),
-      entryDate: Joi.date(),
       transactionDetails: Joi.array().items(
         Joi.object().keys({
           id: Joi.string(),
           peopleId: Joi.string().required(),
-          dueDate: Joi.date().required(),
+          entryDate: Joi.date().required(),
           priceInput: Joi.number().required(),
           note: Joi.string(),
         })

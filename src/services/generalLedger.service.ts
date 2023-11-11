@@ -555,14 +555,14 @@ const detailBeginBalanceDebtReceivable = async (
         dataDetail.push({
           accountId: coreAccountId,
           amount: detail.total,
-          vector: detail.vector,
+          vector: transaction.transactionType === "BEGINNING_BALANCE_RECEIVABLE" ? (detail.vector === "POSITIVE" ? "NEGATIVE" : "POSITIVE") : detail.vector,
           createdBy: data.createdBy,
         });
 
         dataDetail.push({
           accountId: transaction.transactionType === "BEGINNING_BALANCE_RECEIVABLE" ? generalSetting.creditAccountId : generalSetting.debitAccountId,
           amount: detail.total,
-          vector: detail.vector === "POSITIVE" ? "NEGATIVE" : "POSITIVE",
+          vector: transaction.transactionType === "BEGINNING_BALANCE_RECEIVABLE" ? detail.vector : (detail.vector === "POSITIVE" ? "NEGATIVE" : "POSITIVE"),
           createdBy: data.createdBy,
         });
       }

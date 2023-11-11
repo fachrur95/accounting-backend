@@ -25,6 +25,7 @@ interface ICreateJournalEntryData extends Omit<Prisma.TransactionUncheckedCreate
 interface ICreateBeginBalanceDebtReceivableData extends Omit<Prisma.TransactionUncheckedCreateInput, "transactionDetails"> {
   transactionDetails: (Prisma.TransactionDetailCreateManyTransactionInput & {
     peopleId: string;
+    entryDate: Date;
   })[],
 }
 
@@ -47,7 +48,7 @@ interface ReduceAmount {
 }
 
 interface ReduceAmountBeginBalanceDebtReceivable {
-  dataLine: (Prisma.TransactionDetailCreateManyTransactionInput & { peopleId: string })[],
+  dataLine: (Prisma.TransactionDetailCreateManyTransactionInput & { peopleId: string, entryDate: Date })[],
   beforeTax: number,
   taxValue: number,
   total: number
@@ -1249,26 +1250,7 @@ const createBeginBalanceStock = async (
 const createBeginBalanceDebtReceive = async (
   data: ICreateBeginBalanceDebtReceivableData,
 ): Promise<{ message: string }> => {
-  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
-  }
   const { transactionDetails, ...rest } = data;
-  const entryDate = new Date();
-  const lastFinancialClosing = await prisma.financialClosing.findFirst({
-    where: { unitId: data.unitId },
-    select: { entryDate: true },
-    orderBy: { entryDate: "desc" },
-  });
-
-  if (
-    lastFinancialClosing &&
-    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
-  ) {
-    throw new ApiError(
-      httpStatus.FORBIDDEN,
-      "You cannot create transaction on the closed date."
-    );
-  }
 
   const details = transactionDetails.reduce((obj, detail) => {
     /* if (detail.qtyInput === 0) { // if want to skip zero value
@@ -1291,7 +1273,25 @@ const createBeginBalanceDebtReceive = async (
   try {
     return await prisma.$transaction(async (tx) => {
       for (const detail of dataLine) {
-        const { peopleId, ...data } = detail;
+        const { peopleId, entryDate: selectedDate, ...data } = detail;
+
+        const entryDate = new Date(selectedDate);
+        const lastFinancialClosing = await prisma.financialClosing.findFirst({
+          where: { unitId: rest.unitId },
+          select: { entryDate: true },
+          orderBy: { entryDate: "desc" },
+        });
+
+        if (
+          lastFinancialClosing &&
+          new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+        ) {
+          throw new ApiError(
+            httpStatus.FORBIDDEN,
+            "You cannot create transaction on the closed date."
+          );
+        }
+
         const getPeople = await tx.people.findUnique({
           where: {
             id: peopleId ?? "",
@@ -1303,6 +1303,10 @@ const createBeginBalanceDebtReceive = async (
         }
 
         const transactionNumber = await generateTransactionNumber(rest.transactionType, rest.unitId);
+
+        if (await getTransactionByNumber(transactionNumber, rest.unitId)) {
+          throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+        }
 
         const resTransaction = await tx.transaction.create({
           data: {
@@ -1365,6 +1369,7 @@ const queryTransactions = async <Key extends keyof Transaction>(
     'note',
     'total',
     'totalPayment',
+    'underPayment',
     'paymentType',
     'createdBy',
     'createdAt',
@@ -2730,31 +2735,37 @@ const updateBeginBalanceStockById = async <Key extends keyof Transaction>(
           }
         });
 
-        if ((detail.qty ?? 0) > 0) {
-          const dataUpsertItemCogs = tx.itemCogs.upsert({
+        if ((detail.qty ?? 0) === 0 || !detail.qty) {
+          await tx.itemCogs.delete({
             where: {
               transactionDetailId: detail.id ?? "0",
-            },
-            create: {
-              itemId,
-              qty: detail.qty ?? 0,
-              qtyStatic: detail.qty ?? 0,
-              cogs,
-              date: entryDate as Date,
-              unitId: rest.unitId,
-              transactionDetailId: upsertDetail.id,
-              createdBy: rest.updatedBy as string,
-            },
-            update: {
-              qtyStatic: detail.qty,
-              cogs,
-              date: entryDate as Date,
-              updatedBy: rest.updatedBy as string,
             }
           });
-
-          await Promise.all([dataUpsertItemCogs]);
+          continue;
         }
+        const dataUpsertItemCogs = tx.itemCogs.upsert({
+          where: {
+            transactionDetailId: detail.id ?? "0",
+          },
+          create: {
+            itemId,
+            qty: detail.qty,
+            qtyStatic: detail.qty,
+            cogs,
+            date: entryDate as Date,
+            unitId: rest.unitId,
+            transactionDetailId: upsertDetail.id,
+            createdBy: rest.updatedBy as string,
+          },
+          update: {
+            qtyStatic: detail.qty,
+            cogs,
+            date: entryDate as Date,
+            updatedBy: rest.updatedBy as string,
+          }
+        });
+
+        await Promise.all([dataUpsertItemCogs]);
       }
       const recalculateCogsItem = [];
       for (const itemId of dataItemIds) {
