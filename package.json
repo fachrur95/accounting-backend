@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "repository": "https://github.com/fachrur95/accounting-backend.git",
   "scripts": {
-    "start": "yarn build && pm2 start ecosystem.config.json --no-daemon",
+    "start": "yarn build && pm2 startOrRestart ecosystem.config.json --env production",
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
     "test": "docker-compose -f docker-compose.only-db-test.yml up -d && yarn db:push && jest -i --colors --verbose --detectOpenHandles && docker-compose -f docker-compose.only-db-test.yml down",
     "test:watch": "docker-compose -f docker-compose.only-db-test.yml up -d && yarn db:push && jest -i --watchAll && docker-compose -f docker-compose.only-db-test.yml down",
@@ -110,7 +110,7 @@
     "passport-jwt": "^4.0.0",
     "pdf-puppeteer": "^1.1.11",
     "pdfmake": "^0.2.7",
-    "pm2": "^5.2.2",
+    "pm2": "^5.3.0",
     "winston": "^3.8.2",
     "xss-filters": "^1.2.7"
   }
