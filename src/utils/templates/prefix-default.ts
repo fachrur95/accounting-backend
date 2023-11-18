@@ -82,6 +82,11 @@ const defaultPrefix: Omit<Prisma.PrefixCreateInput, "createdBy" | "unit">[] = [
     prefix: "HS",
   },
   {
+    name: "Penyesuaian Stock",
+    transactionType: "STOCK_ADJUSTMENT",
+    prefix: "PS",
+  },
+  {
     name: "Input Jurnal Umum",
     transactionType: "JOURNAL_ENTRY",
     prefix: "JE",

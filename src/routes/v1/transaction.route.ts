@@ -32,6 +32,22 @@ router.use(authSession())
   );
 
 router.use(authSession())
+  .route('/sales-return')
+  .post(
+    auth('createSalesReturn'),
+    validate(transactionValidation.createSalesPurchaseReturn),
+    transactionController.createSalesReturn
+  );
+
+router.use(authSession())
+  .route('/purchase-return')
+  .post(
+    auth('createPurchaseReturn'),
+    validate(transactionValidation.createSalesPurchaseReturn),
+    transactionController.createPurchaseReturn
+  );
+
+router.use(authSession())
   .route('/receivable-payment')
   .post(
     auth('createReceivablePayment'),
@@ -96,6 +112,22 @@ router.use(authSession())
   );
 
 router.use(authSession())
+  .route('/stock-opname')
+  .post(
+    auth('createStockOpname'),
+    validate(transactionValidation.createStockOpname),
+    transactionController.createStockOpname
+  );
+
+router.use(authSession())
+  .route('/stock-adjustment')
+  .post(
+    auth('createStockAdjustment'),
+    validate(transactionValidation.createStockAdjustment),
+    transactionController.createStockAdjustment
+  );
+
+router.use(authSession())
   .route('/generate-number/:transactionType')
   .get(
     auth('getTransactions'),
@@ -117,6 +149,22 @@ router.use(authSession())
     auth('updatePurchase'),
     validate(transactionValidation.updateSalesPurchase),
     transactionController.updateBuy
+  );
+
+router.use(authSession())
+  .route('/sales-return/:transactionId')
+  .patch(
+    auth('updateSalesReturn'),
+    validate(transactionValidation.updateSalesPurchaseReturn),
+    transactionController.updateSalesReturn
+  );
+
+router.use(authSession())
+  .route('/purchase-return/:transactionId')
+  .patch(
+    auth('updatePurchaseReturn'),
+    validate(transactionValidation.updateSalesPurchaseReturn),
+    transactionController.updatePurchaseReturn
   );
 
 router.use(authSession())
@@ -165,6 +213,30 @@ router.use(authSession())
     auth('updateBeginBalanceStock'),
     validate(transactionValidation.updateBeginBalanceStock),
     transactionController.updateBeginBalanceStock
+  );
+
+router.use(authSession())
+  .route('/beginning-balance-debt/:transactionId')
+  .patch(
+    auth('updateBeginBalanceDebt'),
+    validate(transactionValidation.updateBeginBalancePayment),
+    transactionController.updateBeginBalanceDebt
+  );
+
+router.use(authSession())
+  .route('/beginning-balance-receivable/:transactionId')
+  .patch(
+    auth('updateBeginBalanceReceivable'),
+    validate(transactionValidation.updateBeginBalancePayment),
+    transactionController.updateBeginBalanceReceivable
+  );
+
+router.use(authSession())
+  .route('/stock-opname/:transactionId')
+  .patch(
+    auth('updateStockOpname'),
+    validate(transactionValidation.updateStockOpname),
+    transactionController.updateStockOpname
   );
 
 router.use(authSession())

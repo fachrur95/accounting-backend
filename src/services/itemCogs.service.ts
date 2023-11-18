@@ -196,13 +196,14 @@ const calculateFIFOByTransDetailId = async (
         }
       },
       qty: true,
+      vector: true,
     }
   })
 
   if (!getTrans) {
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Transaction not found!");
   }
-  if (!getTrans.multipleUom) {
+  if (!getTrans.multipleUom || getTrans.vector === "POSITIVE") {
     return;
   }
 
@@ -298,20 +299,6 @@ const calculateFIFOByTransDetailId = async (
 
     await Promise.all([createItemCogsDetail, updateItemCogs]);
   }
-  /* await tx.stockCard.update({
-    where: {
-      itemId_warehouseId_unitId: {
-        itemId,
-        warehouseId: trans.warehouseId ?? "",
-        unitId: trans.unitId,
-      }
-    },
-    data: {
-      qty: {
-        [updateStockCardType]: qty
-      }
-    }
-  }) */
 }
 
 /**
@@ -346,13 +333,14 @@ const calculateAVGByTransDetailId = async (
         }
       },
       qty: true,
+      vector: true,
     }
   })
 
   if (!getTrans) {
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Transaction not found!");
   }
-  if (!getTrans.multipleUom) {
+  if (!getTrans.multipleUom || getTrans.vector === "POSITIVE") {
     return;
   }
 
@@ -508,13 +496,14 @@ const calculateManualByTransDetailId = async (
         }
       },
       qty: true,
+      vector: true,
     }
   });
 
   if (!getTrans) {
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Transaction not found!");
   }
-  if (!getTrans.multipleUom) {
+  if (!getTrans.multipleUom || getTrans.vector === "POSITIVE") {
     return;
   }
 
@@ -715,7 +704,10 @@ const recalculateFIFO = async (
         itemId,
       },
       transaction: {
-        entryDate: { gte: date }
+        entryDate: { gte: date },
+        transactionType: {
+          notIn: ["STOCK_OPNAME"]
+        }
       },
       vector: "NEGATIVE",
     },

@@ -46,7 +46,23 @@ router.use(authSession())
     auth('getItems'),
     validate(itemValidation.scanBarcode),
     itemController.scanBarcode
-  )
+  );
+
+router.use(authSession())
+  .route('/stock/:itemId')
+  .get(
+    auth('getItems'),
+    validate(itemValidation.getItemStock),
+    itemController.getItemStock
+  );
+
+router.use(authSession())
+  .route('/stock')
+  .get(
+    auth('getItems'),
+    validate(itemValidation.getStock),
+    itemController.getAllStock
+  );
 
 export default router;
 

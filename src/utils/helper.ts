@@ -1,3 +1,5 @@
+// import dayjs from 'dayjs';
+
 export const isJSONString = (str: string) => {
   try {
     JSON.parse(str);
@@ -17,11 +19,12 @@ export const isArray = (str: string): boolean => {
   return Array.isArray(jsonParse<string[]>(str));
 }
 
-export const checkAndConvertVariable = (input: string | number): string | number | boolean => {
+export const checkAndConvertVariable = (input: string | number): string | number | Date | boolean => {
   if (typeof input === 'string') {
     if (input.toLowerCase() === 'true' || input.toLowerCase() === 'false') {
       return input.toLowerCase() === 'true';
-    } else if (!isNaN(parseFloat(input))) {
+    }
+    if (!isNaN(parseFloat(input))) {
       return parseFloat(input);
     }
   }

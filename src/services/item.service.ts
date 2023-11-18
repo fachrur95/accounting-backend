@@ -34,6 +34,33 @@ type ScanBarcodeResult = Prisma.MultipleUomGetPayload<{
   }
 }>
 
+type ItemStockRawQuery = {
+  id: string;
+  name: string;
+  qty: number;
+}
+
+/**
+ * Get All Item Stock By UnitId
+ * @param {String} id?
+ * @param {String} unitId
+ * @returns {Promise<CashRegister | null>}
+ */
+const getAllItemStockByUnitId = async (unitId: string, id?: string): Promise<ItemStockRawQuery[]> => {
+  return prisma.$queryRaw<ItemStockRawQuery[]>`
+    SELECT
+      "item"."id",
+      "item"."name",
+      COALESCE(SUM("itemCogs".qty), 0) AS qty
+    FROM "Item" AS "item"
+    LEFT JOIN "ItemCogs" AS "itemCogs" ON ("itemCogs"."itemId" = "item"."id")
+    WHERE "item"."unitId" = ${unitId}
+    ${id ? Prisma.sql` AND "item"."id" = ${id}` : Prisma.empty}
+    GROUP BY "item"."id"
+    ORDER BY "item"."code";
+  `;
+}
+
 /**
  * Create a item
  * @param {Object} data
@@ -381,5 +408,6 @@ export default {
   getItemByName,
   getItemByBarcode,
   updateItemById,
-  deleteItemById
+  deleteItemById,
+  getAllItemStockByUnitId,
 };

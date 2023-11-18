@@ -69,6 +69,18 @@ const scanBarcode = {
   })
 };
 
+const getStock = {
+  query: Joi.object().keys({
+    itemId: Joi.string(),
+  })
+};
+
+const getItemStock = {
+  params: Joi.object().keys({
+    itemId: Joi.string()
+  })
+};
+
 const updateItem = {
   params: Joi.object().keys({
     itemId: Joi.string()
@@ -110,6 +122,8 @@ export default {
   getItems,
   getItem,
   scanBarcode,
+  getStock,
+  getItemStock,
   updateItem,
   deleteItem
 };

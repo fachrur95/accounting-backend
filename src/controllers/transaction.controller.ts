@@ -96,6 +96,51 @@ const createBuy = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send(transaction);
 });
 
+const createSalesReturn = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const cashRegisterId = user.session.cashRegister?.id;
+  // if (user.role === 'USER' && !cashRegisterId) {
+  if (!cashRegisterId) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'You must open the cash register before making a sale.');
+  }
+
+  const transaction = await transactionService.createSalesReturn({
+    ...req.body,
+    transactionType: "SALE_RETURN",
+    cashRegisterId,
+    // warehouseId,
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Buat Transaksi Return Penjualan",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
+const createPurchaseReturn = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+
+  const transaction = await transactionService.createPurchaseReturn({
+    ...req.body,
+    transactionType: "PURCHASE_RETURN",
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Buat Transaksi Return Pembelian",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
 const createReceivablePayment = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
 
@@ -248,6 +293,44 @@ const createBeginBalanceReceivable = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send(transaction);
 });
 
+const createStockOpname = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+
+  const transaction = await transactionService.createStockOpname({
+    ...req.body,
+    transactionType: "STOCK_OPNAME",
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Buat Transaksi Stock Opname",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
+const createStockAdjustment = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+
+  const transaction = await transactionService.createStockAdjustment({
+    ...req.body,
+    transactionType: "STOCK_ADJUSTMENT",
+    createdBy: user.email,
+    unitId: user.session.unit?.id ?? ""
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Buat Transaksi Stock Adjustment",
+    activityType: "INSERT",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.status(httpStatus.CREATED).send(transaction);
+});
+
 const getLastBalanceCashRegister = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   if (!user.session?.unit?.id || !user.session.cashRegister) {
@@ -364,6 +447,40 @@ const updateBuy = catchAsync(async (req, res) => {
   res.send(transaction);
 });
 
+const updateSalesReturn = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateSalesReturnById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Mengubah Return Penjualan",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
+const updatePurchaseReturn = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updatePurchaseReturnById(req.params.transactionId, {
+    ...req.body,
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Mengubah Return Pembelian",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
 const updateReceivablePayment = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const transaction = await transactionService.updateReceivablePaymentById(req.params.transactionId, {
@@ -466,6 +583,60 @@ const updateBeginBalanceStock = catchAsync(async (req, res) => {
   res.send(transaction);
 });
 
+const updateBeginBalanceDebt = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateBeginBalanceDebtReceiveById(req.params.transactionId, {
+    ...req.body,
+    transactionType: "BEGINNING_BALANCE_DEBT",
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Mengubah Saldo Awal Hutang",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
+const updateBeginBalanceReceivable = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateBeginBalanceDebtReceiveById(req.params.transactionId, {
+    ...req.body,
+    transactionType: "BEGINNING_BALANCE_RECEIVABLE",
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Mengubah Saldo Awal Piutang",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
+const updateStockOpname = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const transaction = await transactionService.updateStockOpnameById(req.params.transactionId, {
+    ...req.body,
+    transactionType: "STOCK_OPNAME",
+    unitId: user.session?.unit?.id,
+    updatedBy: user.email
+  });
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: "Mengubah Stock Opname",
+    activityType: "UPDATE",
+    createdBy: user.email,
+    data: JSON.stringify(transaction),
+  });
+  res.send(transaction);
+});
+
 const updateTransaction = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const transaction = await transactionService.updateTransactionById(req.params.transactionId, {
@@ -508,6 +679,8 @@ export default {
   closeCashRegister,
   createSell,
   createBuy,
+  createSalesReturn,
+  createPurchaseReturn,
   createReceivablePayment,
   createDebtPayment,
   createRevenue,
@@ -516,14 +689,21 @@ export default {
   createBeginBalanceStock,
   createBeginBalanceDebt,
   createBeginBalanceReceivable,
+  createStockOpname,
+  createStockAdjustment,
   updateSell,
   updateBuy,
+  updateSalesReturn,
+  updatePurchaseReturn,
   updateReceivablePayment,
   updateDebtPayment,
   updateRevenue,
   updateExpense,
   updateJournalEntry,
   updateBeginBalanceStock,
+  updateBeginBalanceDebt,
+  updateBeginBalanceReceivable,
+  updateStockOpname,
   getTransactions,
   getTransaction,
   updateTransaction,

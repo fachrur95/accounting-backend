@@ -14,11 +14,19 @@ PURCHASE
   tiap baris pembelian: {account: "jika item, diambil dari persediaan, jika account, lgsg account", vector: 1}
 
 RETURN PURCHASE
-  jika ada yg terbayar: {account: header_account, vector: ikutinline * -1}
-  jika tidak ada nilainya total nilai dari baris, jika ada diambil dari nilai bayar
+  if (cash) {
+    jika kas, dipilih dari akun pilihan user, vector: 1
+  } else {
+    jika tidak kas, akun dari hutang usaha, vector: -1
+  }
 
-  baris tiap pajak, account: vat_in, vector: ikut line
-  akun persediaan tiap baris
+  if (cash) {
+    baris tiap pajak, account: vat_in, vector: -1
+    akun persediaan tiap baris, vector: -1
+  } else {
+    baris tiap pajak, account: vat_in, vector: 1
+    akun persediaan tiap baris, vector: 1
+  }
 
 BAYAR HUTANG
   - jika pembayaran bersisa, maka nilainya dilawankan dengan akun yg dipilih. Kalau giro, maka dilawankan akun bg_purchase, vector -1
@@ -48,6 +56,20 @@ SALES
   tiap baris dari penjualan: {account: penjualan_item, vector: -1, nilai: nilai_line}
   tiap baris dari penjualan (account): {account: account_line, vector: -1, nilai: nilai_line}
 
+RETURN SALES
+  if (cash) {
+    jika kas, dipilih dari akun pilihan user, vector: -1
+  } else {
+    jika tidak kas, akun dari piutang usaha, vector: 1
+  }
+
+  if (cash) {
+    akun persediaan tiap baris, vector: 1
+    baris tiap pajak, account: vat_in, vector: 1
+  } else {
+    akun penjualan tiap baris, vector: -1
+    baris tiap pajak, account: vat_in, vector: -1
+  }
 
 BAYAR PIUTANG
   - jika pembayaran bersisa, maka nilainya dilawankan dengan akun yg dipilih. Kalau giro, maka dilawankan akun bg_purchase, vector 1

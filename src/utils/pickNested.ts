@@ -10,7 +10,7 @@ const pickNested = (obj?: FiltersType): NestedObject | undefined => {
   const filters: FieldType[] = obj?.fields as unknown as FieldType[];
   const fields = filters?.reduce<{ [field: string]: NestedObject | any }>((finalObj, filter) => {
     const field = filter.field;
-    const value = checkAndConvertVariable(filter.value);
+    const value = field !== "entryDate" && field !== "dueDate" ? checkAndConvertVariable(filter.value) : new Date(filter.value);
 
     const keys = field.split("."); // Membagi string menjadi array keys
     if (keys.length > 1) {

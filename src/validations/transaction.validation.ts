@@ -166,6 +166,68 @@ const createBeginBalanceStock = {
   })
 };
 
+const createSalesPurchaseReturn = {
+  body: Joi.object().keys({
+    transactionParentId: Joi.string().required(),
+    transactionNumber: Joi.string().required(),
+    peopleId: Joi.string().required(),
+    chartOfAccountId: Joi.string(),
+    // entryDate: Joi.date(),
+    paymentInput: Joi.number().required(),
+    note: Joi.string(),
+    transactionDetails: Joi.array().items(
+      Joi.object().keys({
+        transactionDetailParentId: Joi.string().required(),
+        multipleUomId: Joi.string().required(),
+        qtyInput: Joi.number().required(),
+        conversionQty: Joi.number().required(),
+        priceInput: Joi.number().required(),
+        note: Joi.string(),
+      })
+    ).min(1),
+  })
+};
+
+const createStockOpname = {
+  body: Joi.object().keys({
+    transactionNumber: Joi.string().required(),
+    // peopleId: Joi.string().required(),
+    // chartOfAccountId: Joi.string(),
+    entryDate: Joi.date(),
+    note: Joi.string(),
+    transactionDetails: Joi.array().items(
+      Joi.object().keys({
+        multipleUomId: Joi.string().required(),
+        qtyInput: Joi.number().required(),
+        conversionQty: Joi.number().required(),
+        // priceInput: Joi.number().required(),
+        note: Joi.string(),
+      })
+    ).min(1),
+  })
+};
+
+const createStockAdjustment = {
+  body: Joi.object().keys({
+    transactionParentId: Joi.string(),
+    transactionNumber: Joi.string().required(),
+    // peopleId: Joi.string().required(),
+    // chartOfAccountId: Joi.string(),
+    entryDate: Joi.date(),
+    note: Joi.string(),
+    transactionDetails: Joi.array().items(
+      Joi.object().keys({
+        transactionDetailParentId: Joi.string(),
+        multipleUomId: Joi.string().required(),
+        qtyInput: Joi.number().required(),
+        conversionQty: Joi.number().required(),
+        // priceInput: Joi.number().required(),
+        note: Joi.string(),
+      })
+    ).min(1),
+  })
+};
+
 const getTransactions = {
   query: Joi.object().keys({
     search: Joi.string(),
@@ -188,6 +250,7 @@ const getTransactions = {
       TransactionType.TRANSFER_ITEM_SEND,
       TransactionType.TRANSFER_ITEM_RECEIVE,
       TransactionType.STOCK_OPNAME,
+      TransactionType.STOCK_ADJUSTMENT,
       TransactionType.JOURNAL_ENTRY,
       TransactionType.BEGINNING_BALANCE_STOCK,
       TransactionType.BEGINNING_BALANCE_DEBT,
@@ -380,17 +443,38 @@ const updateBeginBalancePayment = {
     .keys({
       transactionNumber: Joi.string(),
       chartOfAccountId: Joi.string(),
-      transactionDetails: Joi.array().items(
-        Joi.object().keys({
-          id: Joi.string(),
-          peopleId: Joi.string().required(),
-          entryDate: Joi.date().required(),
-          priceInput: Joi.number().required(),
-          note: Joi.string(),
-        })
-      ).min(1),
+      peopleId: Joi.string().required(),
+      entryDate: Joi.date().required(),
+      underPayment: Joi.number().required(),
+      note: Joi.string(),
     })
     .min(1)
+};
+
+const updateSalesPurchaseReturn = {
+  params: Joi.object().keys({
+    transactionId: Joi.string()
+  }),
+  body: Joi.object().keys({
+    transactionParentId: Joi.string(),
+    transactionNumber: Joi.string().required(),
+    peopleId: Joi.string().required(),
+    chartOfAccountId: Joi.string(),
+    // entryDate: Joi.date(),
+    paymentInput: Joi.number().required(),
+    note: Joi.string(),
+    transactionDetails: Joi.array().items(
+      Joi.object().keys({
+        id: Joi.string(),
+        transactionDetailParentId: Joi.string().required(),
+        multipleUomId: Joi.string().required(),
+        qtyInput: Joi.number().required(),
+        conversionQty: Joi.number().required(),
+        priceInput: Joi.number().required(),
+        note: Joi.string(),
+      })
+    ).min(1),
+  })
 };
 
 const updateBeginBalanceStock = {
@@ -415,6 +499,29 @@ const updateBeginBalanceStock = {
       ).min(1),
     })
     .min(1)
+};
+
+const updateStockOpname = {
+  params: Joi.object().keys({
+    transactionId: Joi.string()
+  }),
+  body: Joi.object().keys({
+    transactionNumber: Joi.string(),
+    // peopleId: Joi.string().required(),
+    // chartOfAccountId: Joi.string(),
+    entryDate: Joi.date(),
+    note: Joi.string(),
+    transactionDetails: Joi.array().items(
+      Joi.object().keys({
+        id: Joi.string(),
+        multipleUomId: Joi.string().required(),
+        qtyInput: Joi.number().required(),
+        conversionQty: Joi.number().required(),
+        // priceInput: Joi.number().required(),
+        note: Joi.string(),
+      })
+    ).min(1),
+  })
 };
 
 const deleteTransaction = {
@@ -449,6 +556,7 @@ const generateTransactionNumber = {
       TransactionType.TRANSFER_ITEM_SEND,
       TransactionType.TRANSFER_ITEM_RECEIVE,
       TransactionType.STOCK_OPNAME,
+      TransactionType.STOCK_ADJUSTMENT,
       TransactionType.JOURNAL_ENTRY,
       TransactionType.BEGINNING_BALANCE_STOCK,
       TransactionType.BEGINNING_BALANCE_DEBT,
@@ -470,6 +578,9 @@ export default {
   createJournalEntry,
   createBeginBalancePayment,
   createBeginBalanceStock,
+  createSalesPurchaseReturn,
+  createStockOpname,
+  createStockAdjustment,
   getTransactions,
   getTransaction,
   updateSalesPurchase,
@@ -480,6 +591,8 @@ export default {
   updateJournalEntry,
   updateBeginBalancePayment,
   updateBeginBalanceStock,
+  updateSalesPurchaseReturn,
+  updateStockOpname,
   deleteTransaction,
   generateTransactionNumber,
   getPaymentDraft,

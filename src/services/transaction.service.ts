@@ -263,7 +263,6 @@ const openCashRegister = async (
     throw new ApiError(httpStatus.NOT_FOUND, 'Cash Register not found');
   }
   const checkOpen = await getAllCashRegisterByUnitId(data.unitId, data.cashRegisterId);
-  // const getAll = await getAllCashRegisterByUnitId(data.unitId);
 
   if (checkOpen.length === 0) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Cash Register not exists yet');
@@ -647,6 +646,343 @@ const createPurchase = async (
         });
 
         await Promise.all([dataCreateItemCogs]);
+      }
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    console.log({ error })
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Create a buy transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createSalesReturn = async (
+  data: ICreateTransactionData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetails, ...rest } = data;
+  const entryDate = new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
+
+  const dueDate = await generateDueDate(entryDate, rest.termId ?? undefined);
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = qty * (detail.priceInput ?? 0);
+    const amount = beforeDiscount;
+    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
+    const total = amount + taxValue;
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      beforeDiscount,
+      amount,
+      taxValue,
+      total,
+      vector: "POSITIVE",
+      createdBy: rest.createdBy
+    });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, beforeTax, taxValue, total } = details;
+
+  const totalPayment = (rest.paymentInput ?? 0) <= total
+    ? rest.paymentInput ?? 0
+    : total;
+  const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          entryDate,
+          dueDate,
+          beforeTax,
+          taxValue,
+          total,
+          change,
+          totalPayment,
+          underPayment,
+        }
+      });
+
+      for (const detail of dataLine) {
+        const getItem = await tx.multipleUom.findUnique({
+          where: {
+            id: detail.multipleUomId ?? "",
+          },
+          select: {
+            itemId: true,
+            item: {
+              select: {
+                name: true,
+              }
+            }
+          }
+        });
+
+        if (!getItem) {
+          throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
+        }
+
+        const createDetail = await tx.transactionDetail.create({
+          data: {
+            ...detail,
+            transactionId: resTransaction.id
+          }
+        });
+
+        if (!detail.transactionDetailParentId) {
+          throw new ApiError(httpStatus.BAD_REQUEST, "Detail Parent Id not found");
+        }
+
+        if ((detail.qty ?? 0) > 0) {
+          const getItemCogsDetail = await tx.itemCogsDetail.findMany({
+            where: {
+              transactionDetailId: detail.transactionDetailParentId
+            }
+          });
+
+          if (getItemCogsDetail.length === 0) {
+            throw new ApiError(httpStatus.NOT_FOUND, "Item Cogs Detail not found");
+          }
+
+          let totalStockReturn = 0;
+          let currentQty = (detail.qty ?? 0);
+          let totalCogs = 0;
+          let count = 0;
+          for (const [index, cogsDetail] of getItemCogsDetail.entries()) {
+            if (currentQty === 0) break;
+            const currentStock = cogsDetail.qty;
+            const currentCogs = cogsDetail.cogs;
+
+            if (index + 1 === getItemCogsDetail.length && currentStock < (detail.qty ?? 0)) {
+              throw new ApiError(
+                httpStatus.INTERNAL_SERVER_ERROR,
+                `Insufficient stock of "${getItem.item?.name}"! Only: ${currentStock} left`
+              );
+            }
+            ++count;
+
+            if (currentStock >= currentQty) {
+              totalStockReturn += currentQty;
+              totalCogs += currentCogs;
+              break;
+            }
+
+            totalStockReturn += currentStock;
+            totalCogs += currentCogs;
+            currentQty -= totalStockReturn;
+          }
+          const avgCogs = totalCogs / count;
+          await tx.itemCogs.create({
+            data: {
+              itemId: getItem.itemId,
+              qty: detail.qty ?? 0,
+              qtyStatic: detail.qty ?? 0,
+              cogs: avgCogs,
+              date: entryDate,
+              createdBy: data.createdBy,
+              unitId: data.unitId,
+              transactionDetailId: createDetail.id
+            }
+          });
+        }
+      }
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    console.log({ error })
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Create a buy transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createPurchaseReturn = async (
+  data: ICreateTransactionData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetails, ...rest } = data;
+  const entryDate = new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
+
+  const dueDate = await generateDueDate(entryDate, rest.termId ?? undefined);
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = qty * (detail.priceInput ?? 0);
+    const amount = beforeDiscount;
+    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
+    const total = amount + taxValue;
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      beforeDiscount,
+      amount,
+      taxValue,
+      total,
+      vector: "NEGATIVE",
+      createdBy: rest.createdBy
+    });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, beforeTax, taxValue, total } = details;
+
+  const totalPayment = (rest.paymentInput ?? 0) <= total
+    ? rest.paymentInput ?? 0
+    : total;
+  const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          entryDate,
+          dueDate,
+          beforeTax,
+          taxValue,
+          total,
+          change,
+          totalPayment,
+          underPayment,
+        }
+      });
+
+      for (const detail of dataLine) {
+        const getItem = await tx.multipleUom.findUnique({
+          where: {
+            id: detail.multipleUomId ?? "",
+          },
+          select: {
+            itemId: true,
+            item: {
+              select: {
+                name: true,
+              }
+            }
+          }
+        });
+
+        if (!getItem) {
+          throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
+        }
+
+        const createDetail = await tx.transactionDetail.create({
+          data: {
+            ...detail,
+            transactionId: resTransaction.id
+          }
+        });
+
+        if (!detail.transactionDetailParentId) {
+          throw new ApiError(httpStatus.BAD_REQUEST, "Detail Parent Id not found");
+        }
+
+        if ((detail.qty ?? 0) > 0) {
+          const getItemCogs = await tx.itemCogs.findUnique({
+            where: {
+              transactionDetailId: detail.transactionDetailParentId
+            }
+          });
+
+          if (!getItemCogs) {
+            throw new ApiError(httpStatus.NOT_FOUND, "Item Cogs not found");
+          }
+
+          if (getItemCogs.qty < (detail.qty ?? 0)) {
+            throw new ApiError(httpStatus.BAD_REQUEST, "Qty more than stock about will be returned");
+          }
+
+          const itemCogsId = getItemCogs.id;
+
+          await tx.itemCogsDetail.create({
+            data: {
+              cogs: getItemCogs.cogs,
+              date: entryDate,
+              qty: detail.qty ?? 0,
+              unitId: data.unitId,
+              itemCogsId,
+              transactionDetailId: createDetail.id,
+            }
+          });
+
+          await tx.itemCogs.update({
+            where: {
+              id: itemCogsId,
+            },
+            data: {
+              qty: getItemCogs.qty - (detail.qty ?? 0),
+            }
+          });
+        }
       }
 
       await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
@@ -1340,6 +1676,199 @@ const createBeginBalanceDebtReceive = async (
 };
 
 /**
+ * Create a beginning balance stock transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createStockOpname = async (
+  data: ICreateTransactionData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetails, ...rest } = data;
+  const entryDate = new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    /* if (detail.qtyInput === 0) { // if want to skip zero value
+      return obj;
+    } */
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      vector: "POSITIVE",
+      createdBy: rest.createdBy
+    });
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine } = details;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          entryDate,
+          transactionDetails: {
+            createMany: {
+              data: dataLine.map((detail) => detail),
+            }
+          }
+        }
+      });
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Create a beginning balance stock transaction
+ * @param {Object} data
+ * @returns {Promise<Transaction>}
+ */
+const createStockAdjustment = async (
+  data: ICreateTransactionData
+): Promise<Transaction> => {
+  if (await getTransactionByNumber(data.transactionNumber, data.unitId)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const { transactionDetails, ...rest } = data;
+  const entryDate = new Date();
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: data.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot create transaction on the closed date."
+    );
+  }
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    /* if (detail.qtyInput === 0) { // if want to skip zero value
+      return obj;
+    } */
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+
+    obj.dataLine.push({
+      ...detail,
+      qty: Math.abs(qty),
+      vector: qty >= 0 ? "POSITIVE" : "NEGATIVE",
+      createdBy: rest.createdBy
+    });
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, total } = details;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          entryDate,
+          total,
+        }
+      });
+
+      const createItemCogs = [];
+      for (const detail of dataLine) {
+        const getItem = await tx.multipleUom.findUnique({
+          where: {
+            id: detail.multipleUomId ?? "",
+          },
+          select: {
+            itemId: true,
+            item: {
+              select: {
+                name: true,
+              }
+            }
+          }
+        });
+
+        if (!getItem) {
+          throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
+        }
+
+        const itemId = getItem.itemId;
+
+        const avgCost = await tx.itemCogs.aggregate({
+          _avg: { cogs: true },
+          where: { itemId },
+        });
+
+        const createDetail = await tx.transactionDetail.create({
+          data: {
+            ...detail,
+            transactionId: resTransaction.id
+          }
+        });
+
+        if ((detail.qty ?? 0) > 0) {
+          createItemCogs.push(tx.itemCogs.create({
+            data: {
+              itemId,
+              qty: detail.qty ?? 0,
+              qtyStatic: detail.qty ?? 0,
+              cogs: avgCost._avg.cogs ?? 0,
+              date: entryDate,
+              createdBy: rest.createdBy,
+              unitId: rest.unitId,
+              transactionDetailId: createDetail.id
+            }
+          }));
+        }
+      }
+
+      await Promise.all([...createItemCogs]);
+      await itemCogsService.calculateCogs(tx, resTransaction.id);
+
+      await generalLedgerService.createGeneralLedger(tx, resTransaction.id);
+
+      await prefixService.updatePrefixByTransactionType(rest.unitId, rest.transactionType, rest.transactionNumber);
+
+      return resTransaction;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
  * Query for transactions
  * @param {Object} filter - Mongo filter
  * @param {Object} options - Query options
@@ -1361,6 +1890,7 @@ const queryTransactions = async <Key extends keyof Transaction>(
   multipleSort?: NestedSort[],
   keys: Key[] = [
     'id',
+    'transactionParent',
     'transactionNumber',
     'chartOfAccount',
     'people',
@@ -1447,10 +1977,12 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
   id: string,
   keys: Key[] = [
     'id',
+    'transactionParent',
     'transactionNumber',
     'chartOfAccount',
     'people',
     'paymentInput',
+    'underPayment',
     'specialDiscount',
     'discountGroupInput',
     'paymentType',
@@ -1458,6 +1990,7 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
     'dueDate',
     'note',
     'unitId',
+    'change',
     'transactionDetails',
     'createdBy',
     'createdAt',
@@ -1472,7 +2005,7 @@ const getTransactionById = async <Key extends keyof TransactionWithInclude>(
     }
   });
   if (!transaction) {
-    return null;
+    throw new ApiError(httpStatus.NOT_FOUND, `Transaction Not Found`);
   }
   const transactionType = transaction.transactionType;
 
@@ -1616,26 +2149,53 @@ const updateSellById = async <Key extends keyof Transaction>(
 
   const { transactionDetails, ...rest } = updateBody;
 
-  const details = transactionDetails.reduce((obj, detail) => {
-    /* if (detail.qtyInput === 0) { // if want to skip zero value
-      return obj;
-    } */
+  const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
+
+  const totalAll = transactionDetails.reduce((total, detail) => {
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
-    const total = qty * (detail.priceInput ?? 0);
+    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
+    const amount = (qty * afterDiscount);
+    return total + amount;
+  }, 0);
+
+  const discountGroupInput = rest.discountGroupInput ?? 0;
+  const specialDiscount = rest.specialDiscount ?? 0;
+  const specialDiscountValue = (specialDiscount / 100) * totalAll;
+
+  const additionalDiscount = discountGroupInput + specialDiscountValue;
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = qty * (detail.priceInput ?? 0);
+    const discount = qty * (detail.discountInput ?? 0);
+    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
+    const amountBefore = (qty * afterDiscount);
+    const distribute = amountBefore / totalAll;
+    const distributeValue = additionalDiscount * distribute;
+    const amount = amountBefore - distributeValue;
+    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
+    const total = amount + taxValue;
 
     obj.dataLine.push({
       ...detail,
       qty,
+      beforeDiscount,
+      discount,
+      distribute,
+      distributeValue,
+      amount,
+      taxValue,
       total,
-      vector: "POSITIVE",
-      createdBy: rest.createdBy
+      vector: "NEGATIVE",
+      updatedBy: rest.updatedBy
     });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
     obj.total += total;
     return obj;
   }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
 
-
-  const { dataLine, total } = details;
+  const { dataLine, beforeTax, taxValue, total } = details;
 
   const dataLineBecome: DetailCompare[] = []
   for (const line of dataLine) {
@@ -1657,6 +2217,13 @@ const updateSellById = async <Key extends keyof Transaction>(
 
   const dataItemIds = getItemChanges(dataLineBefore, dataLineBecome);
 
+  const totalPayment = (rest.paymentInput ?? 0) <= total
+    ? (rest.paymentInput ?? 0)
+    : total;
+
+  const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
+
   try {
     return await prisma.$transaction(async (tx) => {
       const resTransaction = await tx.transaction.update({
@@ -1665,8 +2232,13 @@ const updateSellById = async <Key extends keyof Transaction>(
         },
         data: {
           ...rest,
-          entryDate,
+          dueDate,
+          beforeTax,
+          taxValue,
           total,
+          change,
+          totalPayment,
+          underPayment,
           transactionDetails: {
             deleteMany: {
               transactionId,
@@ -1781,7 +2353,6 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
   const additionalDiscount = discountGroupInput + specialDiscountValue;
 
   const details = transactionDetails.reduce((obj, detail) => {
-    console.log({ detail });
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
     const beforeDiscount = qty * (detail.priceInput ?? 0);
     const discount = qty * (detail.discountInput ?? 0);
@@ -1813,8 +2384,6 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
   }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
 
   const { dataLine, beforeTax, taxValue, total } = details;
-
-  console.log({ dataLine });
 
   const dataLineBecome: DetailCompare[] = []
   for (const line of dataLine) {
@@ -1928,6 +2497,481 @@ const updatePurchaseById = async <Key extends keyof Transaction>(
         });
 
         await Promise.all([dataUpsertItemCogs]);
+      }
+      const recalculateCogsItem = [];
+      for (const itemId of dataItemIds) {
+        recalculateCogsItem.push(itemCogsService.recalculateCogs(tx, itemId, rest.unitId));
+      }
+
+      await Promise.all(recalculateCogsItem);
+
+      await generalLedgerService.createGeneralLedger(tx, transactionId);
+
+      // Jika semua operasi berjalan lancar, transaksi akan di-commit
+      return resTransaction as Pick<Transaction, Key> | null;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Update transaction sell by id
+ * @param {ObjectId} transactionId
+ * @param {Object} updateBody
+ * @returns {Promise<Transaction>}
+ */
+const updateSalesReturnById = async <Key extends keyof Transaction>(
+  transactionId: string,
+  updateBody: IUpdateTransactionData,
+  keys: Key[] = ['id', 'transactionNumber'] as Key[]
+): Promise<Pick<Transaction, Key> | null> => {
+  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'transactionDetails', 'entryDate']);
+  if (!transaction) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
+  }
+  const checkName = await getTransactionByNumber(updateBody.transactionNumber as string, updateBody.unitId as string);
+  if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const entryDate = transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
+
+  const { transactionDetails: transactionDetailsBefore } = transaction;
+
+  const dataLineBefore = transactionDetailsBefore.reduce((arr, detail) => {
+    if (detail.multipleUom) {
+      arr.push({
+        id: detail.id,
+        itemId: detail.multipleUom.itemId,
+        qty: detail.qty,
+        price: detail.priceInput,
+        disc: detail.discountInput,
+      });
+    }
+    return arr;
+  }, [] as unknown as DetailCompare[]);
+
+  const { transactionDetails, ...rest } = updateBody;
+
+  const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = qty * (detail.priceInput ?? 0);
+    const amount = beforeDiscount;
+    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
+    const total = amount + taxValue;
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      beforeDiscount,
+      amount,
+      taxValue,
+      total,
+      vector: "POSITIVE",
+      updatedBy: rest.updatedBy
+    });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, beforeTax, taxValue, total } = details;
+
+  const dataLineBecome: DetailCompare[] = []
+  for (const line of dataLine) {
+    if (line.multipleUomId) {
+      const getItem = await prisma.multipleUom.findUnique({
+        where: { id: line.multipleUomId },
+        select: { itemId: true },
+      });
+      if (getItem) {
+        dataLineBecome.push({
+          itemId: getItem.itemId,
+          qty: line.qty ?? 0,
+          price: line.priceInput as number,
+          disc: line.discountInput as number,
+        })
+      }
+    }
+  }
+
+  const dataItemIds = getItemChanges(dataLineBefore, dataLineBecome);
+
+  const totalPayment = (rest.paymentInput ?? 0) <= total
+    ? (rest.paymentInput ?? 0)
+    : total;
+
+  const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.update({
+        where: {
+          id: transactionId,
+        },
+        data: {
+          ...rest,
+          dueDate,
+          beforeTax,
+          taxValue,
+          total,
+          change,
+          totalPayment,
+          underPayment,
+          transactionDetails: {
+            deleteMany: {
+              transactionId,
+              NOT: dataLine.map(({ id }) => ({ id }))
+            },
+          }
+        },
+        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+      });
+
+      for (const detail of dataLine) {
+        const getItem = await tx.multipleUom.findUnique({
+          where: {
+            id: detail.multipleUomId ?? "",
+          },
+          select: {
+            itemId: true,
+            item: {
+              select: {
+                name: true,
+              }
+            }
+          }
+        });
+
+        if (!getItem) {
+          throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
+        }
+
+        const upsertDetail = await tx.transactionDetail.upsert({
+          where: {
+            id: detail.id ?? "0",
+          },
+          create: {
+            ...detail,
+            transactionId,
+            createdBy: rest.updatedBy as string,
+          },
+          update: {
+            ...detail,
+            updatedBy: rest.updatedBy as string,
+          }
+        });
+
+        await tx.itemCogs.delete({ where: { transactionDetailId: upsertDetail.id } });
+
+        if (!detail.transactionDetailParentId) {
+          throw new ApiError(httpStatus.BAD_REQUEST, "Detail Parent Id not found");
+        }
+
+        if ((detail.qty ?? 0) > 0) {
+          const getItemCogsDetail = await tx.itemCogsDetail.findMany({
+            where: {
+              transactionDetailId: detail.transactionDetailParentId
+            }
+          });
+
+          if (getItemCogsDetail.length === 0) {
+            throw new ApiError(httpStatus.NOT_FOUND, "Item Cogs Detail not found");
+          }
+
+          let totalStockReturn = 0;
+          let currentQty = (detail.qty ?? 0);
+          let totalCogs = 0;
+          let count = 0;
+          for (const [index, cogsDetail] of getItemCogsDetail.entries()) {
+            if (currentQty === 0) break;
+            const currentStock = cogsDetail.qty;
+            const currentCogs = cogsDetail.cogs;
+
+            if (index + 1 === getItemCogsDetail.length && currentStock < (detail.qty ?? 0)) {
+              throw new ApiError(
+                httpStatus.INTERNAL_SERVER_ERROR,
+                `Insufficient stock of "${getItem.item?.name}"! Only: ${currentStock} left`
+              );
+            }
+            ++count;
+
+            if (currentStock >= currentQty) {
+              totalStockReturn += currentQty;
+              totalCogs += currentCogs;
+              break;
+            }
+
+            totalStockReturn += currentStock;
+            totalCogs += currentCogs;
+            currentQty -= totalStockReturn;
+          }
+          const avgCogs = totalCogs / count;
+          await tx.itemCogs.create({
+            data: {
+              itemId: getItem.itemId,
+              qty: currentQty,
+              qtyStatic: currentQty,
+              cogs: avgCogs,
+              date: entryDate,
+              createdBy: updateBody.updatedBy ?? "",
+              updatedBy: updateBody.updatedBy,
+              unitId: updateBody.unitId,
+              transactionDetailId: upsertDetail.id
+            }
+          });
+        }
+      }
+
+      const recalculateCogsItem = [];
+      for (const itemId of dataItemIds) {
+        recalculateCogsItem.push(itemCogsService.recalculateCogs(tx, itemId, rest.unitId));
+      }
+
+      await Promise.all(recalculateCogsItem);
+
+      await generalLedgerService.createGeneralLedger(tx, transactionId);
+
+      // Jika semua operasi berjalan lancar, transaksi akan di-commit
+      return resTransaction as Pick<Transaction, Key> | null;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Update transaction sell by id
+ * @param {ObjectId} transactionId
+ * @param {Object} updateBody
+ * @returns {Promise<Transaction>}
+ */
+const updatePurchaseReturnById = async <Key extends keyof Transaction>(
+  transactionId: string,
+  updateBody: IUpdateTransactionData,
+  keys: Key[] = ['id', 'transactionNumber'] as Key[]
+): Promise<Pick<Transaction, Key> | null> => {
+  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'transactionDetails', 'entryDate']);
+  if (!transaction) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
+  }
+  const checkName = await getTransactionByNumber(updateBody.transactionNumber as string, updateBody.unitId as string);
+  if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const entryDate = transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
+
+  const { transactionDetails: transactionDetailsBefore } = transaction;
+
+  const dataLineBefore = transactionDetailsBefore.reduce((arr, detail) => {
+    if (detail.multipleUom) {
+      arr.push({
+        id: detail.id,
+        itemId: detail.multipleUom.itemId,
+        qty: detail.qty,
+        price: detail.priceInput,
+        disc: detail.discountInput,
+      });
+    }
+    return arr;
+  }, [] as unknown as DetailCompare[]);
+
+  const { transactionDetails, ...rest } = updateBody;
+
+  const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+    const beforeDiscount = qty * (detail.priceInput ?? 0);
+    const amount = beforeDiscount;
+    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
+    const total = amount + taxValue;
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      beforeDiscount,
+      amount,
+      taxValue,
+      total,
+      vector: "NEGATIVE",
+      updatedBy: rest.updatedBy
+    });
+    obj.beforeTax += amount;
+    obj.taxValue += taxValue;
+    obj.total += total;
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine, beforeTax, taxValue, total } = details;
+
+  const dataLineBecome: DetailCompare[] = []
+  for (const line of dataLine) {
+    if (line.multipleUomId) {
+      const getItem = await prisma.multipleUom.findUnique({
+        where: { id: line.multipleUomId },
+        select: { itemId: true },
+      });
+      if (getItem) {
+        dataLineBecome.push({
+          itemId: getItem.itemId,
+          qty: line.qty ?? 0,
+          price: line.priceInput as number,
+          disc: line.discountInput as number,
+        })
+      }
+    }
+  }
+
+  const dataItemIds = getItemChanges(dataLineBefore, dataLineBecome);
+
+  const totalPayment = (rest.paymentInput ?? 0) <= total
+    ? (rest.paymentInput ?? 0)
+    : total;
+
+  const change = (rest.paymentInput ?? 0) - total;
+  const underPayment = total - totalPayment;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.update({
+        where: {
+          id: transactionId,
+        },
+        data: {
+          ...rest,
+          dueDate,
+          beforeTax,
+          taxValue,
+          total,
+          change,
+          totalPayment,
+          underPayment,
+          transactionDetails: {
+            deleteMany: {
+              transactionId,
+              NOT: dataLine.map(({ id }) => ({
+                id,
+              }))
+            },
+          }
+        },
+        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+      });
+
+      for (const detail of dataLine) {
+        const getItem = await tx.multipleUom.findUnique({
+          where: {
+            id: detail.multipleUomId ?? "",
+          },
+          select: {
+            itemId: true,
+            item: {
+              select: {
+                name: true,
+              }
+            }
+          }
+        });
+
+        if (!getItem) {
+          throw new ApiError(httpStatus.NOT_FOUND, "Item not found");
+        }
+
+        const upsertDetail = await tx.transactionDetail.upsert({
+          where: {
+            id: detail.id ?? ""
+          },
+          create: {
+            ...detail,
+            transactionId,
+            createdBy: rest.updatedBy as string,
+          },
+          update: {
+            ...detail,
+            updatedBy: rest.updatedBy as string,
+          }
+        });
+
+        if (!detail.transactionDetailParentId) {
+          throw new ApiError(httpStatus.BAD_REQUEST, "Detail Parent Id not found");
+        }
+
+        if ((detail.qty ?? 0) > 0) {
+          const getItemCogs = await tx.itemCogs.findUnique({
+            where: {
+              transactionDetailId: detail.transactionDetailParentId
+            }
+          });
+
+          if (!getItemCogs) {
+            throw new ApiError(httpStatus.NOT_FOUND, "Item Cogs not found");
+          }
+
+          if (getItemCogs.qty < (detail.qty ?? 0)) {
+            throw new ApiError(httpStatus.BAD_REQUEST, "Qty more than stock about will be returned");
+          }
+
+          const itemCogsId = getItemCogs.id;
+
+          await tx.itemCogsDetail.create({
+            data: {
+              cogs: getItemCogs.cogs,
+              date: entryDate,
+              qty: detail.qty ?? 0,
+              unitId: updateBody.unitId,
+              itemCogsId,
+              transactionDetailId: upsertDetail.id,
+            }
+          });
+
+          await tx.itemCogs.update({
+            where: {
+              id: itemCogsId,
+            },
+            data: {
+              qty: getItemCogs.qty - (detail.qty ?? 0),
+            }
+          });
+        }
       }
       const recalculateCogsItem = [];
       for (const itemId of dataItemIds) {
@@ -2563,7 +3607,7 @@ const updateBeginBalanceStockById = async <Key extends keyof Transaction>(
   if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
   }
-  const entryDate = transaction.entryDate;
+  const entryDate = updateBody.entryDate;
   const lastFinancialClosing = await prisma.financialClosing.findFirst({
     where: { unitId: updateBody.unitId },
     select: { entryDate: true },
@@ -2597,54 +3641,22 @@ const updateBeginBalanceStockById = async <Key extends keyof Transaction>(
 
   const { transactionDetails, ...rest } = updateBody;
 
-  const dueDate = await generateDueDate(new Date(entryDate as Date), rest.termId ?? undefined);
-
-  const totalAll = transactionDetails.reduce((total, detail) => {
-    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
-    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
-    const amount = (qty * afterDiscount);
-    return total + amount;
-  }, 0);
-
-  const discountGroupInput = rest.discountGroupInput ?? 0;
-  const specialDiscount = rest.specialDiscount ?? 0;
-  const specialDiscountValue = (specialDiscount / 100) * totalAll;
-
-  const additionalDiscount = discountGroupInput + specialDiscountValue;
-
   const details = transactionDetails.reduce((obj, detail) => {
-    console.log({ detail });
     const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
-    const beforeDiscount = qty * (detail.priceInput ?? 0);
-    const discount = qty * (detail.discountInput ?? 0);
-    const afterDiscount = (detail.priceInput ?? 0) - (detail.discountInput ?? 0);
-    const amountBefore = (qty * afterDiscount);
-    const distribute = amountBefore / totalAll;
-    const distributeValue = additionalDiscount * distribute;
-    const amount = amountBefore - distributeValue;
-    const taxValue = amount * ((detail.taxRate ?? 0) / 100);
-    const total = amount + taxValue;
+    const total = qty * (detail.priceInput ?? 0);
 
     obj.dataLine.push({
       ...detail,
       qty,
-      beforeDiscount,
-      discount,
-      distribute,
-      distributeValue,
-      amount,
-      taxValue,
       total,
       vector: "POSITIVE",
       updatedBy: rest.updatedBy
     });
-    obj.beforeTax += amount;
-    obj.taxValue += taxValue;
     obj.total += total;
     return obj;
   }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
 
-  const { dataLine, beforeTax, taxValue, total } = details;
+  const { dataLine, total } = details;
 
   const dataLineBecome: DetailCompare[] = []
   for (const line of dataLine) {
@@ -2666,13 +3678,6 @@ const updateBeginBalanceStockById = async <Key extends keyof Transaction>(
 
   const dataItemIds = getItemChanges(dataLineBefore, dataLineBecome);
 
-  const totalPayment = (rest.paymentInput ?? 0) <= total
-    ? (rest.paymentInput ?? 0)
-    : total;
-
-  const change = (rest.paymentInput ?? 0) - total;
-  const underPayment = total - totalPayment;
-
   try {
     return await prisma.$transaction(async (tx) => {
       const resTransaction = await tx.transaction.update({
@@ -2681,13 +3686,8 @@ const updateBeginBalanceStockById = async <Key extends keyof Transaction>(
         },
         data: {
           ...rest,
-          dueDate,
-          beforeTax,
-          taxValue,
+          entryDate,
           total,
-          change,
-          totalPayment,
-          underPayment,
           transactionDetails: {
             deleteMany: {
               transactionId,
@@ -2773,6 +3773,88 @@ const updateBeginBalanceStockById = async <Key extends keyof Transaction>(
       }
 
       await Promise.all(recalculateCogsItem);
+
+      await generalLedgerService.createGeneralLedger(tx, transactionId);
+
+      // Jika semua operasi berjalan lancar, transaksi akan di-commit
+      return resTransaction as Pick<Transaction, Key> | null;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
+ * Update transaction sell by id
+ * @param {ObjectId} transactionId
+ * @param {Object} updateBody
+ * @returns {Promise<Transaction>}
+ */
+const updateBeginBalanceDebtReceiveById = async <Key extends keyof Transaction>(
+  transactionId: string,
+  updateBody: IUpdateTransactionData,
+  keys: Key[] = ['id', 'transactionNumber'] as Key[]
+): Promise<Pick<Transaction, Key> | null> => {
+  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'transactionDetails', 'entryDate']);
+  if (!transaction) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
+  }
+  const checkName = await getTransactionByNumber(updateBody.transactionNumber as string, updateBody.unitId as string);
+  if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const entryDate = transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
+
+  const data = updateBody;
+
+  const dueDate = await generateDueDate(new Date(entryDate as Date), data.termId ?? undefined);
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.update({
+        where: {
+          id: transactionId,
+        },
+        data: {
+          ...data,
+          dueDate,
+          total: data.underPayment,
+          transactionDetails: {
+            deleteMany: {
+              transactionId,
+            },
+          }
+        },
+        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+      });
+      await tx.transactionDetail.create({
+        data: {
+          priceInput: data.underPayment,
+          total: data.underPayment,
+          vector: "POSITIVE",
+          note: data.note,
+          createdBy: data.updatedBy as string,
+          updatedBy: data.updatedBy as string,
+          transactionId,
+        }
+      })
 
       await generalLedgerService.createGeneralLedger(tx, transactionId);
 
@@ -2893,6 +3975,147 @@ const deleteTransactionById = async (transactionId: string): Promise<Transaction
 };
 
 /**
+ * Update transaction sell by id
+ * @param {ObjectId} transactionId
+ * @param {Object} updateBody
+ * @returns {Promise<Transaction>}
+ */
+const updateStockOpnameById = async <Key extends keyof Transaction>(
+  transactionId: string,
+  updateBody: IUpdateTransactionData,
+  keys: Key[] = ['id', 'transactionNumber'] as Key[]
+): Promise<Pick<Transaction, Key> | null> => {
+  const transaction = await getTransactionById(transactionId, ['id', 'transactionNumber', 'transactionDetails', 'entryDate']);
+  if (!transaction) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
+  }
+  const checkName = await getTransactionByNumber(updateBody.transactionNumber as string, updateBody.unitId as string);
+  if (updateBody.transactionNumber && checkName && checkName.transactionNumber !== transaction.transactionNumber) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Transaction Number already taken');
+  }
+  const entryDate = transaction.entryDate;
+  const lastFinancialClosing = await prisma.financialClosing.findFirst({
+    where: { unitId: updateBody.unitId },
+    select: { entryDate: true },
+    orderBy: { entryDate: "desc" },
+  });
+
+  if (
+    lastFinancialClosing &&
+    new Date(lastFinancialClosing.entryDate) > new Date(entryDate as Date)
+  ) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You cannot modify transaction on the closed date."
+    );
+  }
+
+  const { transactionDetails: transactionDetailsBefore } = transaction;
+
+  const dataLineBefore = transactionDetailsBefore.reduce((arr, detail) => {
+    if (detail.multipleUom) {
+      arr.push({
+        id: detail.id,
+        itemId: detail.multipleUom.itemId,
+        qty: detail.qty,
+        price: detail.priceInput,
+        disc: detail.discountInput,
+      });
+    }
+    return arr;
+  }, [] as unknown as DetailCompare[]);
+
+  const { transactionDetails, ...rest } = updateBody;
+
+  const details = transactionDetails.reduce((obj, detail) => {
+    const qty = (detail.qtyInput ?? 0) * (detail.conversionQty ?? 0)
+
+    obj.dataLine.push({
+      ...detail,
+      qty,
+      vector: "POSITIVE",
+      updatedBy: rest.updatedBy
+    });
+    return obj;
+  }, { dataLine: [], beforeTax: 0, taxValue: 0, total: 0 } as ReduceAmount);
+
+  const { dataLine } = details;
+
+  const dataLineBecome: DetailCompare[] = []
+  for (const line of dataLine) {
+    if (line.multipleUomId) {
+      const getItem = await prisma.multipleUom.findUnique({
+        where: { id: line.multipleUomId },
+        select: { itemId: true },
+      });
+      if (getItem) {
+        dataLineBecome.push({
+          itemId: getItem.itemId,
+          qty: line.qty ?? 0,
+          price: line.priceInput as number,
+          disc: line.discountInput as number,
+        })
+      }
+    }
+  }
+
+  const dataItemIds = getItemChanges(dataLineBefore, dataLineBecome);
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resTransaction = await tx.transaction.update({
+        where: {
+          id: transactionId,
+        },
+        data: {
+          ...rest,
+          entryDate,
+          transactionDetails: {
+            deleteMany: {
+              transactionId,
+              NOT: dataLine.map(({ id }) => ({
+                id,
+              }))
+            },
+            upsert: dataLine.map((detail) => {
+              return ({
+                where: {
+                  id: detail.id ?? ""
+                },
+                create: {
+                  ...detail,
+                  createdBy: rest.updatedBy as string,
+                },
+                update: {
+                  ...detail,
+                  updatedBy: rest.updatedBy as string,
+                }
+              })
+            })
+          }
+        },
+        select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+      });
+      const recalculateCogsItem = [];
+      for (const itemId of dataItemIds) {
+        recalculateCogsItem.push(itemCogsService.recalculateCogs(tx, itemId, rest.unitId));
+      }
+
+      await Promise.all(recalculateCogsItem);
+
+      await generalLedgerService.createGeneralLedger(tx, transactionId);
+
+      // Jika semua operasi berjalan lancar, transaksi akan di-commit
+      return resTransaction as Pick<Transaction, Key> | null;
+    }, {
+      isolationLevel: 'Serializable'
+    });
+  } catch (error: any) {
+    throw new ApiError(httpStatus.BAD_REQUEST, error?.message ?? "Some Error occurred");
+  }
+};
+
+/**
  * Generate transaction number
  * @param {String} transactionType
  * @param {String} unitId
@@ -2932,6 +4155,10 @@ export default {
   createJournalEntry,
   createBeginBalanceStock,
   createBeginBalanceDebtReceive,
+  createSalesReturn,
+  createPurchaseReturn,
+  createStockOpname,
+  createStockAdjustment,
   queryTransactions,
   getTransactionById,
   getTransactionByNumber,
@@ -2943,6 +4170,10 @@ export default {
   updateExpenseById,
   updateJournalEntryById,
   updateBeginBalanceStockById,
+  updateBeginBalanceDebtReceiveById,
+  updateSalesReturnById,
+  updatePurchaseReturnById,
+  updateStockOpnameById,
   updateTransactionById,
   deleteTransactionById,
   generateTransactionNumber,

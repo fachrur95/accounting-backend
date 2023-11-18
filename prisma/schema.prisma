@@ -500,39 +500,42 @@ model Transaction {
 }
 
 model TransactionDetail {
-  id                   String                @id @default(cuid())
-  qtyInput             Float                 @default(0)
-  priceInput           Float                 @default(0)
-  discountInput        Float                 @default(0)
-  conversionQty        Float                 @default(1.0)
-  taxRate              Float                 @default(0)
-  vector               Vector
-  qty                  Float                 @default(0)
-  beforeDiscount       Float                 @default(0)
-  discount             Float                 @default(0)
-  distribute           Float                 @default(0)
-  distributeValue      Float                 @default(0)
-  amount               Float                 @default(0)
-  taxValue             Float                 @default(0)
-  total                Float                 @default(0)
-  note                 String?
-  createdAt            DateTime              @default(now())
-  createdBy            String
-  updatedAt            DateTime              @updatedAt
-  updatedBy            String?
-  transaction          Transaction           @relation("transaction", fields: [transactionId], references: [id], onDelete: Cascade)
-  transactionId        String
-  transactionPayment   Transaction?          @relation("transactionPayment", fields: [transactionPaymentId], references: [id])
-  transactionPaymentId String?
-  multipleUom          MultipleUom?          @relation(fields: [multipleUomId], references: [id])
-  multipleUomId        String?
-  tax                  Tax?                  @relation(fields: [taxId], references: [id])
-  taxId                String?
-  chartOfAccount       ChartOfAccount?       @relation(fields: [chartOfAccountId], references: [id])
-  chartOfAccountId     String?
-  itemCogsDetails      ItemCogsDetail[]
-  itemCogs             ItemCogs?
-  generalLedgerDetails GeneralLedgerDetail[]
+  id                        String                @id @default(cuid())
+  qtyInput                  Float                 @default(0)
+  priceInput                Float                 @default(0)
+  discountInput             Float                 @default(0)
+  conversionQty             Float                 @default(1.0)
+  taxRate                   Float                 @default(0)
+  vector                    Vector
+  qty                       Float                 @default(0)
+  beforeDiscount            Float                 @default(0)
+  discount                  Float                 @default(0)
+  distribute                Float                 @default(0)
+  distributeValue           Float                 @default(0)
+  amount                    Float                 @default(0)
+  taxValue                  Float                 @default(0)
+  total                     Float                 @default(0)
+  note                      String?
+  createdAt                 DateTime              @default(now())
+  createdBy                 String
+  updatedAt                 DateTime              @updatedAt
+  updatedBy                 String?
+  transaction               Transaction           @relation("transaction", fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId             String
+  transactionDetailParent   TransactionDetail?    @relation("transactionDetailChildren", fields: [transactionDetailParentId], references: [id])
+  transactionDetailParentId String?
+  transactionPayment        Transaction?          @relation("transactionPayment", fields: [transactionPaymentId], references: [id])
+  transactionPaymentId      String?
+  multipleUom               MultipleUom?          @relation(fields: [multipleUomId], references: [id])
+  multipleUomId             String?
+  tax                       Tax?                  @relation(fields: [taxId], references: [id])
+  taxId                     String?
+  chartOfAccount            ChartOfAccount?       @relation(fields: [chartOfAccountId], references: [id])
+  chartOfAccountId          String?
+  itemCogsDetails           ItemCogsDetail[]
+  itemCogs                  ItemCogs?
+  generalLedgerDetails      GeneralLedgerDetail[]
+  transactionDetailChildren TransactionDetail[]   @relation("transactionDetailChildren")
 }
 
 model FinancialClosing {
@@ -659,6 +662,7 @@ enum TransactionType {
   TRANSFER_ITEM_SEND
   TRANSFER_ITEM_RECEIVE
   STOCK_OPNAME
+  STOCK_ADJUSTMENT
   JOURNAL_ENTRY
   BEGINNING_BALANCE_STOCK
   BEGINNING_BALANCE_DEBT

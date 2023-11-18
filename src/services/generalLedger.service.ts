@@ -90,6 +90,15 @@ const createGeneralLedger = async (
         await detailCloseCashRegister(tx, generalLedger.id, transactionId);
         break;
 
+      case "SALE_RETURN":
+      case "PURCHASE_RETURN":
+        await detailSalesPurchaseReturn(tx, generalLedger.id, transactionId);
+        break;
+
+      case "STOCK_ADJUSTMENT":
+        await detailStockAdjustment(tx, generalLedger.id, transactionId);
+        break;
+
       default:
         throw new Error('No such transaction');
     }
@@ -739,6 +748,212 @@ const detailSale = async (
   }
 }
 
+const detailSalesPurchaseReturn = async (
+  tx: TransactionMethod,
+  generalLedgerId: string,
+  transactionId: string,
+): Promise<void> => {
+  try {
+    const transaction = await tx.transaction.findUnique({
+      where: { id: transactionId },
+      include: {
+        transactionDetails: {
+          include: {
+            multipleUom: {
+              include: {
+                item: {
+                  include: {
+                    itemCategory: {
+                      select: {
+                        cogsAccountId: true,
+                        stockAccountId: true,
+                        salesAccountId: true,
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+    });
+    if (!transaction) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Transaction Not Found');
+    }
+    const generalSetting = await tx.generalSetting.findUnique({
+      where: { unitId: transaction.unitId },
+      select: {
+        debitAccountId: true,
+        creditAccountId: true,
+      }
+    });
+    if (!generalSetting || !generalSetting.debitAccountId || !generalSetting.creditAccountId) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'General Setting Not Found');
+    }
+
+    const { transactionDetails, ...data } = transaction;
+
+    const dataDetail: ReduceAccountLine[] = [];
+
+    const coreAccountId = data.chartOfAccountId;
+
+    if (coreAccountId) {
+      dataDetail.push({
+        accountId: coreAccountId,
+        amount: transaction.totalPayment,
+        vector: transaction.transactionType === "PURCHASE_RETURN" ? "POSITIVE" : "NEGATIVE",
+        createdBy: data.createdBy,
+      });
+    }
+
+    if (transaction.underPayment > 0) {
+      dataDetail.push({
+        accountId: transaction.transactionType === "PURCHASE_RETURN" ? generalSetting.debitAccountId : generalSetting.creditAccountId,
+        amount: transaction.underPayment,
+        vector: transaction.transactionType === "PURCHASE_RETURN" ? "POSITIVE" : "NEGATIVE",
+        createdBy: data.createdBy,
+      });
+    }
+
+    for (const detail of transactionDetails) {
+      if (detail.multipleUom) {
+        if (transaction.transactionType === "PURCHASE_RETURN") {
+          if (detail.multipleUom.item.itemCategory.stockAccountId) {
+            dataDetail.push({
+              accountId: detail.multipleUom.item.itemCategory.stockAccountId,
+              itemId: detail.multipleUom.itemId,
+              amount: detail.total,
+              vector: "NEGATIVE",
+              createdBy: data.createdBy,
+            })
+          }
+        }
+        if (transaction.transactionType === "SALE_RETURN") {
+          if (detail.multipleUom.item.itemCategory.salesAccountId) {
+            dataDetail.push({
+              accountId: detail.multipleUom.item.itemCategory.salesAccountId,
+              itemId: detail.multipleUom.itemId,
+              amount: detail.total,
+              vector: "POSITIVE",
+              createdBy: data.createdBy,
+            })
+          }
+        }
+      }
+    }
+
+    await tx.generalLedgerDetail.createMany({
+      data: dataDetail.map((detail) => {
+        const { accountId, ...restDetail } = detail;
+        return ({
+          ...restDetail,
+          chartOfAccountId: accountId,
+          generalLedgerId,
+        })
+      })
+    });
+  } catch (error) {
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
+}
+
+const detailStockAdjustment = async (
+  tx: TransactionMethod,
+  generalLedgerId: string,
+  transactionId: string,
+): Promise<void> => {
+  try {
+    const transaction = await tx.transaction.findUnique({
+      where: { id: transactionId },
+      include: {
+        transactionDetails: {
+          include: {
+            multipleUom: {
+              include: {
+                item: {
+                  include: {
+                    itemCategory: {
+                      select: {
+                        cogsAccountId: true,
+                        stockAccountId: true,
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            itemCogsDetails: {
+              select: {
+                cogs: true,
+              }
+            }
+          }
+        },
+        cashRegister: true,
+      },
+    });
+    if (!transaction) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Transaction Not Found');
+    }
+    const generalSetting = await tx.generalSetting.findUnique({
+      where: { unitId: transaction.unitId },
+      select: {
+        creditAccountId: true,
+      }
+    });
+    if (!generalSetting || !generalSetting.creditAccountId) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'General Setting Not Found');
+    }
+
+    const { transactionDetails, ...data } = transaction;
+
+    const dataDetail: ReduceAccountLine[] = [];
+
+    for (const detail of transactionDetails) {
+      if (detail.multipleUom) {
+        const sumCogs = detail.itemCogsDetails.reduce((sum, item) => sum + item.cogs, 0);
+        const currentCogs = detail.itemCogsDetails.length > 0 ? (sumCogs / detail.itemCogsDetails.length) : 0;
+        const totalCogs = detail.qty * currentCogs;
+        if (totalCogs > 0) {
+          if (detail.multipleUom.item.itemCategory.cogsAccountId) {
+            dataDetail.push({
+              accountId: detail.multipleUom.item.itemCategory.cogsAccountId,
+              itemId: detail.multipleUom.itemId,
+              amount: totalCogs,
+              vector: detail.vector === "NEGATIVE" ? "POSITIVE" : "NEGATIVE",
+              createdBy: data.createdBy,
+              transactionDetailId: detail.id,
+            });
+          }
+          if (detail.multipleUom.item.itemCategory.stockAccountId) {
+            dataDetail.push({
+              accountId: detail.multipleUom.item.itemCategory.stockAccountId,
+              itemId: detail.multipleUom.itemId,
+              amount: totalCogs,
+              vector: detail.vector,
+              createdBy: data.createdBy,
+              transactionDetailId: detail.id,
+            });
+          }
+        }
+      }
+    }
+
+    await tx.generalLedgerDetail.createMany({
+      data: dataDetail.map((detail) => {
+        const { accountId, ...restDetail } = detail;
+        return ({
+          ...restDetail,
+          chartOfAccountId: accountId,
+          generalLedgerId,
+        })
+      })
+    });
+  } catch (error) {
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'An error occurred');
+  }
+}
 
 export default {
   createGeneralLedger,

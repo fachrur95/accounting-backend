@@ -90,6 +90,42 @@ const scanBarcode = catchAsync(async (req, res) => {
   res.send(item);
 });
 
+const getAllStock = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  if (!user.session?.unit?.id) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Unit not choosen');
+  }
+  const stock = await itemService.getAllItemStockByUnitId(user.session?.unit?.id);
+  if (stock.length === 0) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Stock not found');
+  }
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: `Get Stock All Item`,
+    activityType: "READ",
+    createdBy: user.email,
+  });
+  res.send(stock);
+});
+
+const getItemStock = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  if (!user.session?.unit?.id) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Unit not choosen');
+  }
+  const item = await itemService.getAllItemStockByUnitId(user.session?.unit?.id, req.params.itemId);
+  if (item.length === 0) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Item Stock not found');
+  }
+  await logActivityService.createLogActivity({
+    unitId: user.session?.unit?.id,
+    message: `Get Stock Item "${req.params.itemId}"`,
+    activityType: "READ",
+    createdBy: user.email,
+  });
+  res.send(item[0]);
+});
+
 const updateItem = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const { files, ...data } = req.body;
@@ -134,6 +170,8 @@ export default {
   getItems,
   getItem,
   scanBarcode,
+  getAllStock,
+  getItemStock,
   updateItem,
   deleteItem,
 };
