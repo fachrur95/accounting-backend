@@ -106,10 +106,10 @@ export const formatNumberReport = (value: number): string => {
     return "";
   }
   if (value < 0) {
-    const formatted = FormatNumber.format(Math.abs(value))
+    const formatted = FormatNumber.format(Math.abs(parseFloat(value.toFixed(2))))
     return `(${formatted})`
   }
-  return FormatNumber.format(value);
+  return FormatNumber.format(parseFloat(value.toFixed(2)));
 };
 
 export const convertDateOnly = (date: Date) => {
