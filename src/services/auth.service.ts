@@ -129,10 +129,11 @@ const resetPassword = async (resetPasswordToken: string, newPassword: string): P
     if (!user) {
       throw new Error();
     }
-    const encryptedPassword = await encryptPassword(newPassword);
-    await userService.updateUserById(user.id, { password: encryptedPassword });
+    // const encryptedPassword = await encryptPassword(newPassword);
+    await userService.updateUserById(user.id, { password: newPassword });
     await prisma.token.deleteMany({ where: { userId: user.id, type: TokenType.RESET_PASSWORD } });
   } catch (error) {
+    console.log({ error })
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed');
   }
 };

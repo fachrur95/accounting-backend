@@ -20,8 +20,8 @@ const cookieOptions = (expires: Date): CookieOptions => {
 }
 
 const register = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
-  const user = await userService.createUser({ email, password });
+  const { email, password, name } = req.body;
+  const user = await userService.createUser({ email, password, name });
   const userWithoutPassword = exclude(user, ['password', 'createdAt', 'updatedAt']);
   const tokens = await tokenService.generateAuthTokens(user);
   await logActivityService.createLogActivity({
@@ -162,14 +162,12 @@ const allowedUnits = catchAsync(async (req, res) => {
 });
 
 const forgotPassword = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
   const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body.email);
   await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id,
     message: "Request reset password",
     activityType: "RESET_PASSWORD",
-    createdBy: user.email,
+    createdBy: req.body.email,
   });
   res.status(httpStatus.CREATED).send({
     message: "Reset password request has been sent to your email."
@@ -177,13 +175,11 @@ const forgotPassword = catchAsync(async (req, res) => {
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
   await authService.resetPassword(req.query.token as string, req.body.password);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id,
-    message: "Success Reset password",
+    message: `Success Reset password token = ${req.query.token}`,
     activityType: "RESET_PASSWORD",
-    createdBy: user.email,
+    createdBy: req.query.token as string,
   });
   res.status(httpStatus.ACCEPTED).send({
     message: "Password has been reset."
@@ -206,13 +202,11 @@ const sendVerificationEmail = catchAsync(async (req, res) => {
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
-  const user = req.user as SessionData;
   await authService.verifyEmail(req.query.token as string);
   await logActivityService.createLogActivity({
-    unitId: user.session?.unit?.id,
-    message: "Success Verify email",
+    message: `Success Verify email token = ${req.query.token}`,
     activityType: "VERIFY_EMAIL",
-    createdBy: user.email,
+    createdBy: req.query.token as string,
   });
   res.status(httpStatus.ACCEPTED).send({
     message: "Email confirmed."

@@ -40,7 +40,7 @@ const sendResetPasswordEmail = async (to: string, token: string): Promise<any> =
   readHTMLFile('src/utils/templates/reset-password.html', async function (err, html) {
     const subject = 'Reset password';
     // replace this url with the link to the reset password page of your front-end app
-    const resetPasswordUrl = `http://localhost:3000/v1/auth/reset-password?token=${token}`;
+    const resetPasswordUrl = `${config.frontend}/reset-password/${token}`;
     //   const text = `Dear user,
     // To reset your password, click on this link: ${resetPasswordUrl}
     // If you did not request any password resets, then ignore this email.`;
@@ -71,7 +71,7 @@ const sendVerificationEmail = async (to: string, token: string): Promise<any> =>
   readHTMLFile('src/utils/templates/confirm-email.html', async function (err, html) {
     const subject = 'Email Verification';
     // replace this url with the link to the email verification page of your front-end app
-    const verificationEmailUrl = `http://localhost:3000/v1/auth/verify-email?token=${token}`;
+    const verificationEmailUrl = `${config.frontend}/verify-email/${token}`;
     // const text = `Dear user,
     // To verify your email, click on this link: ${verificationEmailUrl}`;
 

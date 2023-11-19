@@ -208,7 +208,7 @@ const updateUserById = async <Key extends keyof User>(
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
-  const checkName = await getUserByEmail(updateBody.email as string);
+  const checkName = await getUserByEmail(user.email as string);
   if (updateBody.name && checkName && checkName.name !== user.name) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
