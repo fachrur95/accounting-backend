@@ -144,11 +144,11 @@ const allowedUnits = catchAsync(async (req, res) => {
   if (!user.session?.institute) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Choose institute first.');
   }
-  if (user.role !== "SUPERADMIN") {
-    filterInstitute = {
-      instituteId: user.session.institute.id
-    }
+  // if (user.role !== "SUPERADMIN") {
+  filterInstitute = {
+    instituteId: user.session.institute.id
   }
+  // }
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Melihat Semua allowed Unit",
