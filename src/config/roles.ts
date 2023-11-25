@@ -22,6 +22,7 @@ const allRoles = {
   [Role.ADMIN]: [
     'getUsers',
     'manageUsers',
+    'getInstitutes',
     'getUnits',
     'manageUnits',
     'getWarehouses',
