@@ -5,6 +5,8 @@ const createPeople = {
     peopleCategoryId: Joi.string().required(),
     code: Joi.string(),
     name: Joi.string().required(),
+    phone: Joi.string(),
+    address: Joi.string(),
     note: Joi.string(),
     isActive: Joi.boolean(),
   })
@@ -56,6 +58,8 @@ const updatePeople = {
       peopleCategoryId: Joi.string(),
       code: Joi.string(),
       name: Joi.string(),
+      phone: Joi.string(),
+      address: Joi.string(),
       note: Joi.string(),
       isActive: Joi.boolean(),
     })

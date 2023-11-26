@@ -47,6 +47,8 @@ const queryPeoples = async <Key extends keyof People>(
     'id',
     'code',
     'name',
+    'phone',
+    'address',
     'note',
     'isActive',
     'peopleCategory',
@@ -68,6 +70,8 @@ const queryPeoples = async <Key extends keyof People>(
     globalSearch = {
       OR: [
         { name: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
         { note: { contains: search, mode: 'insensitive' } },
         { createdBy: { contains: search, mode: 'insensitive' } },
         { updatedBy: { contains: search, mode: 'insensitive' } },
@@ -123,6 +127,8 @@ const getPeopleById = async <Key extends keyof People>(
     'id',
     'code',
     'name',
+    'phone',
+    'address',
     'note',
     'isActive',
     'peopleCategory',

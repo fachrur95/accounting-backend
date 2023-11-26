@@ -236,6 +236,8 @@ model People {
   id                  String         @id @default(cuid())
   code                String?
   name                String
+  phone               String?
+  address             String?
   note                String?
   isActive            Boolean        @default(true)
   createdAt           DateTime       @default(now())
