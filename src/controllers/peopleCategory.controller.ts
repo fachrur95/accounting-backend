@@ -25,7 +25,12 @@ const getPeopleCategories = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const filter = pick(req.query, ['code', 'name', 'unitId', 'isCustomer', 'isSupplier', 'isEmployee']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'search']);
-  filter.unitId = user.session?.unit?.id;
+  const isSupplier = req.query?.isSupplier as unknown as boolean;
+
+  if (isSupplier === true) {
+    filter.unitId = user.session?.unit?.id;
+  }
+
   const conditions = pickNested(req.query?.filters as FiltersType);
   const multipleSort = pickNestedSort(req.query?.sorts as SortType[]);
   const result = await peopleCategoryService.queryPeopleCategories(filter, options, conditions, multipleSort);
