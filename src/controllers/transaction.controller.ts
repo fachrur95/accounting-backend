@@ -363,7 +363,7 @@ const getCashRegistersStandBy = catchAsync(async (req, res) => {
 
 const getPaymentDraft = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
-  const result = await transactionService.getPaymentDraftByPeopleId(req.params.type, req.params.peopleId);
+  const result = await transactionService.getPaymentDraftByPeopleId(user.session?.unit?.id, req.params.type, req.params.peopleId);
   await logActivityService.createLogActivity({
     unitId: user.session?.unit?.id,
     message: "Melihat Daftar Pembayaran",

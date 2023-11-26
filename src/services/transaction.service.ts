@@ -190,8 +190,9 @@ const getAllCashRegisterByUnitId = async (unitId: string, id?: string): Promise<
  * @returns {Promise<CashRegister | null>}
  */
 const getPaymentDraftByPeopleId = async (
+  unitId: string,
   type: "debt" | "receivable",
-  peopleId: string
+  peopleId: string,
 ): Promise<IQueryRawPaymentDraft[]> => {
   const people = await prisma.people.findUnique({
     where: { id: peopleId },
@@ -237,7 +238,8 @@ const getPaymentDraftByPeopleId = async (
       ) AS "transDetailChild"
       ON "transDetailChild"."id" = "Transaction"."id" 
     WHERE
-      (
+      "Transaction"."unitId" = ${unitId}
+      AND (
         "Transaction"."transactionType"::text = ${transType1}
         OR "Transaction"."transactionType"::text = ${transType2}
       ) 
