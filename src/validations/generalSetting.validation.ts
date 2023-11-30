@@ -8,6 +8,8 @@ const updateGeneralSetting = {
   body: Joi.object()
     .keys({
       companyName: Joi.string(),
+      address: Joi.string(),
+      additionalMessage: Joi.string(),
       leader: Joi.string(),
       accountant: Joi.string(),
       recalculateMethod: Joi.string().valid(
@@ -18,6 +20,11 @@ const updateGeneralSetting = {
       currentProfitAccountId: Joi.string(),
       debitAccountId: Joi.string(),
       creditAccountId: Joi.string(),
+      defaultSalesId: Joi.string(),
+      defaultStockId: Joi.string(),
+      defaultCogsId: Joi.string(),
+      defaultPaymentBankAccountId: Joi.string(),
+      defaultPaymentAccountId: Joi.string(),
     })
     .min(1)
 };

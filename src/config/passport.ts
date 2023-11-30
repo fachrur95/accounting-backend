@@ -51,6 +51,11 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
             creditAccount: true,
             debitAccount: true,
             currentProfitAccount: true,
+            defaultSales: true,
+            defaultStock: true,
+            defaultCogs: true,
+            defaultPaymentAccount: true,
+            defaultPaymentBankAccount: true,
           }
         },
       }

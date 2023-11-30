@@ -795,7 +795,7 @@ const createSalesReturn = async (
             if (index + 1 === getItemCogsDetail.length && currentStock < (detail.qty ?? 0)) {
               throw new ApiError(
                 httpStatus.INTERNAL_SERVER_ERROR,
-                `Insufficient stock of "${getItem.item?.name}"! Only: ${currentStock} left`
+                `Stock dari "${getItem.item?.name}" tidak mencukupi! Hanya tersisa: ${currentStock} lagi`
               );
             }
             ++count;
@@ -2714,7 +2714,7 @@ const updateSalesReturnById = async <Key extends keyof Transaction>(
             if (index + 1 === getItemCogsDetail.length && currentStock < (detail.qty ?? 0)) {
               throw new ApiError(
                 httpStatus.INTERNAL_SERVER_ERROR,
-                `Insufficient stock of "${getItem.item?.name}"! Only: ${currentStock} left`
+                `Stock dari "${getItem.item?.name}" tidak mencukupi! Hanya tersisa: ${currentStock} lagi`
               );
             }
             ++count;

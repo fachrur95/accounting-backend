@@ -28,13 +28,13 @@ const createUnit = async (
     return await prisma.$transaction(async (tx) => {
       const unit = await tx.unit.create({ data });
 
-      const createGeneralSetting = tx.generalSetting.create({
+      /* const createGeneralSetting = tx.generalSetting.create({
         data: {
           companyName: unit.name,
           createdBy: unit.createdBy,
           unitId: unit.id,
         }
-      });
+      }); */
       /* const createWarehouse = tx.warehouse.create({
         data: {
           unitId: unit.id,
@@ -73,7 +73,131 @@ const createUnit = async (
         }))
       }
 
-      await Promise.all([createGeneralSetting, ...prefixes, ...defaultCoa]);
+      await Promise.all([...prefixes, ...defaultCoa]);
+
+      // 39900 // laba berjalan
+      // 21000 // hutang
+      // 13000 // piutang
+
+      // 41000 // penjualan
+      // 14000 // persediaan
+      // 51000 // hpp
+
+      // 11000 // kas
+
+      const getLabaBerjalan = tx.chartOfAccount.findUnique({
+        where: {
+          code_unitId: {
+            code: "39900",
+            unitId: unit.id
+          }
+        }
+      });
+      const getHutang = tx.chartOfAccount.findUnique({
+        where: {
+          code_unitId: {
+            code: "21000",
+            unitId: unit.id
+          }
+        }
+      });
+      const getPiutang = tx.chartOfAccount.findUnique({
+        where: {
+          code_unitId: {
+            code: "13000",
+            unitId: unit.id
+          }
+        }
+      });
+      const getPenjualan = tx.chartOfAccount.findUnique({
+        where: {
+          code_unitId: {
+            code: "41000",
+            unitId: unit.id
+          }
+        }
+      });
+      const getPersediaan = tx.chartOfAccount.findUnique({
+        where: {
+          code_unitId: {
+            code: "14000",
+            unitId: unit.id
+          }
+        }
+      });
+      const getHPP = tx.chartOfAccount.findUnique({
+        where: {
+          code_unitId: {
+            code: "51000",
+            unitId: unit.id
+          }
+        }
+      });
+      const getKas = tx.chartOfAccount.findUnique({
+        where: {
+          code_unitId: {
+            code: "11000",
+            unitId: unit.id
+          }
+        }
+      });
+      const getBank = tx.chartOfAccount.findUnique({
+        where: {
+          code_unitId: {
+            code: "12000",
+            unitId: unit.id
+          }
+        }
+      });
+      const getKasKecil = tx.chartOfAccount.findUnique({
+        where: {
+          code_unitId: {
+            code: "11010",
+            unitId: unit.id
+          }
+        }
+      });
+
+      const [
+        defaultLabaBerjalan,
+        defaultHutang,
+        defaultPiutang,
+        defaultPenjualan,
+        defaultPersediaan,
+        defaultHPP,
+        defaultKas,
+        defaultBank,
+        defaultKasKecil,
+      ] = await Promise.all([getLabaBerjalan, getHutang, getPiutang, getPenjualan, getPersediaan, getHPP, getKas, getBank, getKasKecil])
+
+      await tx.generalSetting.create({
+        data: {
+          companyName: unit.name,
+          createdBy: unit.createdBy,
+          unitId: unit.id,
+          currentProfitAccountId: defaultLabaBerjalan?.id,
+          debitAccountId: defaultHutang?.id,
+          creditAccountId: defaultPiutang?.id,
+          defaultSalesId: defaultPenjualan?.id,
+          defaultStockId: defaultPersediaan?.id,
+          defaultCogsId: defaultHPP?.id,
+          defaultPaymentAccountId: defaultKas?.id,
+          defaultPaymentBankAccountId: defaultBank?.id,
+        }
+      });
+
+      if (defaultKas && defaultKasKecil) {
+        await tx.cashRegister.create({
+          data: {
+            name: "Mesin Kasir 1",
+            createdBy: unit.createdBy,
+            beginBalanceAccountId: defaultKas.id,
+            depositAccountId: defaultKas.id,
+            mainAccountId: defaultKasKecil.id,
+            unitId: unit.id,
+          }
+        });
+      }
 
       return unit;
     }, {

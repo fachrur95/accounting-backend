@@ -18,6 +18,12 @@ const updateGeneralSettingById = async <Key extends keyof GeneralSetting>(
     data: updateBody,
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   });
+  await prisma.unit.update({
+    where: { id: unitId },
+    data: {
+      name: updateBody.companyName,
+    }
+  });
   return updatedGeneralSetting as Pick<GeneralSetting, Key> | null;
 };
 

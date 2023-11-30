@@ -228,7 +228,7 @@ const calculateFIFOByTransDetailId = async (
   if (transBefore.length === 0) {
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
-      `Insufficient stock of "${item?.name}"! Only: 0 left`
+      `Stock dari "${item?.name}" tidak mencukupi! Hanya tersisa: 0 lagi`
     );
   }
 
@@ -243,7 +243,7 @@ const calculateFIFOByTransDetailId = async (
     if (index + 1 === transBefore.length && currentStock < qty) {
       throw new ApiError(
         httpStatus.INTERNAL_SERVER_ERROR,
-        `Insufficient stock of "${item?.name}"! Only: ${currentStock} left`
+        `Stock dari "${item?.name}" tidak mencukupi! Hanya tersisa: ${currentStock} lagi`
       );
     }
 
@@ -376,7 +376,7 @@ const calculateAVGByTransDetailId = async (
   if (transBefore.length === 0) {
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
-      `Insufficient stock of "${item?.name}"! Only: 0 left`
+      `Stock dari "${item?.name}" tidak mencukupi! Hanya tersisa: 0 lagi`
     );
   }
 
@@ -392,7 +392,7 @@ const calculateAVGByTransDetailId = async (
     if (index + 1 === transBefore.length && currentStock < qty) {
       throw new ApiError(
         httpStatus.INTERNAL_SERVER_ERROR,
-        `Insufficient stock of "${item?.name}"! Only: ${currentStock} left`
+        `Stock dari "${item?.name}" tidak mencukupi! Hanya tersisa: ${currentStock} lagi`
       );
     }
 
@@ -539,7 +539,7 @@ const calculateManualByTransDetailId = async (
   if (transBefore.length === 0) {
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
-      `Insufficient stock of "${item?.name}"! Only: 0 left`
+      `Stock dari "${item?.name}" tidak mencukupi! Hanya tersisa: 0 lagi`
     );
   }
 
@@ -555,7 +555,7 @@ const calculateManualByTransDetailId = async (
     if (index + 1 === transBefore.length && currentStock < qty) {
       throw new ApiError(
         httpStatus.INTERNAL_SERVER_ERROR,
-        `Insufficient stock of "${item?.name}"! Only: ${currentStock} left`
+        `Stock dari "${item?.name}" tidak mencukupi! Hanya tersisa: ${currentStock} lagi`
       );
     }
 

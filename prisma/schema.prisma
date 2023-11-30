@@ -141,31 +141,36 @@ model AccountSubClass {
 }
 
 model ChartOfAccount {
-  id                           String                @id @default(cuid())
-  code                         String
-  group                        String?
-  name                         String
-  isActive                     Boolean               @default(true)
-  createdAt                    DateTime              @default(now())
-  createdBy                    String
-  updatedAt                    DateTime              @updatedAt
-  updatedBy                    String?
-  accountSubClass              AccountSubClass       @relation(fields: [accountSubClassId], references: [id])
-  accountSubClassId            String
-  unit                         Unit                  @relation(fields: [unitId], references: [id])
-  unitId                       String
-  transactionDetails           TransactionDetail[]
-  transactions                 Transaction[]
-  cashRegisterMains            CashRegister[]        @relation("main")
-  cashRegisterDeposits         CashRegister[]        @relation("deposit")
-  cashRegisterBeginBalances    CashRegister[]        @relation("beginBalance")
-  itemCategoryStocks           ItemCategory[]        @relation("stock")
-  itemCategoryCogs             ItemCategory[]        @relation("cogs")
-  itemCategorySales            ItemCategory[]        @relation("sales")
-  generalSettingCurrentProfits GeneralSetting[]      @relation("currentProfit")
-  generalSettingDebits         GeneralSetting[]      @relation("debit")
-  generalSettingCredits        GeneralSetting[]      @relation("credit")
-  generalLedgerDetails         GeneralLedgerDetail[]
+  id                                       String                @id @default(cuid())
+  code                                     String
+  group                                    String?
+  name                                     String
+  isActive                                 Boolean               @default(true)
+  createdAt                                DateTime              @default(now())
+  createdBy                                String
+  updatedAt                                DateTime              @updatedAt
+  updatedBy                                String?
+  accountSubClass                          AccountSubClass       @relation(fields: [accountSubClassId], references: [id])
+  accountSubClassId                        String
+  unit                                     Unit                  @relation(fields: [unitId], references: [id])
+  unitId                                   String
+  transactionDetails                       TransactionDetail[]
+  transactions                             Transaction[]
+  cashRegisterMains                        CashRegister[]        @relation("main")
+  cashRegisterDeposits                     CashRegister[]        @relation("deposit")
+  cashRegisterBeginBalances                CashRegister[]        @relation("beginBalance")
+  itemCategoryStocks                       ItemCategory[]        @relation("stock")
+  itemCategoryCogs                         ItemCategory[]        @relation("cogs")
+  itemCategorySales                        ItemCategory[]        @relation("sales")
+  generalSettingCurrentProfits             GeneralSetting[]      @relation("currentProfit")
+  generalSettingDebits                     GeneralSetting[]      @relation("debit")
+  generalSettingCredits                    GeneralSetting[]      @relation("credit")
+  generalSettingDefaultSaleses             GeneralSetting[]      @relation("defaultSales")
+  generalSettingDefaultStocks              GeneralSetting[]      @relation("defaultStock")
+  generalSettingDefaultCogses              GeneralSetting[]      @relation("defaultCogs")
+  generalSettingDefaultPaymentBankAccounts GeneralSetting[]      @relation("defaultPaymentBankAccount")
+  generalSettingDefaultPaymentAccounts     GeneralSetting[]      @relation("defaultPaymentAccount")
+  generalLedgerDetails                     GeneralLedgerDetail[]
 
   @@unique([code, unitId])
   @@unique([group, unitId])
@@ -192,24 +197,36 @@ model CashRegister {
 }
 
 model GeneralSetting {
-  id                     String            @id @default(cuid())
-  companyName            String
-  leader                 String?
-  accountant             String?
-  recalculateMethod      RecalculateMethod @default(FIFO)
-  isStrictMode           Boolean           @default(true)
-  createdAt              DateTime          @default(now())
-  createdBy              String
-  updatedAt              DateTime          @updatedAt
-  updatedBy              String?
-  unit                   Unit              @relation(fields: [unitId], references: [id])
-  unitId                 String            @unique
-  currentProfitAccount   ChartOfAccount?   @relation("currentProfit", fields: [currentProfitAccountId], references: [id])
-  currentProfitAccountId String?
-  debitAccount           ChartOfAccount?   @relation("debit", fields: [debitAccountId], references: [id])
-  debitAccountId         String?
-  creditAccount          ChartOfAccount?   @relation("credit", fields: [creditAccountId], references: [id])
-  creditAccountId        String?
+  id                          String            @id @default(cuid())
+  companyName                 String
+  address                     String?
+  leader                      String?
+  accountant                  String?
+  recalculateMethod           RecalculateMethod @default(FIFO)
+  isStrictMode                Boolean           @default(true)
+  additionalMessage           String?           @default("Terimakasih telah berbelanja")
+  createdAt                   DateTime          @default(now())
+  createdBy                   String
+  updatedAt                   DateTime          @updatedAt
+  updatedBy                   String?
+  unit                        Unit              @relation(fields: [unitId], references: [id])
+  unitId                      String            @unique
+  currentProfitAccount        ChartOfAccount?   @relation("currentProfit", fields: [currentProfitAccountId], references: [id])
+  currentProfitAccountId      String?
+  debitAccount                ChartOfAccount?   @relation("debit", fields: [debitAccountId], references: [id])
+  debitAccountId              String?
+  creditAccount               ChartOfAccount?   @relation("credit", fields: [creditAccountId], references: [id])
+  creditAccountId             String?
+  defaultSales                ChartOfAccount?   @relation("defaultSales", fields: [defaultSalesId], references: [id])
+  defaultSalesId              String?
+  defaultStock                ChartOfAccount?   @relation("defaultStock", fields: [defaultStockId], references: [id])
+  defaultStockId              String?
+  defaultCogs                 ChartOfAccount?   @relation("defaultCogs", fields: [defaultCogsId], references: [id])
+  defaultCogsId               String?
+  defaultPaymentBankAccount   ChartOfAccount?   @relation("defaultPaymentBankAccount", fields: [defaultPaymentBankAccountId], references: [id])
+  defaultPaymentBankAccountId String?
+  defaultPaymentAccount       ChartOfAccount?   @relation("defaultPaymentAccount", fields: [defaultPaymentAccountId], references: [id])
+  defaultPaymentAccountId     String?
 }
 
 model PeopleCategory {
