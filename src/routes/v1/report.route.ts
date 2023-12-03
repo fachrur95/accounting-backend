@@ -119,6 +119,14 @@ router.use(authSession())
     reportController.pdfTransactionDetail
   );
 
+router.use(authSession())
+  .route('/remaining-stock/pdf/:entryDate')
+  .get(
+    auth('getRemainingStock'),
+    validate(reportValidation.getRemainingStock),
+    reportController.pdfRemainingStock
+  );
+
 export default router;
 
 /**

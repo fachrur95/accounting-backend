@@ -176,6 +176,18 @@ const pdfTransactionDetail = catchAsync(async (req, res) => {
   res.send(content);
 });
 
+const pdfRemainingStock = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const { entryDate } = req.params;
+  const content = await reportService.pdfRemainingStock(user.session?.unit?.id, entryDate as unknown as Date);
+
+  const filename = `sisa-stock-${user.session?.unit?.name?.replace(" ", "_")}-${Date.now()}.pdf`;
+  res.setHeader('Content-disposition', `attachment; filename=${filename}`);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.contentType("application/pdf")
+  res.send(content);
+});
+
 export default {
   getBalanceSheet,
   getDebtReceivable,
@@ -191,4 +203,5 @@ export default {
   pdfBankSummary,
   pdfTransactionSummary,
   pdfTransactionDetail,
+  pdfRemainingStock,
 };

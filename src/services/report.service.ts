@@ -61,6 +61,13 @@ interface IQueryRawBankSummary {
   balance: number;
 }
 
+interface IQueryRawRemainingStock {
+  code: string;
+  name: string;
+  qty: number;
+  unit: string;
+}
+
 /**
  * Get All Balance Sheet By UnitId
  * @param {String} unitId
@@ -608,6 +615,100 @@ const getTransactionDetail = async (
     ],
   })
 }
+
+/**
+ * Get All Remaining Stock By UnitId
+ * @param {String} unitId
+ * @returns {Promise<IQueryRawRemainingStock[]>}
+ */
+const getRemainingStock = async (
+  unitId: string,
+  entryDate: Date,
+): Promise<IQueryRawRemainingStock[]> => {
+  const unit = await prisma.unit.findUnique({
+    where: { id: unitId },
+  });
+  if (!unit) {
+    throw new ApiError(httpStatus.NOT_FOUND, `Unit Not Found`);
+  }
+
+  return prisma.$queryRaw<IQueryRawRemainingStock[]>`
+    SELECT
+      "item"."code",
+      "item"."name",
+      COALESCE("trans".qty, 0) AS qty,
+      "unit"."code" AS "unit"
+    FROM "Item" AS "item"
+    LEFT JOIN (
+      SELECT
+        "item"."id" AS "itemId",
+        COALESCE(SUM("transDetail"."qty"), 0) AS "qty"
+      FROM "TransactionDetail" AS "transDetail"
+      JOIN "Transaction" AS "trans" ON ("trans"."id" = "transDetail"."transactionId")
+      JOIN "MultipleUom" AS "multi" ON ("multi"."id" = "transDetail"."multipleUomId")
+      JOIN "Item" AS "item" ON ("item"."id" = "multi"."itemId")
+      JOIN "UnitOfMeasure" AS "unit" ON ("unit"."id" = "multi"."unitOfMeasureId")
+      WHERE "trans"."unitId" = ${unitId}
+      AND DATE(TIMEZONE('Asia/Bangkok', "trans"."entryDate")) <= DATE(TIMEZONE('Asia/Bangkok', ${entryDate}))
+      GROUP BY ("item"."id")
+    ) AS "trans" ON ("trans"."itemId" = "item"."id")
+    JOIN (SELECT "multi"."itemId", "unit"."code" FROM "MultipleUom" AS "multi" JOIN "UnitOfMeasure" AS "unit" ON ("unit"."id" = "multi"."unitOfMeasureId") WHERE "multi"."conversionQty" = 1) AS "unit" ON ("unit"."itemId" = "item"."id")
+    WHERE "item"."unitId" = ${unitId}
+    ORDER BY "item"."code";
+  `;
+}
+
+/**
+ * Get All Transaction Detail By UnitId
+ * @param {String} unitId
+ * @returns {Promise<CashRegister | null>}
+ */
+/* const getStockMutation = async (
+  unitId: string,
+): Promise<Prisma.ItemCogsGetPayload<
+  {
+    include: {
+      item: true,
+      itemCogsDetails: {
+        include: {
+          transactionDetail: {
+            include: {
+              transaction: true,
+            }
+          }
+        }
+      },
+      transactionDetail: {
+        select: {
+          transaction: true,
+        }
+      }
+    }
+  }>[]> => {
+  return prisma.itemCogs.findMany({
+    where: {
+      unitId,
+    },
+    include: {
+      item: true,
+      itemCogsDetails: {
+        include: {
+          transactionDetail: {
+            include: {
+              transaction: true,
+            }
+          }
+        }
+      },
+      transactionDetail: {
+        select: {
+          transaction: true,
+        }
+      }
+    },
+    orderBy: { date: "asc" },
+  })
+} */
 
 const pdfBalanceSheet = async (
   unitId: string,
@@ -1863,6 +1964,93 @@ const pdfTransactionDetail = async (
   }
 }
 
+const pdfRemainingStock = async (
+  unitId: string,
+  entryDate: Date,
+): Promise<Buffer | string> => {
+  try {
+    const unit = await prisma.unit.findUnique({
+      where: { id: unitId },
+      include: {
+        institute: true,
+      }
+    });
+    if (!unit) {
+      throw new ApiError(httpStatus.NOT_FOUND, `Unit Not Found`);
+    }
+
+    const data = await getRemainingStock(unitId, entryDate);
+    const rows: TableCell[][] = [
+      [
+        { text: "Barang", bold: true, border: [true, true, false, true], fillColor: '#ddd' },
+        { text: "Qty", bold: true, alignment: 'right', border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "Satuan", bold: true, border: [false, true, true, true], fillColor: '#ddd' },
+      ]
+    ];
+
+    let sumQty = 0;
+
+    for (const row of data) {
+      rows.push(
+        [
+          { text: `${row.code} - ${row.name}`, bold: true, border: [true, true, false, true] },
+          { text: formatNumberReport(row.qty), bold: true, alignment: 'right', border: [false, true, false, true] },
+          { text: row.unit, bold: true, border: [false, true, true, true] },
+        ]
+      );
+      sumQty += row.qty;
+    }
+    rows.push(
+      [
+        { text: `TOTAL`, bold: true, border: [true, true, false, true] },
+        { text: formatNumberReport(sumQty), bold: true, alignment: 'right', border: [false, true, false, true] },
+        { text: "", bold: true, border: [false, true, true, true] },
+      ]
+    );
+
+    const docDefinition: TDocumentDefinitions = {
+      content: [
+        { text: `${unit.name} - ${unit.institute.name}`, style: 'header' },
+        { text: `LAPORAN SISA STOCK`, style: 'reportName' },
+        { text: `Tanggal: ${convertDateOnly(entryDate)}`, style: 'date' },
+        {
+          style: 'tableExample',
+          table: {
+            headerRows: 1,
+            widths: ['70%', '20%', '10%'],
+            body: rows,
+          },
+        },
+      ],
+      styles: {
+        header: {
+          fontSize: 16,
+          bold: true,
+          margin: [0, 0, 0, 0],
+        },
+        reportName: {
+          fontSize: 14,
+          bold: true,
+          margin: [0, 0, 0, 0],
+        },
+        date: {
+          margin: [0, 0, 0, 10],
+        },
+        tableExample: {
+          margin: [0, 5, 0, 15],
+        },
+      },
+      pageSize: 'A4',
+      pageOrientation: 'landscape',
+    }
+    const binaryResult = await createPdf(docDefinition);
+    return binaryResult;
+  } catch (err: any) {
+    console.log({ err });
+    return errorPdfHtmlTemplate(err.message);
+  }
+}
+
 export default {
   getBalanceSheet,
   getDebtReceivable,
@@ -1871,6 +2059,8 @@ export default {
   getCashFlow,
   getBankSummary,
   getTransactionSummary,
+  getTransactionDetail,
+  getRemainingStock,
   pdfBalanceSheet,
   pdfDebtReceivable,
   pdfProfitLoss,
@@ -1879,4 +2069,5 @@ export default {
   pdfBankSummary,
   pdfTransactionSummary,
   pdfTransactionDetail,
+  pdfRemainingStock,
 };

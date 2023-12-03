@@ -68,6 +68,12 @@ const getTransactionDetail = {
   })
 };
 
+const getRemainingStock = {
+  params: Joi.object().keys({
+    entryDate: Joi.date(),
+  }),
+};
+
 export default {
   getBalanceSheet,
   getDebtReceivable,
@@ -77,4 +83,5 @@ export default {
   getBankSummary,
   getTransactionSummary,
   getTransactionDetail,
+  getRemainingStock,
 };
