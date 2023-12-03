@@ -495,6 +495,120 @@ const getBankSummary = async (
   `;
 }
 
+/**
+ * Get All Transaction Summary By UnitId
+ * @param {String} unitId
+ * @returns {Promise<CashRegister | null>}
+ */
+const getTransactionSummary = async (
+  unitId: string,
+  type: 'sales' | 'purchase',
+  startDate: Date,
+  endDate: Date,
+): Promise<Prisma.TransactionGetPayload<
+  {
+    include: {
+      // transactionDetails: true,
+      cashRegister: true,
+      people: {
+        include: {
+          peopleCategory: true,
+        }
+      },
+    }
+  }>[]> => {
+  return prisma.transaction.findMany({
+    where: {
+      unitId,
+      entryDate: {
+        gte: startDate,
+        lte: endDate,
+      },
+      transactionType: type === 'purchase' ? 'PURCHASE_INVOICE' : 'SALE_INVOICE',
+    },
+    include: {
+      // transactionDetails: true,
+      cashRegister: true,
+      people: {
+        include: {
+          peopleCategory: true,
+        }
+      },
+    },
+    orderBy: [
+      // { people: { peopleCategory: { code: "asc" }, } },
+      // { people: { code: "asc" } },
+      { entryDate: "asc" },
+    ],
+  })
+}
+
+/**
+ * Get All Transaction Detail By UnitId
+ * @param {String} unitId
+ * @returns {Promise<CashRegister | null>}
+ */
+const getTransactionDetail = async (
+  unitId: string,
+  type: 'sales' | 'purchase',
+  startDate: Date,
+  endDate: Date,
+): Promise<Prisma.TransactionGetPayload<
+  {
+    include: {
+      transactionDetails: {
+        include: {
+          multipleUom: {
+            include: {
+              item: true,
+              unitOfMeasure: true,
+            }
+          }
+        }
+      },
+      cashRegister: true,
+      people: {
+        include: {
+          peopleCategory: true,
+        }
+      },
+    }
+  }>[]> => {
+  return prisma.transaction.findMany({
+    where: {
+      unitId,
+      entryDate: {
+        gte: startDate,
+        lte: endDate,
+      },
+      transactionType: type === 'purchase' ? 'PURCHASE_INVOICE' : 'SALE_INVOICE',
+    },
+    include: {
+      transactionDetails: {
+        include: {
+          multipleUom: {
+            include: {
+              item: true,
+              unitOfMeasure: true,
+            }
+          }
+        }
+      },
+      cashRegister: true,
+      people: {
+        include: {
+          peopleCategory: true,
+        }
+      },
+    },
+    orderBy: [
+      { people: { peopleCategory: { code: "asc" }, } },
+      { people: { code: "asc" } },
+      { entryDate: "asc" },
+    ],
+  })
+}
+
 const pdfBalanceSheet = async (
   unitId: string,
   startDate: Date,
@@ -1407,6 +1521,348 @@ const pdfBankSummary = async (
   }
 }
 
+const pdfTransactionSummary = async (
+  unitId: string,
+  type: 'sales' | 'purchase',
+  startDate: Date,
+  endDate: Date,
+): Promise<Buffer | string> => {
+  try {
+    const unit = await prisma.unit.findUnique({
+      where: { id: unitId },
+      include: {
+        institute: true,
+      }
+    });
+    if (!unit) {
+      throw new ApiError(httpStatus.NOT_FOUND, `Unit Not Found`);
+    }
+
+    const data = await getTransactionSummary(unitId, type, startDate, endDate);
+    const rows: TableCell[][] = [
+      [
+        { text: "Tanggal", bold: true, border: [true, true, false, true], fillColor: '#ddd' },
+        { text: "No. Transaksi", bold: true, border: [false, true, false, true], fillColor: '#ddd' },
+        { text: type === "sales" ? "Pelanggan" : "Pemasok", bold: true, border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "Ket", bold: true, border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "Total", bold: true, alignment: 'right', border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "Bayar", bold: true, alignment: 'right', border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "Saldo", bold: true, alignment: 'right', border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "PJ", bold: true, border: [false, true, true, true], fillColor: '#ddd' },
+      ]
+    ];
+
+    let sumTotal = 0;
+    let sumPayment = 0;
+    let sumBalance = 0;
+
+    for (const row of data) {
+      rows.push(
+        [
+          { text: dateID(row.entryDate), bold: true, border: [true, true, false, true] },
+          { text: row.transactionNumber, bold: true, border: [false, true, false, true] },
+          { text: `${row.people?.code ?? ""} - ${row.people?.name ?? ""}`, bold: true, border: [false, true, false, true] },
+          { text: row.note, bold: true, border: [false, true, false, true] },
+          { text: formatNumberReport(row.total), bold: true, alignment: 'right', border: [false, true, false, true] },
+          { text: formatNumberReport(row.paymentInput), bold: true, alignment: 'right', border: [false, true, false, true] },
+          { text: formatNumberReport(row.underPayment), bold: true, alignment: 'right', border: [false, true, false, true] },
+          { text: row.createdBy, bold: true, border: [false, true, true, true] },
+        ]
+      );
+      sumTotal += row.total;
+      sumPayment += row.paymentInput
+      sumBalance += row.underPayment
+    }
+    rows.push(
+      [
+        { text: `GRAND TOTAL`, colSpan: 3, bold: true, border: [true, true, false, true] },
+        { text: "", bold: true, border: [false, true, false, true] },
+        { text: "", bold: true, border: [false, true, false, true] },
+        { text: "", bold: true, border: [false, true, false, true] },
+        { text: formatNumberReport(sumTotal), bold: true, alignment: 'right', border: [false, true, false, true] },
+        { text: formatNumberReport(sumPayment), bold: true, alignment: 'right', border: [false, true, false, true] },
+        { text: formatNumberReport(sumBalance), bold: true, alignment: 'right', border: [false, true, false, true] },
+        { text: "", bold: true, alignment: 'right', border: [false, true, true, true] },
+      ]
+    );
+
+    const docDefinition: TDocumentDefinitions = {
+      content: [
+        { text: `${unit.name} - ${unit.institute.name}`, style: 'header' },
+        { text: `LAPORAN ${type === 'sales' ? "PENJUALAN" : "PEMBELIAN"} - RINGKAS`, style: 'reportName' },
+        { text: `Tanggal: ${convertDateOnly(startDate)} s/d ${convertDateOnly(endDate)}`, style: 'date' },
+        {
+          style: 'tableExample',
+          table: {
+            headerRows: 1,
+            widths: ['10%', '20%', '20%', '7%', '11%', '11%', '11%', '10%'],
+            body: rows,
+          },
+        },
+      ],
+      styles: {
+        header: {
+          fontSize: 16,
+          bold: true,
+          margin: [0, 0, 0, 0],
+        },
+        reportName: {
+          fontSize: 14,
+          bold: true,
+          margin: [0, 0, 0, 0],
+        },
+        date: {
+          margin: [0, 0, 0, 10],
+        },
+        tableExample: {
+          margin: [0, 5, 0, 15],
+        },
+      },
+      pageSize: 'A4',
+      pageOrientation: 'landscape',
+    }
+    const binaryResult = await createPdf(docDefinition);
+    return binaryResult;
+  } catch (err: any) {
+    console.log({ err });
+    return errorPdfHtmlTemplate(err.message);
+  }
+}
+
+const pdfTransactionDetail = async (
+  unitId: string,
+  type: 'sales' | 'purchase',
+  startDate: Date,
+  endDate: Date,
+): Promise<Buffer | string> => {
+  try {
+    const unit = await prisma.unit.findUnique({
+      where: { id: unitId },
+      include: {
+        institute: true,
+      }
+    });
+    if (!unit) {
+      throw new ApiError(httpStatus.NOT_FOUND, `Unit Not Found`);
+    }
+
+    const data = await getTransactionDetail(unitId, type, startDate, endDate);
+    const rows: TableCell[][] = [
+      [
+        { text: "Barang", bold: true, border: [true, true, false, true], fillColor: '#ddd' },
+        { text: "Qty", bold: true, alignment: 'right', border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "Satuan", bold: true, border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "Harga", bold: true, alignment: 'right', border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "Diskon", bold: true, alignment: 'right', border: [false, true, false, true], fillColor: '#ddd' },
+        { text: "Total", bold: true, alignment: 'right', border: [false, true, true, true], fillColor: '#ddd' },
+      ]
+    ];
+
+    let tempPeopleCategory = "";
+    let tempPeople = "";
+
+    let sumQty = 0;
+    let sumDiscount = 0;
+    let sumTotal = 0;
+
+    let sumQtyTrans = 0;
+    let sumDiscountTrans = 0;
+    let sumTotalTrans = 0;
+
+    let sumQtyPeople = 0;
+    let sumDiscountPeople = 0;
+    let sumTotalPeople = 0;
+
+    let sumQtyPeopleCategory = 0;
+    let sumDiscountPeopleCategory = 0;
+    let sumTotalPeopleCategory = 0;
+
+    for (const [index, row] of data.entries()) {
+      if (tempPeopleCategory !== row.people?.peopleCategory.code) {
+        rows.push(
+          [
+            { text: `${row.people?.peopleCategory.code} - ${row.people?.peopleCategory.name}` ?? "-", bold: true, colSpan: 5, border: [true, true, false, true] },
+            { text: "", border: [false, true, false, true] },
+            { text: "", border: [false, true, false, true] },
+            { text: "", border: [false, true, false, true] },
+            { text: "", border: [false, true, false, true] },
+            { text: "", border: [false, true, true, true] },
+          ]
+        );
+
+        tempPeopleCategory = row.people?.peopleCategory.code ?? "";
+      }
+
+      if (tempPeople !== row.people?.code) {
+        rows.push(
+          [
+            { text: `${row.people?.code} - ${row.people?.name}` ?? "-", bold: true, colSpan: 5, border: [true, true, false, true] },
+            { text: "", border: [false, true, false, true] },
+            { text: "", border: [false, true, false, true] },
+            { text: "", border: [false, true, false, true] },
+            { text: "", border: [false, true, false, true] },
+            { text: "", border: [false, true, true, true] },
+          ]
+        );
+
+        tempPeople = row.people?.code ?? "";
+      }
+
+      rows.push(
+        [
+          { text: `${row.transactionNumber} [${dateID(row.entryDate)}]`, bold: true, colSpan: 5, border: [true, true, false, true] },
+          { text: "", border: [false, true, false, true] },
+          { text: "", border: [false, true, false, true] },
+          { text: "", border: [false, true, false, true] },
+          { text: "", border: [false, true, false, true] },
+          { text: formatNumberReport(row.total), alignment: 'right', border: [false, true, true, true] },
+        ]
+      );
+      sumQty += 0;
+      sumDiscount += row.underPayment;
+      sumTotal += row.underPayment;
+
+      sumQtyTrans += 0;
+      sumDiscountTrans += row.underPayment;
+      sumTotalTrans += row.underPayment;
+
+      sumQtyPeople += 0;
+      sumDiscountPeople += row.underPayment;
+      sumTotalPeople += row.underPayment;
+
+      sumQtyPeopleCategory += 0;
+      sumDiscountPeopleCategory += row.underPayment;
+      sumTotalPeopleCategory += row.underPayment;
+
+      if (row.transactionDetails.length > 0) {
+        for (const detail of row.transactionDetails) {
+          sumQty += detail.qtyInput;
+          sumQtyTrans += detail.qtyInput;
+          sumQtyPeople += detail.qtyInput;
+          sumQtyPeopleCategory += detail.qtyInput;
+          sumDiscount += detail.discountInput;
+          sumDiscountTrans += detail.discountInput;
+          sumDiscountPeople += detail.discountInput;
+          sumDiscountPeopleCategory += detail.discountInput;
+          sumTotal += detail.total;
+          sumTotalTrans += detail.total;
+          sumTotalPeople += detail.total;
+          sumTotalPeopleCategory += detail.total;
+
+          rows.push(
+            [
+              { text: `${detail.multipleUom?.item.code} - ${detail.multipleUom?.item.name}`, border: [true, true, false, true] },
+              { text: formatNumberReport(detail.qtyInput), alignment: 'right', border: [false, true, false, true] },
+              { text: detail.multipleUom?.unitOfMeasure.code, border: [false, true, false, true] },
+              { text: formatNumberReport(detail.priceInput), alignment: 'right', border: [false, true, false, true] },
+              { text: formatNumberReport(detail.discountInput), alignment: 'right', border: [false, true, false, true] },
+              { text: formatNumberReport(detail.total), alignment: 'right', border: [false, true, true, true] },
+            ]
+          );
+        }
+      }
+      rows.push(
+        [
+          { text: `SUB TOTAL (${row.transactionNumber})`, colSpan: 5, bold: true, border: [true, true, false, true] },
+          { text: formatNumberReport(sumQtyTrans), bold: true, alignment: 'right', border: [false, true, false, true] },
+          { text: "", bold: true, border: [false, true, false, true] },
+          { text: "", bold: true, border: [false, true, false, true] },
+          { text: formatNumberReport(sumDiscountTrans), bold: true, alignment: 'right', border: [false, true, false, true] },
+          { text: formatNumberReport(sumTotalTrans), bold: true, alignment: 'right', border: [false, true, true, true] },
+        ]
+      );
+      sumQtyTrans = 0;
+      sumDiscountTrans = 0;
+      sumTotalTrans = 0;
+
+      if (row.peopleId !== data[index + 1]?.peopleId) {
+        rows.push(
+          [
+            { text: `SUB TOTAL (${row.people?.code ?? row.people?.name ?? "-"})`, colSpan: 5, bold: true, border: [true, true, false, true] },
+            { text: formatNumberReport(sumQtyPeople), bold: true, alignment: 'right', border: [false, true, false, true] },
+            { text: "", bold: true, border: [false, true, false, true] },
+            { text: "", bold: true, border: [false, true, false, true] },
+            { text: formatNumberReport(sumDiscountPeople), bold: true, alignment: 'right', border: [false, true, false, true] },
+            { text: formatNumberReport(sumTotalPeople), bold: true, alignment: 'right', border: [false, true, true, true] },
+          ]
+        );
+
+        sumQtyPeople = 0;
+        sumDiscountPeople = 0;
+        sumTotalPeople = 0;
+      }
+
+      if (row.people?.peopleCategoryId !== data[index + 1]?.people?.peopleCategoryId) {
+        rows.push(
+          [
+            { text: `SUB TOTAL (${row.people?.peopleCategory.code ?? row.people?.peopleCategory.name ?? "-"})`, colSpan: 5, bold: true, border: [true, true, false, true] },
+            { text: formatNumberReport(sumQtyPeopleCategory), bold: true, alignment: 'right', border: [false, true, false, true] },
+            { text: "", bold: true, border: [false, true, false, true] },
+            { text: "", bold: true, border: [false, true, false, true] },
+            { text: formatNumberReport(sumDiscountPeopleCategory), bold: true, alignment: 'right', border: [false, true, false, true] },
+            { text: formatNumberReport(sumTotalPeopleCategory), bold: true, alignment: 'right', border: [false, true, true, true] },
+          ]
+        );
+
+        sumQtyPeopleCategory = 0;
+        sumDiscountPeopleCategory = 0;
+        sumTotalPeopleCategory = 0;
+      }
+    }
+    rows.push(
+      [
+        { text: `GRAND TOTAL`, colSpan: 5, bold: true, border: [true, true, false, true] },
+        { text: formatNumberReport(sumQty), bold: true, alignment: 'right', border: [false, true, false, true] },
+        { text: "", bold: true, border: [false, true, false, true] },
+        { text: "", bold: true, border: [false, true, false, true] },
+        { text: formatNumberReport(sumDiscount), bold: true, alignment: 'right', border: [false, true, false, true] },
+        { text: formatNumberReport(sumTotal), bold: true, alignment: 'right', border: [false, true, true, true] },
+      ]
+    );
+
+    const docDefinition: TDocumentDefinitions = {
+      content: [
+        { text: `${unit.name} - ${unit.institute.name}`, style: 'header' },
+        { text: `LAPORAN ${type === 'sales' ? "PENJUALAN" : "PEMBELIAN"} - RINCI`, style: 'reportName' },
+        { text: `Tanggal: ${convertDateOnly(startDate)} s/d ${convertDateOnly(endDate)}`, style: 'date' },
+        {
+          style: 'tableExample',
+          table: {
+            headerRows: 1,
+            widths: ['30%', '15%', '10%', '15%', '15%', '15%'],
+            body: rows,
+          },
+        },
+      ],
+      styles: {
+        header: {
+          fontSize: 16,
+          bold: true,
+          margin: [0, 0, 0, 0],
+        },
+        reportName: {
+          fontSize: 14,
+          bold: true,
+          margin: [0, 0, 0, 0],
+        },
+        date: {
+          margin: [0, 0, 0, 10],
+        },
+        tableExample: {
+          margin: [0, 5, 0, 15],
+        },
+      },
+      pageSize: 'A4',
+      // pageOrientation: 'landscape',
+    }
+    const binaryResult = await createPdf(docDefinition);
+    return binaryResult;
+  } catch (err: any) {
+    console.log({ err });
+    return errorPdfHtmlTemplate(err.message);
+  }
+}
+
 export default {
   getBalanceSheet,
   getDebtReceivable,
@@ -1414,10 +1870,13 @@ export default {
   getBestSellingProduct,
   getCashFlow,
   getBankSummary,
+  getTransactionSummary,
   pdfBalanceSheet,
   pdfDebtReceivable,
   pdfProfitLoss,
   pdfBestSellingProduct,
   pdfCashFlow,
   pdfBankSummary,
+  pdfTransactionSummary,
+  pdfTransactionDetail,
 };

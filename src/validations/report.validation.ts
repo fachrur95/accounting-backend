@@ -46,6 +46,28 @@ const getBankSummary = {
   }),
 };
 
+const getTransactionSummary = {
+  params: Joi.object().keys({
+    type: Joi.string().valid('sales', 'purchase'),
+    startDate: Joi.date(),
+    endDate: Joi.date(),
+  }),
+  query: Joi.object().keys({
+    partnerId: Joi.string(),
+  })
+};
+
+const getTransactionDetail = {
+  params: Joi.object().keys({
+    type: Joi.string().valid('sales', 'purchase'),
+    startDate: Joi.date(),
+    endDate: Joi.date(),
+  }),
+  query: Joi.object().keys({
+    partnerId: Joi.string(),
+  })
+};
+
 export default {
   getBalanceSheet,
   getDebtReceivable,
@@ -53,4 +75,6 @@ export default {
   getBestSellingProduct,
   getCashFlow,
   getBankSummary,
+  getTransactionSummary,
+  getTransactionDetail,
 };

@@ -103,6 +103,22 @@ router.use(authSession())
     reportController.pdfBankSummary
   );
 
+router.use(authSession())
+  .route('/transaction-summary/pdf/:type/:startDate/:endDate')
+  .get(
+    auth('getTransactionSummary'),
+    validate(reportValidation.getTransactionSummary),
+    reportController.pdfTransactionSummary
+  );
+
+router.use(authSession())
+  .route('/transaction-detail/pdf/:type/:startDate/:endDate')
+  .get(
+    auth('getTransactionDetail'),
+    validate(reportValidation.getTransactionDetail),
+    reportController.pdfTransactionDetail
+  );
+
 export default router;
 
 /**
