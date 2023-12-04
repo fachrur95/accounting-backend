@@ -626,6 +626,72 @@ const getTransactionDetail = async (
       },
     },
     orderBy: [
+      { entryDate: "asc" },
+    ],
+  })
+}
+
+/**
+ * Get All Transaction Detail By UnitId
+ * @param {String} unitId
+ * @returns {Promise<CashRegister | null>}
+ */
+const getTransactionDetailGrouped = async (
+  unitId: string,
+  type: 'sales' | 'purchase',
+  startDate: Date,
+  endDate: Date,
+  peopleId?: string,
+): Promise<Prisma.TransactionGetPayload<
+  {
+    include: {
+      transactionDetails: {
+        include: {
+          multipleUom: {
+            include: {
+              item: true,
+              unitOfMeasure: true,
+            }
+          }
+        }
+      },
+      cashRegister: true,
+      people: {
+        include: {
+          peopleCategory: true,
+        }
+      },
+    }
+  }>[]> => {
+  return prisma.transaction.findMany({
+    where: {
+      unitId,
+      entryDate: {
+        gte: startDate,
+        lte: endDate,
+      },
+      transactionType: type === 'purchase' ? 'PURCHASE_INVOICE' : 'SALE_INVOICE',
+      peopleId,
+    },
+    include: {
+      transactionDetails: {
+        include: {
+          multipleUom: {
+            include: {
+              item: true,
+              unitOfMeasure: true,
+            }
+          }
+        }
+      },
+      cashRegister: true,
+      people: {
+        include: {
+          peopleCategory: true,
+        }
+      },
+    },
+    orderBy: [
       { people: { peopleCategory: { code: "asc" }, } },
       { people: { code: "asc" } },
       { entryDate: "asc" },
@@ -1859,6 +1925,15 @@ const pdfTransactionDetail = async (
     if (!unit) {
       throw new ApiError(httpStatus.NOT_FOUND, `Unit Not Found`);
     }
+    let people = null;
+    if (peopleId) {
+      people = await prisma.people.findUnique({
+        where: { id: peopleId }
+      });
+      if (!people) {
+        throw new ApiError(httpStatus.NOT_FOUND, `${type === 'sales' ? 'Pelanggan' : 'Pemasok'} Not Found`);
+      }
+    }
 
     const data = await getTransactionDetail(unitId, type, startDate, endDate, peopleId);
     const rows: TableCell[][] = [
@@ -1929,6 +2004,7 @@ const pdfTransactionDetail = async (
         { text: `${unit.name} - ${unit.institute.name}`, style: 'header' },
         { text: `LAPORAN ${type === 'sales' ? "PENJUALAN" : "PEMBELIAN"} - RINCI`, style: 'reportName' },
         { text: `Tanggal: ${convertDateOnly(startDate)} s/d ${convertDateOnly(endDate)}`, style: 'date' },
+        { text: people ? `Difilter ${type === 'sales' ? 'Pelanggan' : 'Pemasok'}: ${people.code} - ${people.name}` : "" },
         {
           style: 'tableExample',
           table: {
@@ -1984,8 +2060,17 @@ const pdfTransactionDetailGrouped = async (
     if (!unit) {
       throw new ApiError(httpStatus.NOT_FOUND, `Unit Not Found`);
     }
+    let people = null;
+    if (peopleId) {
+      people = await prisma.people.findUnique({
+        where: { id: peopleId }
+      });
+      if (!people) {
+        throw new ApiError(httpStatus.NOT_FOUND, `${type === 'sales' ? 'Pelanggan' : 'Pemasok'} Not Found`);
+      }
+    }
 
-    const data = await getTransactionDetail(unitId, type, startDate, endDate, peopleId);
+    const data = await getTransactionDetailGrouped(unitId, type, startDate, endDate, peopleId);
     const rows: TableCell[][] = [
       [
         { text: "No", bold: true, alignment: 'right', border: [true, true, false, true], fillColor: '#ddd' },
@@ -2009,11 +2094,6 @@ const pdfTransactionDetailGrouped = async (
     let sumPrice = 0;
     let sumDiscount = 0;
     let sumTotal = 0;
-
-    // let sumQtyTrans = 0;
-    // let sumPriceTrans = 0;
-    // let sumDiscountTrans = 0;
-    // let sumTotalTrans = 0;
 
     let sumQtyPeople = 0;
     let sumPricePeople = 0;
@@ -2065,26 +2145,6 @@ const pdfTransactionDetailGrouped = async (
 
         tempPeople = row.people?.code ?? "";
       }
-
-      /* sumQty += row.qtyInput;
-      sumPrice += row.priceInput;
-      sumDiscount += row.discoutInput;
-      sumTotal += row.total;
-
-      sumQtyTrans += row.qtyInput;
-      sumPriceTrans += row.priceInput;
-      sumDiscountTrans += row.discoutInput;
-      sumTotalTrans += row.total;
-
-      sumQtyPeople += row.qtyInput;
-      sumPricePeople += row.priceInput;
-      sumDiscountPeople += row.discoutInput;
-      sumTotalPeople += row.total;
-
-      sumQtyPeopleCategory += row.qtyInput;
-      sumPricePeopleCategory += row.priceInput;
-      sumDiscountPeopleCategory += row.discoutInput;
-      sumTotalPeopleCategory += row.total; */
 
       if (row.transactionDetails.length > 0) {
         for (const detail of row.transactionDetails) {
@@ -2190,6 +2250,7 @@ const pdfTransactionDetailGrouped = async (
         { text: `${unit.name} - ${unit.institute.name}`, style: 'header' },
         { text: `LAPORAN ${type === 'sales' ? "PENJUALAN" : "PEMBELIAN"} - RINCI (DIKELOMPOKKAN)`, style: 'reportName' },
         { text: `Tanggal: ${convertDateOnly(startDate)} s/d ${convertDateOnly(endDate)}`, style: 'date' },
+        { text: people ? `Difilter ${type === 'sales' ? 'Pelanggan' : 'Pemasok'}: ${people.code} - ${people.name}` : "" },
         {
           style: 'tableExample',
           table: {
