@@ -167,9 +167,23 @@ const pdfTransactionSummary = catchAsync(async (req, res) => {
 const pdfTransactionDetail = catchAsync(async (req, res) => {
   const user = req.user as Required<SessionData>;
   const { type, startDate, endDate } = req.params;
-  const content = await reportService.pdfTransactionDetail(user.session?.unit?.id, type as 'sales' | 'purchase', startDate as unknown as Date, endDate as unknown as Date);
+  const { peopleId } = req.query;
+  const content = await reportService.pdfTransactionDetail(user.session?.unit?.id, type as 'sales' | 'purchase', startDate as unknown as Date, endDate as unknown as Date, peopleId as string);
 
   const filename = `rincian-${type === 'sales' ? "penjualan" : "pembelian"}-${user.session?.unit?.name?.replace(" ", "_")}-${Date.now()}.pdf`;
+  res.setHeader('Content-disposition', `attachment; filename=${filename}`);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.contentType("application/pdf")
+  res.send(content);
+});
+
+const pdfTransactionDetailGrouped = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const { type, startDate, endDate } = req.params;
+  const { peopleId } = req.query;
+  const content = await reportService.pdfTransactionDetailGrouped(user.session?.unit?.id, type as 'sales' | 'purchase', startDate as unknown as Date, endDate as unknown as Date, peopleId as string);
+
+  const filename = `rincian-${type === 'sales' ? "penjualan" : "pembelian"}-dikelompokkan-${user.session?.unit?.name?.replace(" ", "_")}-${Date.now()}.pdf`;
   res.setHeader('Content-disposition', `attachment; filename=${filename}`);
   res.setHeader('Content-Type', 'application/pdf');
   res.contentType("application/pdf")
@@ -182,6 +196,18 @@ const pdfRemainingStock = catchAsync(async (req, res) => {
   const content = await reportService.pdfRemainingStock(user.session?.unit?.id, entryDate as unknown as Date);
 
   const filename = `sisa-stock-${user.session?.unit?.name?.replace(" ", "_")}-${Date.now()}.pdf`;
+  res.setHeader('Content-disposition', `attachment; filename=${filename}`);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.contentType("application/pdf")
+  res.send(content);
+});
+
+const pdfStockCard = catchAsync(async (req, res) => {
+  const user = req.user as Required<SessionData>;
+  const { startDate, endDate } = req.params;
+  const content = await reportService.pdfStockCard(user.session?.unit?.id, startDate as unknown as Date, endDate as unknown as Date);
+
+  const filename = `kartu-stock-barang-${user.session?.unit?.name?.replace(" ", "_")}-${Date.now()}.pdf`;
   res.setHeader('Content-disposition', `attachment; filename=${filename}`);
   res.setHeader('Content-Type', 'application/pdf');
   res.contentType("application/pdf")
@@ -204,4 +230,6 @@ export default {
   pdfTransactionSummary,
   pdfTransactionDetail,
   pdfRemainingStock,
+  pdfStockCard,
+  pdfTransactionDetailGrouped,
 };

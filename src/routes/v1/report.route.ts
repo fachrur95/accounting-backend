@@ -120,11 +120,27 @@ router.use(authSession())
   );
 
 router.use(authSession())
+  .route('/transaction-detail-grouped/pdf/:type/:startDate/:endDate')
+  .get(
+    auth('getTransactionDetailGrouped'),
+    validate(reportValidation.getTransactionDetailGrouped),
+    reportController.pdfTransactionDetailGrouped
+  );
+
+router.use(authSession())
   .route('/remaining-stock/pdf/:entryDate')
   .get(
     auth('getRemainingStock'),
     validate(reportValidation.getRemainingStock),
     reportController.pdfRemainingStock
+  );
+
+router.use(authSession())
+  .route('/stock-card/pdf/:startDate/:endDate')
+  .get(
+    auth('getStockCard'),
+    validate(reportValidation.getStockCard),
+    reportController.pdfStockCard
   );
 
 export default router;
